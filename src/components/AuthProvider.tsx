@@ -1,9 +1,11 @@
+
 // src/components/AuthProvider.tsx
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import api from '@/src/lib/api';
+import api from '@/src/lib/api/api';
+import axios from 'axios';
 
 interface User {
   id: string;
@@ -17,17 +19,28 @@ interface User {
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name: string, employeeId: string) => Promise<void>;
+  login: (email: string, password: string, redirectPath?: string) => Promise<void>;
+  register: (email: string, password: string, name: string, referralCode?: string) => Promise<void>;
   verify: (code: string) => Promise<void>;
-  resendVerification: () => Promise<void>;
-  logout: () => void;
+  resendVerification: (email: string) => Promise<void>;
+  logout: () => Promise<void>;
   isAuthenticated: boolean;
   isAdmin: boolean;
   isSuperAdmin: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// Helper: set a cookie
+function setCookie(name: string, value: string, days = 7) {
+  const expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+  document.cookie = `${name}=${value}; path=/; expires=${expires.toUTCString()}; SameSite=Lax`;
+}
+
+// Helper: delete a cookie
+function deleteCookie(name: string) {
+  document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;`;
+}
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -43,11 +56,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return;
       }
       try {
-        const response = await api.get('/auth/me');
+        const response = await api.get('/investment/auth/me');
         setUser(response.data);
+        // Sync cookie with localStorage (ensures consistency)
+        setCookie('access_token', token);
       } catch {
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
+        deleteCookie('access_token');
+        deleteCookie('refresh_token');
       } finally {
         setLoading(false);
       }
@@ -55,33 +72,108 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     loadUser();
   }, []);
 
-  const login = async (email: string, password: string) => {
-    const response = await api.post('/auth/login', { email, password });
+
+
+const login = async (email: string, password: string, redirectPath?: string) => {
+  try {
+    const response = await api.post('/investment/auth/login', {
+      email,
+      password,
+    });
+
     const { access_token, refresh_token, user } = response.data;
+
     localStorage.setItem('access_token', access_token);
     localStorage.setItem('refresh_token', refresh_token);
-    setUser(user);
-    router.push('/dashboard');
-  };
 
-  const register = async (email: string, password: string, name: string, employeeId: string) => {
-    await api.post('/auth/register', { email, password, name, employee_id: employeeId });
-    router.push('/verify');
-  };
+    setCookie('access_token', access_token);
+    setCookie('refresh_token', refresh_token);
+
+    setUser(user);
+
+    const roleDefaultPaths: Record<string, string> = {
+      employee: '/investment',
+      admin: '/admin',
+      superadmin: '/superadmin',
+    };
+
+    const defaultPath = roleDefaultPaths[user.role] || '/investment';
+    const finalRedirect = redirectPath || defaultPath;
+
+    router.replace(finalRedirect);
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status;
+      const code = error.response?.data?.code;
+
+      if (status === 403 && code === 'EMAIL_NOT_VERIFIED') {
+        localStorage.setItem('registration_email', email);
+        router.push('/verify');
+        return;
+      }
+    }
+
+    throw error;
+  }
+};
+
+
+
+  const register = async (
+  email: string,
+  password: string,
+  name: string,
+  referralCode = ''
+) => {
+  const query = referralCode
+    ? `?ref=${encodeURIComponent(referralCode)}`
+    : '';
+
+  await api.post(
+    `/investment/auth/register${query}`,
+    {
+      email,
+      password,
+      name,
+    }
+  );
+
+  localStorage.setItem('registration_email', email);
+  router.push('/verify');
+};
 
   const verify = async (code: string) => {
-    await api.post('/auth/verify', { code });
+    await api.post('/investment/auth/verify', { code });
     router.push('/login');
   };
 
-  const resendVerification = async () => {
-    await api.post('/auth/resend');
+  const resendVerification = async (email: string) => {
+    await api.post('/investment/auth/resend', { email });
   };
 
-  const logout = () => {
+  const logout = async () => {
+    // Call backend logout to invalidate refresh token
+    const refreshToken = localStorage.getItem('refresh_token');
+    if (refreshToken) {
+      try {
+        await api.post('/auth/logout', { refresh_token: refreshToken });
+      } catch {
+        // Ignore backend errors – still clear local state
+      }
+    }
+
+    // Clear local storage
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
+
+    // Clear cookies (for middleware)
+    deleteCookie('access_token');
+    deleteCookie('refresh_token');
+
+    // Reset user state
     setUser(null);
+
+    // Redirect to login
     router.push('/login');
   };
 

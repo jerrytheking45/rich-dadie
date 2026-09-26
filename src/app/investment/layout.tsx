@@ -1,18 +1,22 @@
+
 // src/app/investment/layout.tsx
+import type { ReactNode } from 'react';
+
 import ProtectedRoute from '@/src/components/ProtectedRoute';
-import InvestmentBottomNav from '@/src/features/investment/components/InvestmentBottomNav';
+import InvestmentBottomNav from '@/src/components/InvestmentBottomNav';
+
+interface InvestmentLayoutProps {
+  children: ReactNode;
+}
 
 export default function InvestmentLayout({
   children,
-}: {
-  children: React.ReactNode;
-}) {
+}: InvestmentLayoutProps) {
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-[#f6f8f6]">
-        <main className="mx-auto w-full max-w-xl px-4 pb-28 pt-5 sm:px-6">
-          {children}
-        </main>
+      <div className="min-h-screen bg-[#050B18] text-white">
+        {children}
+
         <InvestmentBottomNav />
       </div>
     </ProtectedRoute>

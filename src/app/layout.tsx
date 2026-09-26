@@ -2,13 +2,14 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
-import { AuthProvider } from '@/src/components/AuthProvider';
+import { Providers } from '@/src/components/Providers';
+import TransactionActivityToast from '@/src/components/TransactionActivityToast';
 
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Golden Hills Investment',
-  description: 'Employee Investment Platform',
+  title: 'Rich-Dadie investment',
+  description: 'Investment platform for managed digital investments.',
 };
 
 export default function RootLayout({
@@ -19,7 +20,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <AuthProvider>{children}</AuthProvider>
+        <Providers>
+          {children}
+          <TransactionActivityToast />
+        </Providers>
       </body>
     </html>
   );
