@@ -1,5 +1,5 @@
 
-//investment/invest/StepPaymentDetails/page.tsx
+// /investment/invest/StepPaymentDetails/page.tsx
 
 "use client";
 
@@ -373,7 +373,46 @@ export default function StepPaymentDetails({
         />
       </section>
 
-      {/* Deposit history */}
+      {error && (
+        <div className="rounded-2xl border border-red-400/10 bg-red-400/5 p-4 text-xs leading-5 text-red-300">
+          {error}
+        </div>
+      )}
+
+      {/* Navigation - intentionally before deposit history */}
+      <div className="flex gap-3">
+        <button
+          type="button"
+          onClick={onBack}
+          disabled={submitting}
+          className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-white/8 bg-[#0B1426] py-4 text-sm font-bold text-white/55 transition hover:bg-[#0D182C] hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          <ArrowLeft size={18} />
+          {t("invest.back")}
+        </button>
+
+        <button
+          type="button"
+          onClick={handleSubmit}
+          disabled={
+            !txHash.trim() ||
+            submitting
+          }
+          className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-linear-to-r from-emerald-500 to-emerald-400 py-4 text-sm font-black text-[#03130C] shadow-[0_15px_35px_-15px_rgba(52,211,153,0.7)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          {submitting
+            ? t("payment.submitting")
+            : existingDeposit
+              ? "Continue deposit"
+              : t("payment.submit")}
+
+          {!submitting && (
+            <ArrowRight size={18} />
+          )}
+        </button>
+      </div>
+
+      {/* Deposit history - intentionally last on the page */}
       <section className="rounded-3xl border border-white/8 bg-[#0B1426] p-5">
         <div className="flex items-center justify-between gap-3">
           <div>
@@ -496,45 +535,7 @@ export default function StepPaymentDetails({
           )}
         </div>
       </section>
-
-      {error && (
-        <div className="rounded-2xl border border-red-400/10 bg-red-400/5 p-4 text-xs leading-5 text-red-300">
-          {error}
-        </div>
-      )}
-
-      {/* Navigation */}
-      <div className="flex gap-3">
-        <button
-          type="button"
-          onClick={onBack}
-          disabled={submitting}
-          className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-white/8 bg-[#0B1426] py-4 text-sm font-bold text-white/55 transition hover:bg-[#0D182C] hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          <ArrowLeft size={18} />
-          {t("invest.back")}
-        </button>
-
-        <button
-          type="button"
-          onClick={handleSubmit}
-          disabled={
-            !txHash.trim() ||
-            submitting
-          }
-          className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-linear-to-r from-emerald-500 to-emerald-400 py-4 text-sm font-black text-[#03130C] shadow-[0_15px_35px_-15px_rgba(52,211,153,0.7)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          {submitting
-            ? t("payment.submitting")
-            : existingDeposit
-              ? "Continue deposit"
-              : t("payment.submit")}
-
-          {!submitting && (
-            <ArrowRight size={18} />
-          )}
-        </button>
-      </div>
     </div>
   );
 }
+

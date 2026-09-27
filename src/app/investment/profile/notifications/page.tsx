@@ -18,7 +18,7 @@ import {
   notificationApi,
   type Notification,
 } from '@/src/lib/api/notification';
-import InvestmentBottomNav from '@/src/components/InvestmentBottomNav';
+//import InvestmentBottomNav from '@/src/components/InvestmentBottomNav';
 
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<
@@ -698,8 +698,6 @@ export default function NotificationsPage() {
           )}
         </div>
       </div>
-
-      <InvestmentBottomNav />
     </main>
   );
 }

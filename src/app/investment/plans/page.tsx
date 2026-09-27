@@ -210,7 +210,7 @@ const PlansPage = () => {
         <>
           {plans.length > 0 ? (
             <section className="mt-4">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
                 {plans.map((plan) => (
                   <InvestmentPlanCard
                     key={plan.id}

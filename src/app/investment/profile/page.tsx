@@ -7,6 +7,7 @@ import {
   ChevronRight,
   DollarSign,
   Globe,
+  Loader2,
   LogOut,
   PlusCircle,
   RefreshCw,
@@ -16,6 +17,7 @@ import {
   Wallet,
   X,
 } from "lucide-react";
+import { useAuth } from "@/src/components/AuthProvider";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -29,6 +31,9 @@ import type { UserProfile } from "@/src/lib/types/investment";
 
 const ProfilePage = () => {
   const router = useRouter();
+
+  const { logout } = useAuth();
+const [loggingOut, setLoggingOut] = useState(false);
 
   const {
     currency,
@@ -177,15 +182,33 @@ const ProfilePage = () => {
     setShowLanguageDropdown(false);
   };
 
-  const handleLogout = () => {
-    if (
-      window.confirm(
-        "Are you sure you want to log out?",
-      )
-    ) {
-      router.push("/investment");
-    }
-  };
+  const handleLogout = async () => {
+  if (loggingOut) {
+    return;
+  }
+
+  const confirmed = window.confirm(
+    "Are you sure you want to log out?",
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  setLoggingOut(true);
+  setError("");
+
+  try {
+    await logout();
+  } catch (err) {
+    console.error("Logout failed:", err);
+
+    setError(
+      "Unable to log out right now. Please try again.",
+    );
+    setLoggingOut(false);
+  }
+};
 
   if (loading) {
     return (
@@ -800,16 +823,25 @@ const ProfilePage = () => {
         )}
 
         {/* LOGOUT */}
-        <section className="mt-5">
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-red-400/10 bg-red-400/5 py-3.5 text-xs font-bold text-red-400 shadow-lg shadow-black/10 transition hover:bg-red-400/10 active:scale-[0.99]"
-          >
-            <LogOut size={17} />
-            Log Out
-          </button>
-        </section>
+<section className="mt-5">
+  <button
+    type="button"
+    onClick={() => void handleLogout()}
+    disabled={loggingOut}
+    className="flex w-full items-center justify-center gap-2 rounded-2xl border border-red-400/10 bg-red-400/5 py-3.5 text-xs font-bold text-red-400 shadow-lg shadow-black/10 transition hover:bg-red-400/10 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
+  >
+    {loggingOut ? (
+      <Loader2
+        size={17}
+        className="animate-spin"
+      />
+    ) : (
+      <LogOut size={17} />
+    )}
+
+    {loggingOut ? "Logging out..." : "Log Out"}
+  </button>
+</section>
 
         <div className="pb-2 pt-6 text-center">
           <p className="text-[9px] text-white/20">

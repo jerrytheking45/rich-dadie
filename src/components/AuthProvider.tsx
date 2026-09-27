@@ -73,6 +73,29 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
 
+  useEffect(() => {
+  const handleAuthLogout = () => {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+
+    deleteCookie("access_token");
+    deleteCookie("refresh_token");
+
+    setUser(null);
+  };
+
+  window.addEventListener(
+    "auth:logout",
+    handleAuthLogout,
+  );
+
+  return () => {
+    window.removeEventListener(
+      "auth:logout",
+      handleAuthLogout,
+    );
+  };
+}, []);
 
 const login = async (email: string, password: string, redirectPath?: string) => {
   try {
@@ -152,30 +175,36 @@ const login = async (email: string, password: string, redirectPath?: string) => 
   };
 
   const logout = async () => {
-    // Call backend logout to invalidate refresh token
-    const refreshToken = localStorage.getItem('refresh_token');
+  const refreshToken =
+    localStorage.getItem("refresh_token");
+
+  try {
     if (refreshToken) {
-      try {
-        await api.post('/auth/logout', { refresh_token: refreshToken });
-      } catch {
-        // Ignore backend errors – still clear local state
-      }
+      await api.post(
+        "/investment/auth/logout",
+        {
+          refresh_token: refreshToken,
+        },
+      );
     }
+  } catch (error) {
+    console.error(
+      "Backend logout failed:",
+      error,
+    );
+  } finally {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    localStorage.removeItem("registration_email");
 
-    // Clear local storage
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
+    deleteCookie("access_token");
+    deleteCookie("refresh_token");
 
-    // Clear cookies (for middleware)
-    deleteCookie('access_token');
-    deleteCookie('refresh_token');
-
-    // Reset user state
     setUser(null);
 
-    // Redirect to login
-    router.push('/login');
-  };
+    router.replace("/login");
+  }
+};
 
   const isAuthenticated = !!user;
   const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
