@@ -79,7 +79,7 @@ export const investmentApi = {
   // ---------------------------------------------------------------------------
 
   getPlans: async (): Promise<InvestmentPlan[]> => {
-    const response = await api.get('/plans');
+    const response = await api.get('/investment/plans');
 
     return toCamelCase<InvestmentPlan[]>(response.data);
   },
@@ -87,7 +87,7 @@ export const investmentApi = {
   getPlan: async (
     planId: string,
   ): Promise<InvestmentPlan> => {
-    const response = await api.get(`/plans/${planId}`);
+    const response = await api.get(`/investment/plans/${planId}`);
 
     return toCamelCase<InvestmentPlan>(response.data);
   },
