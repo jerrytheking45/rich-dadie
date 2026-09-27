@@ -370,7 +370,7 @@ return (
       touchAction: 'none',
     }}
     className={[
-      'fixed z-40',
+      'fixed z-40 overflow-hidden',
       'flex h-14 w-14 items-center justify-center',
       'rounded-full',
       'border border-emerald-300/20',
