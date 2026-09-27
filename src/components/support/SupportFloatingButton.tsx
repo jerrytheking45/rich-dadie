@@ -2,7 +2,7 @@
 
 'use client';
 
-import { Headphones } from 'lucide-react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import {
   useCallback,
@@ -391,11 +391,15 @@ return (
       className,
     ].join(' ')}
   >
-    <Headphones
-      size={22}
-      strokeWidth={2.3}
-      aria-hidden="true"
-    />
+    <Image
+  src="/images/service.jpg"
+  alt=""
+  fill
+  sizes="56px"
+  priority
+  className="rounded-full object-cover"
+  draggable={false}
+/>
 
     {unreadCount > 0 && (
       <span
