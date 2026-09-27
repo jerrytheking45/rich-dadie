@@ -153,7 +153,7 @@ export default function PromotionDetailsPage() {
   const endDate = formatDate(promotion.ends_at);
 
   return (
-    <main className="w-full">
+    <main className="relative mx-auto w-full max-w-2xl overflow-hidden px-4 pb-32 pt-5 sm:px-6 lg:max-w-5xl lg:px-8">
       <div className="mx-auto w-full max-w-xl">
         <button
           type="button"
