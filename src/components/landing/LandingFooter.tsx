@@ -20,6 +20,7 @@ const footerLinks = [
     links: [
       { label: 'Sign in', href: '/login' },
       { label: 'Register', href: '/register' },
+      { label: 'Download App', href: '/download' },
       { label: 'FAQ', href: '#faq' },
     ],
   },

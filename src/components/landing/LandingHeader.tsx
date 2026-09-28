@@ -96,37 +96,44 @@ export default function LandingHeader() {
           </nav>
 
           {/* Actions */}
-          <div className="flex items-center gap-2.5">
-            <Link
-              href="/login"
-              className="hidden rounded-full px-4 py-2.5 text-sm font-bold text-white/70 transition hover:bg-white/5 hover:text-white sm:inline-flex"
-            >
-              Sign in
-            </Link>
+<div className="flex items-center gap-2.5">
+  <Link
+    href="/login"
+    className="hidden rounded-full px-4 py-2.5 text-sm font-bold text-white/70 transition hover:bg-white/5 hover:text-white sm:inline-flex"
+  >
+    Sign in
+  </Link>
 
-            <Link
-              href="/register"
-              className="group inline-flex items-center gap-1 rounded-full bg-[#F7C948] px-2.5 py-2 text-[11px] font-black leading-none text-[#050B18] shadow-lg shadow-[#F7C948]/10 transition hover:-translate-y-0.5 hover:bg-[#FFD96A] sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm"
-            >
-              Get started
+  <Link
+    href="/download"
+    className="hidden rounded-full border border-white/10 px-4 py-2.5 text-sm font-bold text-white/70 transition hover:border-white/20 hover:bg-white/5 hover:text-white sm:inline-flex"
+  >
+    Download App
+  </Link>
 
-              <ArrowRight
-    size={13}
-    className="shrink-0 transition-transform duration-300 group-hover:translate-x-0.5 sm:h-3.75 sm:w-3.75"
-  />
-            </Link>
+  <Link
+    href="/register"
+    className="group inline-flex items-center gap-1 rounded-full bg-[#F7C948] px-2.5 py-2 text-[11px] font-black leading-none text-[#050B18] shadow-lg shadow-[#F7C948]/10 transition hover:-translate-y-0.5 hover:bg-[#FFD96A] sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm"
+  >
+    Get started
 
-            <button
-              type="button"
-              aria-label="Open navigation"
-              aria-expanded={isOpen}
-              aria-controls="mobile-navigation"
-              onClick={() => setIsOpen(true)}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/75 transition hover:bg-white/10 hover:text-white md:hidden"
-            >
-              <Menu size={19} />
-            </button>
-          </div>
+    <ArrowRight
+      size={13}
+      className="shrink-0 transition-transform duration-300 group-hover:translate-x-0.5 sm:h-3.75 sm:w-3.75"
+    />
+  </Link>
+
+  <button
+    type="button"
+    aria-label="Open navigation"
+    aria-expanded={isOpen}
+    aria-controls="mobile-navigation"
+    onClick={() => setIsOpen(true)}
+    className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/75 transition hover:bg-white/10 hover:text-white md:hidden"
+  >
+    <Menu size={19} />
+  </button>
+</div>
         </div>
       </header>
 
@@ -207,26 +214,33 @@ export default function LandingHeader() {
             ))}
           </nav>
 
-          <div className="mt-auto border-t border-white/8 pt-6">
-            <Link
-              href="/login"
-              onClick={closeMenu}
-              className="flex w-full items-center justify-center rounded-full border border-white/10 bg-white/5 px-5 py-3.5 text-sm font-bold text-white/80 transition hover:bg-white/10 hover:text-white"
-            >
-              Sign in
-            </Link>
+<div className="mt-auto border-t border-white/8 pt-6">
+  <Link
+    href="/login"
+    onClick={closeMenu}
+    className="flex w-full items-center justify-center rounded-full border border-white/10 bg-white/5 px-5 py-3.5 text-sm font-bold text-white/80 transition hover:bg-white/10 hover:text-white"
+  >
+    Sign in
+  </Link>
 
-            <Link
-              href="/register"
-              onClick={closeMenu}
-              className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-[#F7C948] px-5 py-3.5 text-sm font-black text-[#050B18] transition hover:bg-[#FFD96A]"
-            >
-            >
-              Get started
+  <Link
+    href="/download"
+    onClick={closeMenu}
+    className="mt-3 flex w-full items-center justify-center rounded-full border border-white/10 px-5 py-3.5 text-sm font-bold text-white/75 transition hover:border-white/20 hover:bg-white/5 hover:text-white"
+  >
+    Download App
+  </Link>
 
-              <ArrowRight size={15} />
-            </Link>
-          </div>
+  <Link
+    href="/register"
+    onClick={closeMenu}
+    className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-[#F7C948] px-5 py-3.5 text-sm font-black text-[#050B18] transition hover:bg-[#FFD96A]"
+  >
+    Get started
+
+    <ArrowRight size={15} />
+  </Link>
+</div>
         </div>
       </aside>
     </>
