@@ -1,4 +1,4 @@
-﻿
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -106,14 +106,14 @@ export default function LandingHeader() {
 
             <Link
               href="/register"
-              className="group inline-flex items-center gap-2 rounded-full bg-[#F7C948] px-4 py-2.5 text-sm font-black text-[#050B18] shadow-lg shadow-[#F7C948]/10 transition hover:-translate-y-0.5 hover:bg-[#FFD96A] hover:shadow-[#F7C948]/20"
+              className="group inline-flex items-center gap-1 rounded-full bg-[#F7C948] px-2.5 py-2 text-[11px] font-black leading-none text-[#050B18] shadow-lg shadow-[#F7C948]/10 transition hover:-translate-y-0.5 hover:bg-[#FFD96A] sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm"
             >
               Get started
 
               <ArrowRight
-                size={15}
-                className="transition-transform duration-300 group-hover:translate-x-0.5"
-              />
+    size={13}
+    className="shrink-0 transition-transform duration-300 group-hover:translate-x-0.5 sm:h-3.75 sm:w-3.75"
+  />
             </Link>
 
             <button
@@ -177,9 +177,9 @@ export default function LandingHeader() {
                 Investment
               </p>
             </div>
-          </Link>
+            </Link>
 
-          <button
+            <button
             type="button"
             aria-label="Close navigation"
             onClick={closeMenu}
@@ -221,6 +221,7 @@ export default function LandingHeader() {
               onClick={closeMenu}
               className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-[#F7C948] px-5 py-3.5 text-sm font-black text-[#050B18] transition hover:bg-[#FFD96A]"
             >
+            >
               Get started
 
               <ArrowRight size={15} />
@@ -231,5 +232,3 @@ export default function LandingHeader() {
     </>
   );
 }
-
-

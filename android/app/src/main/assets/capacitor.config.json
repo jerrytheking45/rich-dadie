@@ -1,0 +1,10 @@
+{
+	"appId": "com.rediq.app",
+	"appName": "REDIQ",
+	"webDir": "public",
+	"server": {
+		"url": "https://rediq.vercel.app",
+		"cleartext": false,
+		"androidScheme": "https"
+	}
+}

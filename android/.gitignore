@@ -1,0 +1,8 @@
+﻿# Generated build files
+.gradle/
+build/
+**/build/
+local.properties
+
+# Android Studio / IntelliJ project metadata
+.idea/
