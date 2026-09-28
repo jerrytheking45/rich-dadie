@@ -8,12 +8,10 @@ import {
   AlertCircle,
   ArrowLeft,
   CheckCircle2,
-  Globe,
   Key,
   LockKeyhole,
   RefreshCw,
   ShieldCheck,
-  Smartphone,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -27,35 +25,10 @@ type PINStatus =
   | "not_configured"
   | "error";
 
-interface Session {
-  id: string;
-  device: string;
-  location: string;
-  lastActive: string;
-  current?: boolean;
-}
 
-const sessions: Session[] = [
-  {
-    id: "session-1",
-    device: "Windows â€¢ Chrome",
-    location: "Current device",
-    lastActive: "Active now",
-    current: true,
-  },
-  {
-    id: "session-2",
-    device: "Android â€¢ Chrome",
-    location: "Uganda",
-    lastActive: "2 hours ago",
-  },
-];
 
 export default function SecurityPage() {
   const router = useRouter();
-
-  const [twoFactorEnabled, setTwoFactorEnabled] =
-    useState(false);
 
   const [pinStatus, setPinStatus] =
     useState<PINStatus>("checking");
@@ -277,29 +250,6 @@ export default function SecurityPage() {
     }
   }
 
-  function handleTwoFactorToggle() {
-    const nextValue = !twoFactorEnabled;
-
-    setTwoFactorEnabled(nextValue);
-
-    window.alert(
-      nextValue
-        ? "Two-factor authentication enabled (demo)."
-        : "Two-factor authentication disabled (demo).",
-    );
-  }
-
-  function handleChangePassword() {
-    window.alert(
-      "Password change flow will be connected here.",
-    );
-  }
-
-  function handleRefreshSessions() {
-    window.alert(
-      "Active sessions refreshed (demo).",
-    );
-  }
 
   return (
     <div className="min-h-screen overflow-hidden bg-[#050B18] text-white">
@@ -490,187 +440,46 @@ export default function SecurityPage() {
             </div>
           </section>
 
-          {/* Two-Factor Authentication */}
-          <section className="mt-4 rounded-[26px] border border-white/8 bg-[#0B1426] p-5 shadow-xl shadow-black/10">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex min-w-0 items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-400/10 text-blue-400">
-                  <Smartphone
-                    size={19}
-                    aria-hidden="true"
-                  />
-                </div>
 
-                <div className="min-w-0">
-                  <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-slate-500">
-                    Authentication
-                  </p>
+{/* Login Security */}
+<section className="mt-4 rounded-[26px] border border-white/8 bg-[#0B1426] p-5 shadow-xl shadow-black/10">
+  <div className="flex items-start gap-3">
+    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-500/10 text-purple-300">
+      <Key
+        size={19}
+        aria-hidden="true"
+      />
+    </div>
 
-                  <h2 className="mt-1 text-[15px] font-extrabold text-white">
-                    Two-Factor Authentication
-                  </h2>
+    <div className="min-w-0 flex-1">
+      <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-slate-500">
+        Login security
+      </p>
 
-                  <p className="mt-1 text-[10px] leading-5 text-slate-400">
-                    Add an extra layer of protection to your
-                    account.
-                  </p>
-                </div>
-              </div>
+      <h2 className="mt-1 text-[15px] font-extrabold text-white">
+        Password
+      </h2>
 
-              <button
-                type="button"
-                role="switch"
-                aria-checked={twoFactorEnabled}
-                onClick={handleTwoFactorToggle}
-                className={`relative h-7 w-12 shrink-0 rounded-full border transition ${
-                  twoFactorEnabled
-                    ? "border-emerald-400/20 bg-emerald-500"
-                    : "border-white/10 bg-white/10"
-                }`}
-              >
-                <span
-                  className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition ${
-                    twoFactorEnabled
-                      ? "left-6"
-                      : "left-1"
-                  }`}
-                />
-              </button>
-            </div>
+      <p className="mt-1 text-[10px] leading-5 text-slate-400">
+        Reset your account password securely using
+        your registered email address.
+      </p>
 
-            <div className="mt-4 flex items-center gap-2 text-[9px]">
-              <span
-                className={`h-1.5 w-1.5 rounded-full ${
-                  twoFactorEnabled
-                    ? "bg-emerald-400"
-                    : "bg-slate-500"
-                }`}
-              />
+      <button
+        type="button"
+        onClick={() => router.push("/forgot-password")}
+        className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-white/8 bg-white/5 px-4 py-3 text-[10px] font-bold text-slate-200 transition hover:bg-white/10"
+      >
+        <Key
+          size={14}
+          aria-hidden="true"
+        />
+        Reset Password
+      </button>
+    </div>
+  </div>
+</section>
 
-              <span className="text-slate-500">
-                {twoFactorEnabled
-                  ? "Two-factor authentication is enabled."
-                  : "Two-factor authentication is disabled."}
-              </span>
-            </div>
-          </section>
-
-          {/* Password */}
-          <section className="mt-4 rounded-[26px] border border-white/8 bg-[#0B1426] p-5 shadow-xl shadow-black/10">
-            <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-500/10 text-purple-300">
-                <Key
-                  size={19}
-                  aria-hidden="true"
-                />
-              </div>
-
-              <div className="min-w-0 flex-1">
-                <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-slate-500">
-                  Login security
-                </p>
-
-                <h2 className="mt-1 text-[15px] font-extrabold text-white">
-                  Password
-                </h2>
-
-                <p className="mt-1 text-[10px] leading-5 text-slate-400">
-                  Change your account password regularly to
-                  keep your account secure.
-                </p>
-
-                <button
-                  type="button"
-                  onClick={handleChangePassword}
-                  className="mt-4 rounded-xl border border-white/8 bg-white/5 px-4 py-2.5 text-[10px] font-bold text-slate-200 transition hover:bg-white/10"
-                >
-                  Change Password
-                </button>
-              </div>
-            </div>
-          </section>
-
-          {/* Active Sessions */}
-          <section className="mt-4 rounded-[26px] border border-white/8 bg-[#0B1426] p-5 shadow-xl shadow-black/10">
-            <div className="mb-4 flex items-start justify-between gap-3">
-              <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-400/10 text-emerald-400">
-                  <Globe
-                    size={19}
-                    aria-hidden="true"
-                  />
-                </div>
-
-                <div>
-                  <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-slate-500">
-                    Devices
-                  </p>
-
-                  <h2 className="mt-1 text-[15px] font-extrabold text-white">
-                    Active Sessions
-                  </h2>
-
-                  <p className="mt-1 text-[10px] leading-5 text-slate-400">
-                    Review devices currently signed in to
-                    your account.
-                  </p>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={handleRefreshSessions}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/8 bg-white/5 text-slate-400 transition hover:bg-white/10 hover:text-white"
-                aria-label="Refresh active sessions"
-              >
-                <RefreshCw
-                  size={14}
-                  aria-hidden="true"
-                />
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              {sessions.map((session) => (
-                <div
-                  key={session.id}
-                  className="rounded-2xl border border-white/6 bg-[#07101F] p-3.5"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex min-w-0 items-start gap-3">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/5">
-                        <Smartphone
-                          size={16}
-                          className="text-slate-400"
-                          aria-hidden="true"
-                        />
-                      </div>
-
-                      <div className="min-w-0">
-                        <p className="text-[10px] font-bold text-slate-200">
-                          {session.device}
-                        </p>
-
-                        <p className="mt-1 text-[9px] text-slate-500">
-                          {session.location}
-                        </p>
-
-                        <p className="mt-1 text-[9px] text-slate-500">
-                          {session.lastActive}
-                        </p>
-                      </div>
-                    </div>
-
-                    {session.current && (
-                      <span className="shrink-0 rounded-full border border-emerald-400/10 bg-emerald-400/5 px-2.5 py-1 text-[8px] font-bold uppercase tracking-wide text-emerald-400">
-                        Current
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
 
           {/* Security information */}
           <section className="mt-4 rounded-[26px] border border-white/8 bg-[#0B1426] p-5 shadow-xl shadow-black/10">

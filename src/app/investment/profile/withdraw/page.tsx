@@ -58,6 +58,14 @@ function isNotFoundError(error: unknown): boolean {
   return false;
 }
 
+function isWithdrawalFinal(status: Withdrawal["status"]): boolean {
+  return [
+    "COMPLETED",
+    "FAILED",
+    "CANCELLED",
+  ].includes(status);
+}
+
 export default function WithdrawPage() {
   const router = useRouter();
 
@@ -727,6 +735,67 @@ export default function WithdrawPage() {
         setRefreshing(false);
       }
     }, [success]);
+
+      /*
+   * Automatically refresh withdrawal status while
+   * the withdrawal is still being processed.
+   *
+   * Polls every 5 seconds and stops automatically
+   * once the withdrawal reaches a final state.
+   */
+  useEffect(() => {
+    const withdrawalId = success?.id;
+    const withdrawalStatus = success?.status;
+
+    if (!withdrawalId || !withdrawalStatus) {
+      return;
+    }
+
+    if (isWithdrawalFinal(withdrawalStatus)) {
+      return;
+    }
+
+    let mounted = true;
+
+    const refresh = async () => {
+      try {
+        const updated =
+          await withdrawalService.getById(
+            withdrawalId,
+          );
+
+        if (mounted) {
+          setSuccess(updated);
+        }
+      } catch {
+        /*
+         * Keep the current status visible if a
+         * background refresh temporarily fails.
+         *
+         * The user can still use the manual
+         * refresh button.
+         */
+      }
+    };
+
+    /*
+     * Refresh immediately when polling starts,
+     * then continue every 5 seconds.
+     */
+    void refresh();
+
+    const intervalId = window.setInterval(
+      () => {
+        void refresh();
+      },
+      5000,
+    );
+
+    return () => {
+      mounted = false;
+      window.clearInterval(intervalId);
+    };
+  }, [success?.id, success?.status]);
 
   /*
    * Start another withdrawal.

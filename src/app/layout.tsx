@@ -11,7 +11,7 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'REDIQ',
   description: 'Investment platform for managed digital investments.',
-  metadataBase: new URL('https://rediq.wuaze.com'),
+  metadataBase: new URL('https://rediq.vercel.app'),
 
   openGraph: {
     title: 'REDIQ',
