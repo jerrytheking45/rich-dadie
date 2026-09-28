@@ -1,4 +1,4 @@
-
+﻿
 'use client';
 
 import {
@@ -121,7 +121,7 @@ export default function NewSupportTicketPage() {
 
             <div className="min-w-0">
               <p className="text-[9px] font-black uppercase tracking-[0.18em] text-emerald-300">
-                Rich Dadie Support
+                REDIQ Support
               </p>
 
               <h1

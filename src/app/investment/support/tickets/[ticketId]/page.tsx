@@ -1,4 +1,4 @@
-
+﻿
 'use client';
 
 import {
@@ -177,7 +177,7 @@ function AttachmentPreview({
             </p>
 
             <p className="mt-0.5 text-[10px] text-white/30">
-              {attachment.content_type} ·{' '}
+              {attachment.content_type} Â·{' '}
               {formatFileSize(attachment.file_size)}
             </p>
           </div>
@@ -764,7 +764,7 @@ export default function SupportTicketPage() {
 
               <div className="min-w-0">
                 <p className="text-[9px] font-black uppercase tracking-[0.18em] text-emerald-300">
-                  Rich Dadie Support
+                  REDIQ Support
                 </p>
 
                 <h1 className="truncate text-sm font-black text-white sm:text-base">
@@ -1063,4 +1063,5 @@ export default function SupportTicketPage() {
     </div>
   );
 }
+
 

@@ -1,4 +1,4 @@
-
+﻿
 'use client';
 
 import {
@@ -175,7 +175,7 @@ export default function SupportPage() {
 
               <div>
                 <p className="text-[9px] font-black uppercase tracking-[0.18em] text-emerald-300">
-                  Rich Dadie Care
+                  REDIQ Care
                 </p>
 
                 <p className="mt-0.5 text-[10px] text-white/30">
@@ -189,7 +189,7 @@ export default function SupportPage() {
             </h2>
 
             <p className="mt-2 max-w-md text-[11px] leading-5 text-white/35 sm:text-xs">
-              Contact the Rich Dadie support team whenever you need
+              Contact the REDIQ support team whenever you need
               assistance with your account, investments, payments or
               withdrawals.
             </p>
@@ -269,4 +269,5 @@ export default function SupportPage() {
     </div>
   );
 }
+
 

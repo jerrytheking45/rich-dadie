@@ -1,4 +1,4 @@
-
+﻿
 // src/app/investment/profile/security/page.tsx
 
 
@@ -38,14 +38,14 @@ interface Session {
 const sessions: Session[] = [
   {
     id: "session-1",
-    device: "Windows • Chrome",
+    device: "Windows â€¢ Chrome",
     location: "Current device",
     lastActive: "Active now",
     current: true,
   },
   {
     id: "session-2",
-    device: "Android • Chrome",
+    device: "Android â€¢ Chrome",
     location: "Uganda",
     lastActive: "2 hours ago",
   },
@@ -689,7 +689,7 @@ export default function SecurityPage() {
                 <p className="mt-1 text-[10px] leading-5 text-slate-500">
                   Never share your wallet PIN, password,
                   reset links, or verification codes with
-                  anyone. Rich Dadie support will never ask
+                  anyone. REDIQ support will never ask
                   you for your PIN.
                 </p>
               </div>
@@ -711,4 +711,5 @@ export default function SecurityPage() {
     </div>
   );
 }
+
 

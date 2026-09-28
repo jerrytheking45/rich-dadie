@@ -1,4 +1,4 @@
-
+﻿
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -12,7 +12,7 @@ const footerLinks = [
     links: [
       { label: 'Investment plans', href: '#plans' },
       { label: 'How it works', href: '#how-it-works' },
-      { label: 'Why Rich-Dadie', href: '#why-us' },
+      { label: 'Why REDIQ', href: '#why-us' },
     ],
   },
   {
@@ -39,7 +39,7 @@ export default function LandingFooter() {
               <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-[13px]  shadow-lg shadow-black/10">
                 <Image
                   src="/images/logo.png"
-                  alt="Rich-Dadie"
+                  alt="REDIQ"
                   fill
                   sizes="40px"
                   className="h-full w-full object-cover"
@@ -50,7 +50,7 @@ export default function LandingFooter() {
 
               <div className="leading-tight">
                 <p className="text-sm font-black tracking-tight text-white">
-                  Rich-Dadie
+                  REDIQ
                 </p>
 
                 <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/25">
@@ -104,7 +104,7 @@ export default function LandingFooter() {
         {/* Bottom */}
         <div className="mt-12 flex flex-col gap-4 border-t border-white/7 pt-6 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-[10px] text-white/20">
-            © {new Date().getFullYear()} Rich-Dadie Investment.
+            © {new Date().getFullYear()} REDIQ Investment.
             All rights reserved.
           </p>
 
@@ -117,4 +117,5 @@ export default function LandingFooter() {
     </footer>
   );
 }
+
 

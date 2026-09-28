@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -132,7 +132,7 @@ export default function AdminSidebar({
 
             <div>
               <p className="text-sm font-bold tracking-wide text-white">
-                Rich Dadie
+                REDIQ
               </p>
 
               <p className="mt-0.5 text-[11px] text-white/35">

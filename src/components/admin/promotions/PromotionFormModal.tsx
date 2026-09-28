@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   useState,
@@ -360,7 +360,7 @@ export default function PromotionFormModal({
               </h2>
 
               <p className="mt-0.5 text-xs text-slate-500">
-                Create marketing content for Rich Dadie.
+                Create marketing content for REDIQ.
               </p>
             </div>
           </div>
@@ -489,7 +489,7 @@ export default function PromotionFormModal({
                   value=""
                   className="bg-[#07111F]"
                 >
-                  No linked plan — standalone promotion
+                  No linked plan â€” standalone promotion
                 </option>
 
                 {plans.map((plan) => (
@@ -498,7 +498,7 @@ export default function PromotionFormModal({
                     value={plan.id}
                     className="bg-[#07111F]"
                   >
-                    {plan.name} — {plan.status}
+                    {plan.name} â€” {plan.status}
                   </option>
                 ))}
               </select>

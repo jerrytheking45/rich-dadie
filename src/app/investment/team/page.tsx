@@ -1,4 +1,4 @@
-// src/app/investment/team/Page.tsx
+﻿// src/app/investment/team/Page.tsx
 
 "use client";
 
@@ -72,13 +72,13 @@ function formatDate(value: unknown): string {
   const raw = safeString(value).trim();
 
   if (!raw) {
-    return "—";
+    return "â€”";
   }
 
   const date = new Date(raw);
 
   if (Number.isNaN(date.getTime())) {
-    return "—";
+    return "â€”";
   }
 
   return new Intl.DateTimeFormat("en-US", {
@@ -411,11 +411,11 @@ export default function TeamPage() {
         ).trim();
 
         const shareTitle =
-          "Join Rich Dadie";
+          "Join REDIQ";
 
         const shareText = code
-          ? `Join me on Rich Dadie and start investing with my referral code ${code}.`
-          : "Join me on Rich Dadie and start investing.";
+          ? `Join me on REDIQ and start investing with my referral code ${code}.`
+          : "Join me on REDIQ and start investing.";
 
         if (
           typeof navigator !== "undefined" &&
@@ -527,7 +527,7 @@ export default function TeamPage() {
             </h1>
 
             <p className="mt-2 max-w-xl text-sm leading-6 text-white/45 sm:text-[15px]">
-              Invite people to Rich Dadie and
+              Invite people to REDIQ and
               earn referral rewards when their
               first investment becomes active.
             </p>
@@ -600,7 +600,7 @@ export default function TeamPage() {
                     <p className="mt-1.5 break-all text-2xl font-bold tracking-[0.12em] text-white sm:text-3xl">
                       {safeString(
                         referralCode?.code,
-                      ) || "—"}
+                      ) || "â€”"}
                     </p>
                   </div>
                 </div>
@@ -617,7 +617,7 @@ export default function TeamPage() {
 
                   <div className="mt-3 rounded-xl border border-white/6 bg-black/10 px-3 py-3">
                     <p className="break-all text-xs leading-5 text-white/65">
-                      {referralLink || "—"}
+                      {referralLink || "â€”"}
                     </p>
                   </div>
 
@@ -1012,7 +1012,7 @@ export default function TeamPage() {
 
                 <p className="text-[11px] leading-5 text-white/30">
                   Referral rewards are applied
-                  according to Rich Dadie&apos;s
+                  according to REDIQ&apos;s
                   referral program rules. Member
                   status and reward information may
                   update as referrals qualify.

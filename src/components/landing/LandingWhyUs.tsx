@@ -1,4 +1,4 @@
-
+﻿
 import {
   ArrowUpRight,
   BarChart3,
@@ -30,7 +30,7 @@ const benefits = [
     icon: Gift,
     number: '04',
     title: 'Referral rewards',
-    text: 'Invite eligible friends through the Rich-Dadie referral program and track eligible rewards from your account.',
+    text: 'Invite eligible friends through the REDIQ referral program and track eligible rewards from your account.',
   },
 ];
 
@@ -57,7 +57,7 @@ export default function LandingWhyUs() {
             </h2>
 
             <p className="mt-5 max-w-lg text-sm leading-7 text-white/40 sm:text-base">
-              Rich-Dadie brings your investment plans, deposits,
+              REDIQ brings your investment plans, deposits,
               portfolio activity, and account information together
               in one platform.
             </p>
@@ -109,7 +109,7 @@ export default function LandingWhyUs() {
 
                   <div className="mt-5 flex items-center justify-between border-t border-white/6 pt-4">
                     <span className="text-[9px] font-bold uppercase tracking-[0.12em] text-white/20">
-                      Rich-Dadie
+                      REDIQ
                     </span>
 
                     <ArrowUpRight
@@ -126,4 +126,5 @@ export default function LandingWhyUs() {
     </section>
   );
 }
+
 

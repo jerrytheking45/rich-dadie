@@ -1,4 +1,4 @@
-
+﻿
 //src/app/(auth)/verify/page.tsx
 
 'use client';
@@ -268,7 +268,7 @@ export default function VerifyPage() {
 
             <div className="mt-6 flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-white/25">
               <ShieldCheck size={13} className="text-emerald-300" />
-              Rich-Dadie Investment
+              REDIQ Investment
             </div>
           </div>
         </div>
@@ -289,13 +289,13 @@ export default function VerifyPage() {
         <div className="mb-7 flex justify-center">
           <Link
             href="/"
-            aria-label="Rich-Dadie home"
+            aria-label="REDIQ home"
             className="group flex items-center gap-3"
           >
             <div className="relative h-12 w-12 overflow-hidden rounded-[15px] bg-white/95 shadow-xl shadow-black/20">
               <Image
                 src="/images/logo.png"
-                alt="Rich-Dadie"
+                alt="REDIQ"
                 fill
                 sizes="48px"
                 className="object-contain p-1.5"
@@ -307,7 +307,7 @@ export default function VerifyPage() {
 
             <div className="leading-tight">
               <p className="text-base font-black tracking-tight text-white">
-                Rich-Dadie
+                REDIQ
               </p>
               <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/30">
                 Investment

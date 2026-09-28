@@ -1,4 +1,4 @@
-
+﻿
 "use client";
 
 import Image from "next/image";
@@ -114,7 +114,7 @@ export default function ResetPasswordForm() {
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[14px] border border-white/15 bg-white/10 shadow-[0_8px_30px_rgba(45,212,191,0.18)]">
                     <Image
                       src="/images/logo.png"
-                      alt="Rich Dadie logo"
+                      alt="REDIQ logo"
                       width={44}
                       height={44}
                       priority
@@ -124,7 +124,7 @@ export default function ResetPasswordForm() {
 
                   <div>
                     <p className="text-lg font-bold tracking-tight text-white">
-                      Rich Dadie
+                      REDIQ
                     </p>
                     <p className="text-xs text-white/45">
                       Investment Platform
@@ -173,7 +173,7 @@ export default function ResetPasswordForm() {
               </div>
 
               <p className="relative text-xs text-white/30">
-                Continue securely to the Rich Dadie investment platform.
+                Continue securely to the REDIQ investment platform.
               </p>
             </section>
 
@@ -183,7 +183,7 @@ export default function ResetPasswordForm() {
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[14px] border border-white/15 bg-white/10 shadow-[0_8px_30px_rgba(45,212,191,0.18)]">
                     <Image
                       src="/images/logo.png"
-                      alt="Rich Dadie logo"
+                      alt="REDIQ logo"
                       width={44}
                       height={44}
                       priority
@@ -193,7 +193,7 @@ export default function ResetPasswordForm() {
 
                   <div>
                     <p className="text-lg font-bold tracking-tight text-white">
-                      Rich Dadie
+                      REDIQ
                     </p>
                     <p className="text-xs text-white/45">
                       Investment Platform
@@ -261,7 +261,7 @@ export default function ResetPasswordForm() {
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[14px] border border-white/15 bg-white/10 shadow-[0_8px_30px_rgba(45,212,191,0.18)]">
                   <Image
                     src="/images/logo.png"
-                    alt="Rich Dadie logo"
+                    alt="REDIQ logo"
                     width={44}
                     height={44}
                     priority
@@ -271,7 +271,7 @@ export default function ResetPasswordForm() {
 
                 <div>
                   <p className="text-lg font-bold tracking-tight text-white">
-                    Rich Dadie
+                    REDIQ
                   </p>
                   <p className="text-xs text-white/45">
                     Investment Platform
@@ -296,7 +296,7 @@ export default function ResetPasswordForm() {
                 </h1>
 
                 <p className="mt-6 max-w-md text-base leading-7 text-white/55">
-                  Choose a strong password for your Rich Dadie account. Once
+                  Choose a strong password for your REDIQ account. Once
                   updated, you can securely sign back into your dashboard.
                 </p>
               </div>
@@ -342,7 +342,7 @@ export default function ResetPasswordForm() {
             </div>
 
             <p className="relative text-xs text-white/30">
-              Keep your Rich Dadie account credentials private.
+              Keep your REDIQ account credentials private.
             </p>
           </section>
 
@@ -352,7 +352,7 @@ export default function ResetPasswordForm() {
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[14px] border border-white/15 bg-white/10 shadow-[0_8px_30px_rgba(45,212,191,0.18)]">
                   <Image
                     src="/images/logo.png"
-                    alt="Rich Dadie logo"
+                    alt="REDIQ logo"
                     width={44}
                     height={44}
                     priority
@@ -362,7 +362,7 @@ export default function ResetPasswordForm() {
 
                 <div>
                   <p className="text-lg font-bold tracking-tight text-white">
-                    Rich Dadie
+                    REDIQ
                   </p>
                   <p className="text-xs text-white/45">
                     Investment Platform
@@ -612,4 +612,5 @@ export default function ResetPasswordForm() {
     </main>
   );
 }
+
 

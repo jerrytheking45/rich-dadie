@@ -1,4 +1,4 @@
-
+﻿
 import {
   ArrowDownRight,
   BarChart3,
@@ -13,7 +13,7 @@ const steps = [
     number: '01',
     icon: Users,
     title: 'Create your account',
-    text: 'Register and set up your Rich-Dadie investment account in a few simple steps.',
+    text: 'Register and set up your REDIQ investment account in a few simple steps.',
     accent: 'Account',
   },
   {
@@ -170,4 +170,5 @@ export default function LandingHowItWorks() {
     </section>
   );
 }
+
 

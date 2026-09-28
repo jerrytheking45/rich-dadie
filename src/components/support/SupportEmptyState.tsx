@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import {
   MessageCircle,
@@ -28,7 +28,7 @@ export default function SupportEmptyState({
         <div className="mt-5">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/10 bg-emerald-400/8 px-3 py-1 text-[9px] font-black uppercase tracking-widest text-emerald-300">
             <ShieldCheck size={11} />
-            Rich Dadie Support
+            REDIQ Support
           </span>
         </div>
 

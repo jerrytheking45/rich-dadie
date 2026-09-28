@@ -1,4 +1,4 @@
-
+﻿
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -13,7 +13,7 @@ import {
 const navigation = [
   { label: 'Plans', href: '#plans' },
   { label: 'How it works', href: '#how-it-works' },
-  { label: 'Why Rich-Dadie', href: '#why-us' },
+  { label: 'Why REDIQ', href: '#why-us' },
   { label: 'FAQ', href: '#faq' },
 ];
 
@@ -59,7 +59,7 @@ export default function LandingHeader() {
             <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-[13px] bg-white/95 shadow-lg shadow-black/10">
               <Image
                 src="/images/logo.png"
-                alt="Rich-Dadie"
+                alt="REDIQ"
                 fill
                 sizes="40px"
                 className="h-full w-full object-cover"
@@ -71,7 +71,7 @@ export default function LandingHeader() {
 
             <div className="leading-tight">
               <p className="text-sm font-black tracking-tight text-white">
-                Rich-Dadie
+                REDIQ
               </p>
 
               <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/35">
@@ -161,7 +161,7 @@ export default function LandingHeader() {
             <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-xl bg-white/95">
               <Image
                 src="/images/logo.png"
-                alt="Rich-Dadie"
+                alt="REDIQ"
                 fill
                 sizes="36px"
                 className="h-full w-full object-cover"
@@ -170,7 +170,7 @@ export default function LandingHeader() {
 
             <div className="leading-tight">
               <p className="text-sm font-black text-white">
-                Rich-Dadie
+                REDIQ
               </p>
 
               <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-white/35">
@@ -231,4 +231,5 @@ export default function LandingHeader() {
     </>
   );
 }
+
 

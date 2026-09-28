@@ -1,4 +1,4 @@
-
+﻿
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -137,7 +137,7 @@ export default function SearchPage() {
 
             <div className="min-w-0">
               <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-emerald-400/60">
-                Rich Dadie
+                REDIQ
               </p>
 
               <h1 className="mt-0.5 truncate text-[20px] font-extrabold tracking-tight text-white sm:text-[22px]">
@@ -150,7 +150,7 @@ export default function SearchPage() {
             </div>
           </div>
 
-          {/* RIGHT — SEARCH ICON */}
+          {/* RIGHT â€” SEARCH ICON */}
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-purple-400/10 bg-purple-400/10 text-purple-300">
             <Search
               size={17}
@@ -222,7 +222,7 @@ export default function SearchPage() {
               </p>
 
               <p className="mt-0.5 truncate text-xs font-bold text-white/70">
-                “{data.query}”
+                â€œ{data.query}â€
               </p>
             </div>
 
@@ -260,7 +260,7 @@ export default function SearchPage() {
                 </p>
 
                 <p className="mt-1 text-[10px] text-white/30">
-                  Looking through your Rich Dadie account
+                  Looking through your REDIQ account
                 </p>
               </div>
             </div>
@@ -344,7 +344,7 @@ export default function SearchPage() {
         ========================================================= */}
         <div className="pb-2 pt-7 text-center">
           <p className="text-[9px] text-white/20">
-            Rich Dadie Search
+            REDIQ Search
           </p>
 
           <p className="mt-0.5 text-[8px] text-white/15">
@@ -358,3 +358,4 @@ export default function SearchPage() {
     </div>
   );
 }
+

@@ -1,4 +1,4 @@
-
+﻿
 "use client";
 
 import {
@@ -449,7 +449,7 @@ function ResetWithdrawalPINContent() {
 <div className="mx-auto flex h-16 w-16 items-center justify-center overflow-hidden rounded-[22px] border border-white/10   shadow-black/20">
   <Image
     src="/images/logo.png"
-    alt="Rich Dadie"
+    alt="REDIQ"
     width={64}
     height={64}
     priority
@@ -683,4 +683,5 @@ export default function ResetWithdrawalPINPage() {
     </Suspense>
   );
 }
+
 

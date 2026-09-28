@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   Check,
@@ -144,7 +144,7 @@ function formatDate(value: string): string {
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
-    return "—";
+    return "â€”";
   }
 
   return date.toLocaleString();
@@ -161,7 +161,7 @@ function valuePreview(
 
   if (setting.value_type === "JSON") {
     return setting.value.length > 100
-      ? `${setting.value.slice(0, 100)}…`
+      ? `${setting.value.slice(0, 100)}â€¦`
       : setting.value;
   }
 
@@ -626,7 +626,7 @@ export default function PlatformSettingsManagement() {
 
             <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
               Manage runtime configuration used
-              across the Rich Dadie investment
+              across the REDIQ investment
               platform.
             </p>
           </div>
@@ -895,7 +895,7 @@ export default function PlatformSettingsManagement() {
                                     {formatDate(
                                       setting.updated_at,
                                     )}
-                                    {" · "}
+                                    {" Â· "}
                                     {
                                       categoryLabels[
                                         setting

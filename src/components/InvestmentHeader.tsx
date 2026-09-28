@@ -1,4 +1,4 @@
-
+﻿
 // src/components/InvestmentHeader.tsx
 'use client';
 
@@ -66,7 +66,7 @@ export default function InvestmentHeader({
     <>
       <header className="flex w-full items-center justify-between gap-3">
         {/* ----------------------------------------------------------
-            LEFT — USER PROFILE
+            LEFT â€” USER PROFILE
         ----------------------------------------------------------- */}
         <div className="flex min-w-0 items-center gap-3">
           <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-[15px] border border-white/10 bg-[#101D33] shadow-lg shadow-black/10">
@@ -110,7 +110,7 @@ export default function InvestmentHeader({
         </div>
 
         {/* ----------------------------------------------------------
-            RIGHT — HEADER ACTIONS
+            RIGHT â€” HEADER ACTIONS
         ----------------------------------------------------------- */}
         <div className="flex shrink-0 items-center gap-2">
 
@@ -282,7 +282,7 @@ export default function InvestmentHeader({
             {/* MODAL FOOTER */}
             <div className="border-t border-white/8 px-5 py-3.5">
               <p className="text-center text-[9px] text-white/25">
-                Rich Dadie language preferences
+                REDIQ language preferences
               </p>
             </div>
           </div>
@@ -291,3 +291,4 @@ export default function InvestmentHeader({
     </>
   );
 }
+

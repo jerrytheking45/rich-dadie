@@ -1,4 +1,4 @@
-
+﻿
 // src/components/withdraw/WithdrawalPINManager.tsx
 
 "use client";
@@ -808,7 +808,7 @@ export default function WithdrawalPINManager({
 
           <p className="text-center text-[10px] leading-5 text-slate-600">
             Never share your Wallet PIN with anyone.
-            Rich Dadie support will never ask you for it.
+            REDIQ support will never ask you for it.
           </p>
         </div>
       </div>

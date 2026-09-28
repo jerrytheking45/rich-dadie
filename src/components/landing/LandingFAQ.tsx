@@ -1,4 +1,4 @@
-
+﻿
 import {
   ChevronDown,
   CircleHelp,
@@ -8,12 +8,12 @@ const faqs = [
   {
     question: 'How do I get started?',
     answer:
-      'Create a Rich-Dadie account, complete the required account setup, fund your account using an available deposit option, and explore the published investment plans.',
+      'Create a REDIQ account, complete the required account setup, fund your account using an available deposit option, and explore the published investment plans.',
   },
   {
     question: 'Where can I see available investment plans?',
     answer:
-      'Published investment plans are displayed on the public Rich-Dadie website. After signing in, you can also browse investment opportunities from your account.',
+      'Published investment plans are displayed on the public REDIQ website. After signing in, you can also browse investment opportunities from your account.',
   },
   {
     question: 'Can I track my investments?',
@@ -28,7 +28,7 @@ const faqs = [
   {
     question: 'How does the referral program work?',
     answer:
-      'After creating an account, eligible users can invite friends through the Rich-Dadie referral program and track eligible rewards from their account.',
+      'After creating an account, eligible users can invite friends through the REDIQ referral program and track eligible rewards from their account.',
   },
 ];
 
@@ -55,7 +55,7 @@ export default function LandingFAQ() {
           </h2>
 
           <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-white/40">
-            A few answers to common questions about the Rich-Dadie
+            A few answers to common questions about the REDIQ
             platform, investment plans, and account experience.
           </p>
         </div>
@@ -97,4 +97,5 @@ export default function LandingFAQ() {
     </section>
   );
 }
+
 

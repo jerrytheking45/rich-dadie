@@ -1,4 +1,4 @@
-
+﻿
 "use client";
 
 import Image from "next/image";
@@ -80,7 +80,7 @@ export default function ForgotPasswordPage() {
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[14px] border border-white/15 bg-white/10 shadow-[0_8px_30px_rgba(45,212,191,0.18)]">
                   <Image
                     src="/images/logo.png"
-                    alt="Rich Dadie logo"
+                    alt="REDIQ logo"
                     width={44}
                     height={44}
                     priority
@@ -90,7 +90,7 @@ export default function ForgotPasswordPage() {
 
                 <div>
                   <p className="text-lg font-bold tracking-tight text-white">
-                    Rich Dadie
+                    REDIQ
                   </p>
                   <p className="text-xs text-white/45">
                     Investment Platform
@@ -112,7 +112,7 @@ export default function ForgotPasswordPage() {
                 </h1>
 
                 <p className="mt-6 max-w-md text-base leading-7 text-white/55">
-                  Enter the email address connected to your account and we’ll
+                  Enter the email address connected to your account and weâ€™ll
                   help you reset your password securely.
                 </p>
               </div>
@@ -167,7 +167,7 @@ export default function ForgotPasswordPage() {
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[14px] border border-white/15 bg-white/10 shadow-[0_8px_30px_rgba(45,212,191,0.18)]">
                   <Image
                     src="/images/logo.png"
-                    alt="Rich Dadie logo"
+                    alt="REDIQ logo"
                     width={44}
                     height={44}
                     priority
@@ -177,7 +177,7 @@ export default function ForgotPasswordPage() {
 
                 <div>
                   <p className="text-lg font-bold tracking-tight text-white">
-                    Rich Dadie
+                    REDIQ
                   </p>
                   <p className="text-xs text-white/45">
                     Investment Platform
@@ -235,7 +235,7 @@ export default function ForgotPasswordPage() {
                     </h2>
 
                     <p className="mt-3 text-sm leading-6 text-white/45">
-                      Enter your email address and we’ll send you a secure
+                      Enter your email address and weâ€™ll send you a secure
                       password reset link.
                     </p>
                   </div>
@@ -330,4 +330,5 @@ export default function ForgotPasswordPage() {
     </main>
   );
 }
+
 

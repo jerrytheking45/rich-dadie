@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   ArrowLeft,
@@ -390,7 +390,7 @@ const [loggingOut, setLoggingOut] = useState(false);
                     </p>
 
                     <p className="mt-1 text-sm font-semibold text-white/75">
-                      Manage your Rich Dadie account
+                      Manage your REDIQ account
                     </p>
 
                     <p className="mt-1 text-[10px] leading-5 text-white/35">
@@ -600,7 +600,7 @@ const [loggingOut, setLoggingOut] = useState(false);
 
                     <p className="mt-0.5 text-[10px] text-white/35">
                       Select the currency used throughout
-                      Rich Dadie
+                      REDIQ
                     </p>
                   </div>
                 </div>
@@ -688,7 +688,7 @@ const [loggingOut, setLoggingOut] = useState(false);
 
               <div className="border-t border-white/8 px-5 py-3.5">
                 <p className="text-center text-[9px] text-white/25">
-                  Rich Dadie currency preferences
+                  REDIQ currency preferences
                 </p>
               </div>
             </div>
@@ -815,7 +815,7 @@ const [loggingOut, setLoggingOut] = useState(false);
 
               <div className="border-t border-white/8 px-5 py-3.5">
                 <p className="text-center text-[9px] text-white/25">
-                  Rich Dadie language preferences
+                  REDIQ language preferences
                 </p>
               </div>
             </div>
@@ -845,7 +845,7 @@ const [loggingOut, setLoggingOut] = useState(false);
 
         <div className="pb-2 pt-6 text-center">
           <p className="text-[9px] text-white/20">
-            Rich Dadie Employee Investment
+            REDIQ Employee Investment
           </p>
 
           <p className="mt-0.5 text-[8px] text-white/15">

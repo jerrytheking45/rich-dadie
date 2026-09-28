@@ -1,4 +1,4 @@
-
+﻿
 "use client";
 
 import Image from "next/image";
@@ -110,7 +110,7 @@ export default function LoginForm() {
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[14px] border border-white/15 bg-white/10 shadow-[0_8px_30px_rgba(45,212,191,0.18)]">
                   <Image
                     src="/images/logo.png"
-                    alt="Rich Dadie logo"
+                    alt="REDIQ logo"
                     width={44}
                     height={44}
                     priority
@@ -120,7 +120,7 @@ export default function LoginForm() {
 
                 <div>
                   <p className="text-lg font-bold tracking-tight text-white">
-                    Rich Dadie
+                    REDIQ
                   </p>
 
                   <p className="text-xs text-white/45">
@@ -199,7 +199,7 @@ export default function LoginForm() {
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[14px] border border-white/15 bg-white/10 shadow-[0_8px_30px_rgba(45,212,191,0.18)]">
                   <Image
                     src="/images/logo.png"
-                    alt="Rich Dadie logo"
+                    alt="REDIQ logo"
                     width={44}
                     height={44}
                     priority
@@ -209,7 +209,7 @@ export default function LoginForm() {
 
                 <div>
                   <p className="text-lg font-bold tracking-tight text-white">
-                    Rich Dadie
+                    REDIQ
                   </p>
 
                   <p className="text-xs text-white/45">
@@ -422,4 +422,5 @@ export default function LoginForm() {
     </main>
   );
 }
+
 

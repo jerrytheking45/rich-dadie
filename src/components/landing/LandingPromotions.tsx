@@ -1,4 +1,4 @@
-
+﻿
 import {
   ArrowRight,
   Megaphone,
@@ -26,7 +26,7 @@ export default function LandingPromotions() {
             <h2 className="mt-5 text-3xl font-black tracking-[-0.03em] text-white sm:text-4xl lg:text-5xl">
               Discover what is
               <span className="block text-white/35">
-                happening on Rich-Dadie.
+                happening on REDIQ.
               </span>
             </h2>
 
@@ -82,4 +82,5 @@ export default function LandingPromotions() {
     </section>
   );
 }
+
 

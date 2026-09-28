@@ -1,4 +1,4 @@
-
+﻿
 import Link from 'next/link';
 import {
   ArrowRight,
@@ -33,7 +33,7 @@ export default function LandingFinalCTA() {
             </h2>
 
             <p className="mx-auto mt-5 max-w-xl text-sm leading-7 text-white/40 sm:text-base">
-              Create your Rich-Dadie account and explore the
+              Create your REDIQ account and explore the
               investment opportunities currently available on the
               platform.
             </p>
@@ -90,4 +90,5 @@ export default function LandingFinalCTA() {
     </section>
   );
 }
+
 

@@ -1,4 +1,4 @@
-
+﻿
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -51,7 +51,7 @@ export default function LandingPlans({
 
             <p className="mt-5 max-w-xl text-sm leading-7 text-white/40 sm:text-base">
               Browse the investment plans currently published on
-              Rich-Dadie. Review the available details before
+              REDIQ. Review the available details before
               deciding which opportunity works for you.
             </p>
           </div>
@@ -231,11 +231,12 @@ export default function LandingPlans({
             href="#faq"
             className="shrink-0 text-[10px] font-bold text-white/40 transition hover:text-[#F7C948]"
           >
-            Have questions? View FAQ →
+            Have questions? View FAQ â†’
           </a>
         </div>
       </div>
     </section>
   );
 }
+
 

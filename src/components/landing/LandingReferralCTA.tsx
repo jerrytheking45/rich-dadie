@@ -1,4 +1,4 @@
-
+﻿
 import Link from 'next/link';
 import {
   ArrowRight,
@@ -41,7 +41,7 @@ export default function LandingReferralCTA() {
 
               <p className="mt-5 max-w-xl text-sm leading-7 text-white/40 sm:text-base">
                 Once you have an account, invite eligible friends
-                through the Rich-Dadie referral program and track
+                through the REDIQ referral program and track
                 eligible rewards directly from your account.
               </p>
 
@@ -62,7 +62,7 @@ export default function LandingReferralCTA() {
               href="/register"
               className="group inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#F7C948] px-7 py-3.5 text-sm font-black text-[#050B18] shadow-xl shadow-black/20 transition hover:-translate-y-0.5 hover:bg-[#FFD96A] sm:w-fit"
             >
-              Join Rich-Dadie
+              Join REDIQ
 
               <ArrowRight
                 size={16}
@@ -75,3 +75,4 @@ export default function LandingReferralCTA() {
     </section>
   );
 }
+
