@@ -1,4 +1,4 @@
-package com.rediq.app;
+package com.rediq.investment;
 
 import com.getcapacitor.BridgeActivity;
 

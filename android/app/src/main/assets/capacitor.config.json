@@ -1,10 +1,19 @@
 {
-	"appId": "com.rediq.app",
+	"appId": "com.rediq.investment",
 	"appName": "REDIQ",
 	"webDir": "public",
 	"server": {
 		"url": "https://rediq.vercel.app",
 		"cleartext": false,
 		"androidScheme": "https"
+	},
+	"plugins": {
+		"PushNotifications": {
+			"presentationOptions": [
+				"badge",
+				"sound",
+				"alert"
+			]
+		}
 	}
 }

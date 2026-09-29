@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "496123343916",
+    "project_id": "rediq-b81f2",
+    "storage_bucket": "rediq-b81f2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:496123343916:android:1202b2aa8963305e234d89",
+        "android_client_info": {
+          "package_name": "com.rediq.investment"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBaJG_VZvpTIU6vWAESOzuZADipAPzsK4c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

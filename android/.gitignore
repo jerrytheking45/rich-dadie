@@ -6,3 +6,10 @@ local.properties
 
 # Android Studio / IntelliJ project metadata
 .idea/
+
+# Release signing credentials
+rediq-release.jks
+keystore.properties
+
+# Local APK output
+rediq.apk
