@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import {
@@ -11,7 +11,7 @@ import { useRouter } from 'next/navigation';
 
 import { isZeroUUID } from '@/src/lib/utils/uuid';
 
-//import InvestmentBottomNav from '@/src/components/InvestmentBottomNav';
+import SearchModal from '@/src/components/search/SearchModal';
 import InvestmentHeader from '@/src/components/InvestmentHeader';
 import BalanceCard from '@/src/components/BalanceCard';
 import InvestmentCard from '@/src/components/InvestmentCard';
@@ -35,6 +35,9 @@ export default function Home() {
 
   const [balanceSummary, setBalanceSummary] =
     useState<BalanceSummary | null>(null);
+
+  const [searchOpen, setSearchOpen] =
+  useState(false);
 
   const [plans, setPlans] = useState<InvestmentPlan[]>([]);
   const [investments, setInvestments] = useState<Investment[]>([]);
@@ -198,11 +201,9 @@ export default function Home() {
 
         {/* Header */}
         <InvestmentHeader
-          name={displayName}
-          onSearch={() =>
-            router.push('/investment/search')
-          }
-        />
+  name={displayName}
+  onSearch={() => setSearchOpen(true)}
+/>
 
         {/* Welcome */}
         <section className="mt-7">
@@ -356,6 +357,10 @@ export default function Home() {
         </section>
       </main>
 
+<SearchModal
+  open={searchOpen}
+  onClose={() => setSearchOpen(false)}
+/>
       <SupportFloatingButton />
     </>
   );
