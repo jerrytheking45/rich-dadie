@@ -351,72 +351,82 @@ export default function SupportFloatingButton({
   // Keep all existing logic above unchanged.
 
 return (
-  <button
-    type="button"
-    onPointerDown={handlePointerDown}
-    onPointerMove={handlePointerMove}
-    onPointerUp={handlePointerUp}
-    onPointerCancel={handlePointerUp}
-    onClick={handleClick}
-    aria-label={
-      unreadCount > 0
-        ? `Customer support, ${unreadCount} unread messages`
-        : 'Customer support'
-    }
-    title="Customer support"
+  <div
+    className="fixed z-40"
     style={{
       left: position.x,
       top: position.y,
-      touchAction: 'none',
+      width: BUTTON_SIZE,
+      height: BUTTON_SIZE,
     }}
-    className={[
-      'fixed z-40 overflow-hidden',
-      'flex h-14 w-14 items-center justify-center',
-      'rounded-full',
-      'border border-emerald-300/20',
-      'bg-linear-to-br from-emerald-400 via-emerald-500 to-teal-500',
-      'text-[#04110B]',
-      'shadow-xl shadow-emerald-950/30',
-      'select-none',
-      dragging
-        ? 'cursor-grabbing scale-105'
-        : 'cursor-grab',
-      dragging
-        ? ''
-        : 'transition-transform duration-200',
-      'hover:scale-105',
-      'active:scale-95',
-      'focus:outline-none',
-      'focus:ring-2 focus:ring-emerald-300/30',
-      className,
-    ].join(' ')}
   >
-    <Image
-  src="/images/service.jpg"
-  alt=""
-  fill
-  sizes="56px"
-  priority
-  className="rounded-full object-cover"
-  draggable={false}
-/>
+    <button
+      type="button"
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
+      onClick={handleClick}
+      aria-label={
+        unreadCount > 0
+          ? `Customer support, ${unreadCount} unread messages`
+          : 'Customer support'
+      }
+      title="Customer support"
+      style={{
+        touchAction: 'none',
+      }}
+      className={[
+        'relative',
+        'flex h-14 w-14 items-center justify-center',
+        'overflow-hidden rounded-full',
+        'border border-emerald-300/20',
+        'bg-linear-to-br from-emerald-400 via-emerald-500 to-teal-500',
+        'text-[#04110B]',
+        'shadow-xl shadow-emerald-950/30',
+        'select-none',
+        dragging
+          ? 'cursor-grabbing scale-105'
+          : 'cursor-grab',
+        dragging
+          ? ''
+          : 'transition-transform duration-200',
+        'hover:scale-105',
+        'active:scale-95',
+        'focus:outline-none',
+        'focus:ring-2 focus:ring-emerald-300/30',
+        className,
+      ].join(' ')}
+    >
+      <Image
+        src="/images/service.jpg"
+        alt=""
+        fill
+        sizes="56px"
+        priority
+        className="rounded-full object-cover"
+        draggable={false}
+      />
+    </button>
 
     {unreadCount > 0 && (
       <span
         className={[
-          'absolute -right-1 -top-1',
-          'flex min-h-5 min-w-5 items-center justify-center',
-          'rounded-full border-2 border-[#07101F]',
-          'bg-rose-500 px-1',
-          'text-[9px] font-black leading-none text-white',
-          'shadow-lg shadow-rose-950/30',
+          'pointer-events-none absolute',
+          '-right-3 -top-1',
+          'flex min-h-6 min-w-6 items-center justify-center',
+          'rounded-full',
+          'border-2 border-[#f5f6f8]',
+          'bg-rose-500',
+          'px-1.5',
+          'text-[10px] font-black leading-none text-white',
+          'shadow-lg shadow-rose-950/40',
+          'ring-2 ring-rose-500/20',
         ].join(' ')}
       >
-        {unreadCount > 9
-          ? '9+'
-          : unreadCount}
+        {unreadCount > 9 ? '9+' : unreadCount}
       </span>
     )}
-  </button>
+  </div>
 );
 }
