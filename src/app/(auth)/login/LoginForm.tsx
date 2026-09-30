@@ -1,5 +1,4 @@
-﻿
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import { useEffect, useState, type FormEvent } from "react";
@@ -76,7 +75,7 @@ export default function LoginForm() {
       setError(
         apiError.response?.data?.error ||
           apiError.message ||
-          "Login failed. Please try again.",
+          "Login failed. Please try again."
       );
     } finally {
       setLoading(false);
@@ -123,9 +122,7 @@ export default function LoginForm() {
                     REDIQ
                   </p>
 
-                  <p className="text-xs text-white/45">
-                    Investment Platform
-                  </p>
+                  <p className="text-xs text-white/45">Investment Platform</p>
                 </div>
               </div>
 
@@ -212,9 +209,7 @@ export default function LoginForm() {
                     REDIQ
                   </p>
 
-                  <p className="text-xs text-white/45">
-                    Investment Platform
-                  </p>
+                  <p className="text-xs text-white/45">Investment Platform</p>
                 </div>
               </div>
 
@@ -240,17 +235,12 @@ export default function LoginForm() {
                   role="alert"
                   className="mt-6 rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3.5"
                 >
-                  <p className="text-sm leading-5 text-red-300">
-                    {error}
-                  </p>
+                  <p className="text-sm leading-5 text-red-300">{error}</p>
                 </div>
               )}
 
               {/* Login form */}
-              <form
-                className="mt-8 space-y-5"
-                onSubmit={handleSubmit}
-              >
+              <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
                 {/* Email */}
                 <div>
                   <label
@@ -318,31 +308,17 @@ export default function LoginForm() {
 
                     <button
                       type="button"
-                      onClick={() =>
-                        setShowPassword((previous) => !previous)
-                      }
+                      onClick={() => setShowPassword((previous) => !previous)}
                       className="absolute right-0 top-0 flex h-14 w-12 items-center justify-center rounded-r-2xl text-white/30 transition-colors hover:text-white/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60"
                       aria-label={
-                        showPassword
-                          ? "Hide password"
-                          : "Show password"
+                        showPassword ? "Hide password" : "Show password"
                       }
-                      title={
-                        showPassword
-                          ? "Hide password"
-                          : "Show password"
-                      }
+                      title={showPassword ? "Hide password" : "Show password"}
                     >
                       {showPassword ? (
-                        <EyeOff
-                          className="h-5 w-5"
-                          aria-hidden="true"
-                        />
+                        <EyeOff className="h-5 w-5" aria-hidden="true" />
                       ) : (
-                        <Eye
-                          className="h-5 w-5"
-                          aria-hidden="true"
-                        />
+                        <Eye className="h-5 w-5" aria-hidden="true" />
                       )}
                     </button>
                   </div>
@@ -411,8 +387,14 @@ export default function LoginForm() {
               {/* Footer */}
               <div className="mt-8 border-t border-white/8 pt-5 text-center">
                 <p className="text-[11px] leading-5 text-white/25">
-                  By continuing, you agree to the terms and conditions of the
-                  platform.
+                  By continuing, you agree to the{" "}
+                  <Link
+                    href="/terms"
+                    className="font-semibold text-emerald-300 transition-colors hover:text-emerald-200"
+                  >
+                    Terms & Conditions
+                  </Link>{" "}
+                  of the platform.
                 </p>
               </div>
             </div>
@@ -422,5 +404,3 @@ export default function LoginForm() {
     </main>
   );
 }
-
-

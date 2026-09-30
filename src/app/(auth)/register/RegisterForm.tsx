@@ -1,5 +1,4 @@
-﻿
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import { useEffect, useState, type FormEvent } from "react";
@@ -81,19 +80,14 @@ export default function RegisterForm() {
     setLoading(true);
 
     try {
-      await register(
-        trimmedEmail,
-        password,
-        trimmedName,
-        referralCode,
-      );
+      await register(trimmedEmail, password, trimmedName, referralCode);
     } catch (err: unknown) {
       const apiError = err as ApiError;
 
       setError(
         apiError.response?.data?.error ||
           apiError.message ||
-          "Registration failed. Please try again.",
+          "Registration failed. Please try again."
       );
     } finally {
       setLoading(false);
@@ -148,9 +142,7 @@ export default function RegisterForm() {
                     REDIQ
                   </p>
 
-                  <p className="text-xs text-white/45">
-                    Investment Platform
-                  </p>
+                  <p className="text-xs text-white/45">Investment Platform</p>
                 </div>
               </div>
 
@@ -170,8 +162,7 @@ export default function RegisterForm() {
 
                 <p className="mt-6 max-w-md text-base leading-7 text-white/55">
                   Create your account and access your investments, wallet,
-                  transactions and account activity from one secure
-                  dashboard.
+                  transactions and account activity from one secure dashboard.
                 </p>
               </div>
 
@@ -246,9 +237,7 @@ export default function RegisterForm() {
                     REDIQ
                   </p>
 
-                  <p className="text-xs text-white/45">
-                    Investment Platform
-                  </p>
+                  <p className="text-xs text-white/45">Investment Platform</p>
                 </div>
               </div>
 
@@ -273,17 +262,12 @@ export default function RegisterForm() {
                   role="alert"
                   className="mt-6 rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3.5"
                 >
-                  <p className="text-sm leading-5 text-red-300">
-                    {error}
-                  </p>
+                  <p className="text-sm leading-5 text-red-300">{error}</p>
                 </div>
               )}
 
               {/* Registration form */}
-              <form
-                className="mt-8 space-y-5"
-                onSubmit={handleSubmit}
-              >
+              <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
                 {/* Full name */}
                 <div>
                   <label
@@ -372,31 +356,17 @@ export default function RegisterForm() {
 
                     <button
                       type="button"
-                      onClick={() =>
-                        setShowPassword((previous) => !previous)
-                      }
+                      onClick={() => setShowPassword((previous) => !previous)}
                       className="absolute right-0 top-0 flex h-14 w-12 items-center justify-center rounded-r-2xl text-white/30 transition-colors hover:text-white/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60"
                       aria-label={
-                        showPassword
-                          ? "Hide password"
-                          : "Show password"
+                        showPassword ? "Hide password" : "Show password"
                       }
-                      title={
-                        showPassword
-                          ? "Hide password"
-                          : "Show password"
-                      }
+                      title={showPassword ? "Hide password" : "Show password"}
                     >
                       {showPassword ? (
-                        <EyeOff
-                          className="h-5 w-5"
-                          aria-hidden="true"
-                        />
+                        <EyeOff className="h-5 w-5" aria-hidden="true" />
                       ) : (
-                        <Eye
-                          className="h-5 w-5"
-                          aria-hidden="true"
-                        />
+                        <Eye className="h-5 w-5" aria-hidden="true" />
                       )}
                     </button>
                   </div>
@@ -420,11 +390,7 @@ export default function RegisterForm() {
                     <input
                       id="confirmPassword"
                       name="confirmPassword"
-                      type={
-                        showConfirmPassword
-                          ? "text"
-                          : "password"
-                      }
+                      type={showConfirmPassword ? "text" : "password"}
                       autoComplete="new-password"
                       required
                       minLength={8}
@@ -439,9 +405,7 @@ export default function RegisterForm() {
                     <button
                       type="button"
                       onClick={() =>
-                        setShowConfirmPassword(
-                          (previous) => !previous,
-                        )
+                        setShowConfirmPassword((previous) => !previous)
                       }
                       className="absolute right-0 top-0 flex h-14 w-12 items-center justify-center rounded-r-2xl text-white/30 transition-colors hover:text-white/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60"
                       aria-label={
@@ -456,15 +420,9 @@ export default function RegisterForm() {
                       }
                     >
                       {showConfirmPassword ? (
-                        <EyeOff
-                          className="h-5 w-5"
-                          aria-hidden="true"
-                        />
+                        <EyeOff className="h-5 w-5" aria-hidden="true" />
                       ) : (
-                        <Eye
-                          className="h-5 w-5"
-                          aria-hidden="true"
-                        />
+                        <Eye className="h-5 w-5" aria-hidden="true" />
                       )}
                     </button>
                   </div>
@@ -479,10 +437,7 @@ export default function RegisterForm() {
 
                     {passwordLengthValid && passwordsMatch && (
                       <span className="flex items-center gap-1 text-xs font-medium text-emerald-300">
-                        <Check
-                          className="h-3.5 w-3.5"
-                          aria-hidden="true"
-                        />
+                        <Check className="h-3.5 w-3.5" aria-hidden="true" />
                         Ready
                       </span>
                     )}
@@ -504,38 +459,26 @@ export default function RegisterForm() {
                         }`}
                       >
                         {passwordLengthValid && (
-                          <Check
-                            className="h-3 w-3"
-                            aria-hidden="true"
-                          />
+                          <Check className="h-3 w-3" aria-hidden="true" />
                         )}
                       </span>
-
                       At least 8 characters
                     </div>
 
                     <div
                       className={`flex items-center gap-2 text-xs ${
-                        passwordsMatch
-                          ? "text-emerald-300"
-                          : "text-white/35"
+                        passwordsMatch ? "text-emerald-300" : "text-white/35"
                       }`}
                     >
                       <span
                         className={`flex h-5 w-5 items-center justify-center rounded-full ${
-                          passwordsMatch
-                            ? "bg-emerald-400/15"
-                            : "bg-white/5"
+                          passwordsMatch ? "bg-emerald-400/15" : "bg-white/5"
                         }`}
                       >
                         {passwordsMatch && (
-                          <Check
-                            className="h-3 w-3"
-                            aria-hidden="true"
-                          />
+                          <Check className="h-3 w-3" aria-hidden="true" />
                         )}
                       </span>
-
                       Passwords match
                     </div>
                   </div>
@@ -595,8 +538,14 @@ export default function RegisterForm() {
               {/* Footer */}
               <div className="mt-8 border-t border-white/8 pt-5 text-center">
                 <p className="text-[11px] leading-5 text-white/25">
-                  By creating an account, you agree to the terms and
-                  conditions of the platform.
+                  By creating an account, you agree to the{" "}
+                  <Link
+                    href="/terms"
+                    className="font-semibold text-emerald-300 transition-colors hover:text-emerald-200"
+                  >
+                    Terms & Conditions
+                  </Link>{" "}
+                  of the platform.
                 </p>
               </div>
             </div>
@@ -606,5 +555,3 @@ export default function RegisterForm() {
     </main>
   );
 }
-
-

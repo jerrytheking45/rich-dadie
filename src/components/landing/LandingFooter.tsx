@@ -1,27 +1,24 @@
-﻿
-import Image from 'next/image';
-import Link from 'next/link';
-import {
-  ArrowUpRight,
-  ShieldCheck,
-} from 'lucide-react';
+﻿import Image from "next/image";
+import Link from "next/link";
+import { ArrowUpRight, ShieldCheck } from "lucide-react";
 
 const footerLinks = [
   {
-    label: 'Explore',
+    label: "Explore",
     links: [
-      { label: 'Investment plans', href: '#plans' },
-      { label: 'How it works', href: '#how-it-works' },
-      { label: 'Why REDIQ', href: '#why-us' },
+      { label: "Investment plans", href: "#plans" },
+      { label: "How it works", href: "#how-it-works" },
+      { label: "Why REDIQ", href: "#why-us" },
     ],
   },
   {
-    label: 'Account',
+    label: "Account",
     links: [
-      { label: 'Sign in', href: '/login' },
-      { label: 'Register', href: '/register' },
-      { label: 'Download App', href: '/download' },
-      { label: 'FAQ', href: '#faq' },
+      { label: "Sign in", href: "/login" },
+      { label: "Register", href: "/register" },
+      { label: "Download App", href: "/download" },
+      { label: "FAQ", href: "#faq" },
+      { label: "Terms & Conditions", href: "/terms" },
     ],
   },
 ];
@@ -33,10 +30,7 @@ export default function LandingFooter() {
         <div className="grid gap-10 lg:grid-cols-[1.4fr_1fr_1fr]">
           {/* Brand */}
           <div>
-            <Link
-              href="/"
-              className="group inline-flex items-center gap-3"
-            >
+            <Link href="/" className="group inline-flex items-center gap-3">
               <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-[13px]  shadow-lg shadow-black/10">
                 <Image
                   src="/images/logo.png"
@@ -61,16 +55,12 @@ export default function LandingFooter() {
             </Link>
 
             <p className="mt-5 max-w-sm text-xs leading-6 text-white/30">
-              An investment platform for exploring published
-              investment plans, managing your account, and tracking
-              your investment activity.
+              An investment platform for exploring published investment plans,
+              managing your account, and tracking your investment activity.
             </p>
 
             <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-white/7 bg-white/2.5 px-3 py-2 text-[10px] font-semibold text-white/30">
-              <ShieldCheck
-                size={13}
-                className="text-emerald-300"
-              />
+              <ShieldCheck size={13} className="text-emerald-300" />
               Account-focused experience
             </div>
           </div>
@@ -105,18 +95,15 @@ export default function LandingFooter() {
         {/* Bottom */}
         <div className="mt-12 flex flex-col gap-4 border-t border-white/7 pt-6 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-[10px] text-white/20">
-            © {new Date().getFullYear()} REDIQ Investment.
-            All rights reserved.
+            © {new Date().getFullYear()} REDIQ Investment. All rights reserved.
           </p>
 
           <p className="text-[10px] text-white/20">
-            Investment opportunities and platform information are
-            subject to the applicable terms and conditions.
+            Investment opportunities and platform information are subject to the
+            applicable terms and conditions.
           </p>
         </div>
       </div>
     </footer>
   );
 }
-
-
