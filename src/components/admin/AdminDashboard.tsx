@@ -8,6 +8,7 @@ import {
   Users,
   WalletCards,
 } from 'lucide-react';
+import Link from 'next/link';
 
 import {
   adminApi,
@@ -225,13 +226,13 @@ export default function AdminDashboard({
                           </div>
                         </div>
 
-                        <a
-                          href="/admin/deposits"
-                          className="inline-flex w-fit items-center gap-1.5 rounded-xl border border-white/8 bg-white/3 px-3 py-2 text-xs font-semibold text-white/55 transition hover:border-emerald-400/15 hover:bg-emerald-400/6 hover:text-emerald-300"
-                        >
-                          View all
-                          <ArrowRight className="h-3.5 w-3.5" />
-                        </a>
+<Link
+  href="/admin/deposits"
+  className="inline-flex w-fit items-center gap-1.5 rounded-xl border border-white/8 bg-white/3 px-3 py-2 text-xs font-semibold text-white/55 transition hover:border-emerald-400/15 hover:bg-emerald-400/6 hover:text-emerald-300"
+>
+  View all
+  <ArrowRight className="h-3.5 w-3.5" />
+</Link>
                       </div>
                     </div>
 

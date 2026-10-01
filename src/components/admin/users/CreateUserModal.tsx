@@ -66,7 +66,9 @@ export default function CreateUserModal({
     }));
   };
 
-  const submit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const submit = async (
+    event: React.FormEvent<HTMLFormElement>,
+  ) => {
     event.preventDefault();
 
     await onCreate(form);
@@ -85,36 +87,36 @@ export default function CreateUserModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-[#020617]/80 p-4 backdrop-blur-md"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[#020617]/80 p-2 backdrop-blur-md sm:p-4"
       onClick={handleClose}
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="create-user-title"
-        className="max-h-[92vh] w-full max-w-lg overflow-y-auto overflow-hidden rounded-[28px] border border-white/10 bg-[#0B1426] shadow-2xl shadow-black/40"
+        className="flex max-h-[96vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#0B1426] shadow-2xl shadow-black/40 sm:rounded-3xl"
         onClick={(event) => event.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-start justify-between border-b border-white/8 px-6 py-5">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-emerald-400/15 bg-emerald-400/10 text-emerald-300">
-              <UserPlus className="h-5 w-5" />
+        <div className="flex shrink-0 items-start justify-between border-b border-white/8 px-4 py-4 sm:px-6 sm:py-5">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-emerald-400/15 bg-emerald-400/10 text-emerald-300 sm:h-11 sm:w-11 sm:rounded-2xl">
+              <UserPlus className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
 
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-300">
+            <div className="min-w-0">
+              <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-emerald-300">
                 Administration
               </p>
 
               <h2
                 id="create-user-title"
-                className="mt-1 text-xl font-bold text-white"
+                className="mt-0.5 text-lg font-bold text-white sm:text-xl"
               >
                 Create User
               </h2>
 
-              <p className="mt-1 text-xs text-slate-400">
+              <p className="mt-0.5 text-[11px] text-slate-400 sm:text-xs">
                 Add a new platform administrator or employee.
               </p>
             </div>
@@ -125,14 +127,17 @@ export default function CreateUserModal({
             onClick={handleClose}
             disabled={creating}
             aria-label="Close create user modal"
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/8 bg-white/3 text-slate-400 transition hover:bg-white/8 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/8 bg-white/3 text-slate-400 transition hover:bg-white/8 hover:text-white disabled:cursor-not-allowed disabled:opacity-40 sm:h-9 sm:w-9 sm:rounded-xl"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
-        <form onSubmit={submit}>
-          <div className="space-y-4 p-6">
+        <form
+          onSubmit={submit}
+          className="min-h-0 overflow-y-auto"
+        >
+          <div className="space-y-3.5 p-4 sm:space-y-4 sm:p-6">
             <Field
               label="Full name"
               icon={<UserRound className="h-4 w-4" />}
@@ -167,7 +172,7 @@ export default function CreateUserModal({
             />
 
             <div>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-400">
+              <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-400 sm:mb-1.5 sm:text-xs">
                 Temporary password
               </label>
 
@@ -184,12 +189,14 @@ export default function CreateUserModal({
                   onChange={(event) =>
                     update('password', event.target.value)
                   }
-                  className="w-full rounded-xl border border-white/8 bg-[#070F1E] py-2.5 pl-10 pr-11 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-emerald-400/40 focus:ring-2 focus:ring-emerald-400/10"
+                  className="w-full rounded-lg border border-white/8 bg-[#070F1E] py-2.5 pl-10 pr-11 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-emerald-400/40 focus:ring-2 focus:ring-emerald-400/10 sm:rounded-xl"
                 />
 
                 <button
                   type="button"
-                  onClick={() => setShowPassword((current) => !current)}
+                  onClick={() =>
+                    setShowPassword((current) => !current)
+                  }
                   className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-slate-500 transition hover:bg-white/6 hover:text-slate-200"
                   aria-label={
                     showPassword
@@ -205,7 +212,7 @@ export default function CreateUserModal({
                 </button>
               </div>
 
-              <p className="mt-1.5 text-[11px] text-slate-500">
+              <p className="mt-1 text-[10px] text-slate-500 sm:mt-1.5 sm:text-[11px]">
                 Use at least 8 characters. The user can change it later.
               </p>
             </div>
@@ -213,7 +220,7 @@ export default function CreateUserModal({
             <div>
               <label
                 htmlFor="create-user-role"
-                className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-400"
+                className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-400 sm:mb-1.5 sm:text-xs"
               >
                 Role
               </label>
@@ -230,7 +237,7 @@ export default function CreateUserModal({
                       event.target.value as UserRole,
                     )
                   }
-                  className="w-full appearance-none rounded-xl border border-white/8 bg-[#070F1E] py-2.5 pl-10 pr-10 text-sm font-medium text-white outline-none transition focus:border-emerald-400/40 focus:ring-2 focus:ring-emerald-400/10"
+                  className="w-full appearance-none rounded-lg border border-white/8 bg-[#070F1E] py-2.5 pl-10 pr-10 text-sm font-medium text-white outline-none transition focus:border-emerald-400/40 focus:ring-2 focus:ring-emerald-400/10 sm:rounded-xl"
                 >
                   <option value="employee">Employee</option>
                   <option value="admin">Administrator</option>
@@ -245,12 +252,12 @@ export default function CreateUserModal({
           </div>
 
           {/* Footer */}
-          <div className="flex flex-col-reverse gap-3 border-t border-white/8 bg-white/2 px-6 py-4 sm:flex-row sm:justify-end">
+          <div className="flex shrink-0 flex-col-reverse gap-2 border-t border-white/8 bg-white/2 px-4 py-3 sm:flex-row sm:justify-end sm:gap-3 sm:px-6 sm:py-4">
             <button
               type="button"
               onClick={handleClose}
               disabled={creating}
-              className="rounded-xl border border-white/10 bg-white/4 px-5 py-2.5 text-sm font-medium text-slate-300 transition hover:bg-white/8 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+              className="min-h-10 rounded-lg border border-white/10 bg-white/4 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/8 hover:text-white disabled:cursor-not-allowed disabled:opacity-40 sm:min-h-11 sm:rounded-xl sm:px-5"
             >
               Cancel
             </button>
@@ -258,7 +265,7 @@ export default function CreateUserModal({
             <button
               type="submit"
               disabled={creating}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-slate-950 shadow-lg shadow-emerald-500/10 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-slate-950 shadow-lg shadow-emerald-500/10 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-11 sm:rounded-xl sm:px-5"
             >
               {creating ? (
                 <>
@@ -302,7 +309,7 @@ function Field({
 }: FieldProps) {
   return (
     <div>
-      <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-400">
+      <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-400 sm:mb-1.5 sm:text-xs">
         {label}
       </label>
 
@@ -320,7 +327,7 @@ function Field({
           required={required}
           autoComplete={autoComplete}
           onChange={(event) => onChange(event.target.value)}
-          className={`w-full rounded-xl border border-white/8 bg-[#070F1E] py-2.5 pr-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-emerald-400/40 focus:ring-2 focus:ring-emerald-400/10 ${
+          className={`w-full rounded-lg border border-white/8 bg-[#070F1E] py-2.5 pr-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-emerald-400/40 focus:ring-2 focus:ring-emerald-400/10 sm:rounded-xl ${
             icon ? 'pl-10' : 'pl-3'
           }`}
         />

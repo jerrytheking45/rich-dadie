@@ -247,7 +247,7 @@ function AdminAttachmentPreview({
     <div className="flex min-h-100 flex-col overflow-hidden rounded-3xl border border-white/6 bg-[#07101F]">
       <div className="flex shrink-0 items-center justify-between gap-3 border-b border-white/6 px-4 py-3.5">
         <div className="flex min-w-0 items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/6 bg-white/4">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/6 bg-white/4">
             {getAttachmentIcon(
               attachment,
               17,
@@ -1233,13 +1233,13 @@ export default function AdminSupportTicketPage() {
 
   return (
     <AdminDashboard title="Support Ticket">
-      <div className="min-h-screen bg-[#050B18] pb-12">
-        <div className="mx-auto w-full max-w-[1600px] px-4 py-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-[#050B18] pb-8">
+        <div className="mx-auto w-full max-w-[1600px] px-3 py-3 sm:px-5 sm:py-4 lg:px-6">
           {/* ========================================================= */}
           {/* TOP COMMAND BAR                                           */}
           {/* ========================================================= */}
 
-          <div className="mb-5 flex flex-col gap-4 rounded-3xl border border-white/6 bg-[#07101F] p-4 shadow-xl shadow-black/10 sm:p-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-white/6 bg-[#07101F] p-3 shadow-xl shadow-black/10 sm:p-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex min-w-0 items-center gap-3">
               <button
                 type="button"
@@ -1248,7 +1248,7 @@ export default function AdminSupportTicketPage() {
                     '/admin/support',
                   )
                 }
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/8 bg-white/4 text-white/45 transition hover:bg-white/8 hover:text-white"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/8 bg-white/4 text-white/45 transition hover:bg-white/8 hover:text-white"
                 aria-label="Back to support"
               >
                 <ArrowLeft size={17} />
@@ -1291,7 +1291,7 @@ export default function AdminSupportTicketPage() {
                     deletingAttachment !==
                       null
                   }
-                  className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-red-400/15 bg-red-400/7 px-4 text-xs font-bold text-red-300 transition hover:bg-red-400/12 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-red-400/15 bg-red-400/7 px-3 text-[11px] font-bold text-red-300 transition hover:bg-red-400/12 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   {deleting ? (
                     <Loader2
@@ -1321,7 +1321,7 @@ export default function AdminSupportTicketPage() {
                   refreshing ||
                   deleting
                 }
-                className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-white/8 bg-white/4 px-4 text-xs font-bold text-white/55 transition hover:bg-white/8 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-white/8 bg-white/4 px-3 text-[11px] font-bold text-white/55 transition hover:bg-white/8 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <RefreshCw
                   size={15}
@@ -1428,9 +1428,9 @@ export default function AdminSupportTicketPage() {
           {/* MAIN WORKSPACE                                              */}
           {/* ========================================================= */}
 
-          <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
+          <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
             {/* ======================================================= */}
-            {/* LEFT — CONVERSATION                                       */}
+            {/* LEFT — CONVERSATION */}
             {/* ======================================================= */}
 
             <main className="min-w-0 space-y-5">
@@ -1527,7 +1527,7 @@ export default function AdminSupportTicketPage() {
             </main>
 
             {/* ======================================================= */}
-            {/* RIGHT — EVENTS                                            */}
+            {/* RIGHT — EVENTS */}
             {/* ======================================================= */}
 
             <aside className="min-w-0">

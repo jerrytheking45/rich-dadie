@@ -1,4 +1,4 @@
-
+﻿
 'use client';
 
 import { useState } from 'react';
@@ -61,9 +61,9 @@ function isValidUUID(value: string): boolean {
 
 function selectClassName(): string {
   return [
-    'h-11 w-full appearance-none rounded-xl border',
+    'h-10 w-full appearance-none rounded-xl border',
     'border-white/10 bg-[#07101F]',
-    'px-3 pr-10 text-sm text-white',
+    'px-3 pr-9 text-[13px] text-white',
     'outline-none transition',
     'focus:border-emerald-400/40',
     'focus:ring-2 focus:ring-emerald-400/10',
@@ -75,8 +75,8 @@ function saveButtonClassName(
   dirty: boolean,
 ): string {
   return [
-    'inline-flex h-11 min-w-[82px] items-center justify-center gap-1.5',
-    'rounded-xl px-3 text-sm font-semibold',
+    'inline-flex h-10 min-w-[70px] items-center justify-center gap-1.5',
+    'rounded-xl px-2.5 text-xs font-semibold',
     'transition-all duration-200',
     dirty
       ? 'bg-linear-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-950/20 hover:from-emerald-400 hover:to-emerald-500'
@@ -185,26 +185,26 @@ export default function AdminSupportControls({
     !isValidUUID(assignedTo.trim());
 
   return (
-    <section className="overflow-hidden rounded-3xl border border-white/8 bg-linear-to-br from-[#0B1426] via-[#0B1426] to-[#11102B] shadow-2xl shadow-black/10">
-      <div className="border-b border-white/8 px-5 py-5 sm:px-6">
+    <section className="overflow-hidden rounded-2xl border border-white/8 bg-linear-to-br from-[#0B1426] via-[#0B1426] to-[#11102B] shadow-2xl shadow-black/10">
+      <div className="border-b border-white/8 px-4 py-4 sm:px-5">
         <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-purple-400/10 bg-purple-400/10 text-purple-300">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-purple-400/10 bg-purple-400/10 text-purple-300">
             <ShieldCheck size={19} />
           </div>
 
           <div>
-            <h2 className="text-base font-semibold text-white">
+            <h2 className="text-sm font-semibold text-white">
               Ticket controls
             </h2>
 
-            <p className="mt-1 text-sm leading-5 text-white/40">
+            <p className="mt-1 text-xs leading-5 text-white/40">
               Manage status, priority, and staff assignment.
             </p>
           </div>
         </div>
       </div>
 
-      <div className="grid gap-5 p-5 sm:p-6 lg:grid-cols-3">
+      <div className="grid gap-4 p-4 sm:p-5 lg:grid-cols-3">
         {/* Status */}
         <div>
           <label
@@ -214,7 +214,7 @@ export default function AdminSupportControls({
             Status
           </label>
 
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <div className="relative min-w-0 flex-1">
               <select
                 id="support-ticket-status"
@@ -282,7 +282,7 @@ export default function AdminSupportControls({
             Priority
           </label>
 
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <div className="relative min-w-0 flex-1">
               <select
                 id="support-ticket-priority"
@@ -350,7 +350,7 @@ export default function AdminSupportControls({
             Assigned staff
           </label>
 
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <input
               id="support-ticket-assignee"
               type="text"
@@ -365,7 +365,7 @@ export default function AdminSupportControls({
               aria-invalid={assignmentInvalid}
               className={[
                 'min-w-0 flex-1 rounded-xl border',
-                'bg-[#07101F] px-3 py-2.5 text-sm',
+                'bg-[#07101F] px-3 py-2 text-[13px]',
                 'text-white outline-none transition',
                 'placeholder:text-white/20',
                 'disabled:cursor-not-allowed disabled:opacity-50',
@@ -385,7 +385,7 @@ export default function AdminSupportControls({
                 assignmentInvalid
               }
               title="Save assignment"
-              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-lg shadow-emerald-950/20 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-40"
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-lg shadow-emerald-950/20 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-40"
             >
               {savingAssignment ? (
                 <Loader2
@@ -405,7 +405,7 @@ export default function AdminSupportControls({
                   updating || savingAssignment
                 }
                 title="Unassign ticket"
-                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/45 transition hover:border-red-400/20 hover:bg-red-400/10 hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/45 transition hover:border-red-400/20 hover:bg-red-400/10 hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <UserMinus size={16} />
               </button>

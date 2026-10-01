@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import {
   useCallback,
@@ -735,8 +735,8 @@ export default function AdminNotificationsPage() {
           </div>
 
           {/* Filters */}
-          <div className="mb-4 overflow-x-auto pb-1">
-            <div className="flex min-w-max items-center gap-2">
+          <div className="mb-4">
+            <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
                 onClick={() =>
@@ -921,7 +921,7 @@ export default function AdminNotificationsPage() {
                               Open related item
 
                               <span className="transition-transform group-hover:translate-x-0.5">
-                                →
+                                â†’
                               </span>
                             </button>
                           ) : (

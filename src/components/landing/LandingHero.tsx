@@ -1,5 +1,4 @@
-
-import Link from 'next/link';
+﻿import Link from 'next/link';
 import Image from 'next/image';
 import {
   ArrowRight,
@@ -32,13 +31,12 @@ export default function LandingHero({
 
       {/* Dark cinematic overlay */}
       <div className="absolute inset-0 bg-[#050B18]/70" />
-
       <div className="absolute inset-0 bg-linear-to-r from-[#050B18] via-[#050B18]/90 to-[#050B18]/55" />
 
       {/* Ambient lighting */}
-      <div className="absolute -left-40 top-20 h-96 w-96 rounded-full bg-emerald-500/10 blur-[120px]" />
-      <div className="absolute right-[-10%] top-[-20%] h-130 w-130 rounded-full bg-[#F7C948]/8 blur-[130px]" />
-      <div className="absolute bottom-[-20%] right-[20%] h-80 w-80 rounded-full bg-blue-500/8 blur-[120px]" />
+      <div className="absolute -left-32 top-16 h-72 w-72 rounded-full bg-emerald-500/10 blur-[100px] sm:-left-40 sm:top-20 sm:h-96 sm:w-96 sm:blur-[120px]" />
+      <div className="absolute right-[-12%] top-[-14%] h-96 w-96 rounded-full bg-[#F7C948]/8 blur-[110px] sm:h-130 sm:w-130 sm:blur-[130px]" />
+      <div className="absolute bottom-[-15%] right-[15%] h-64 w-64 rounded-full bg-blue-500/8 blur-[100px] sm:h-80 sm:w-80 sm:blur-[120px]" />
 
       {/* Grid texture */}
       <div
@@ -51,34 +49,33 @@ export default function LandingHero({
         }}
       />
 
-      <div className="relative mx-auto grid max-w-7xl items-center gap-14 px-5 pb-20 pt-16 sm:px-8 sm:pb-24 sm:pt-20 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16 lg:px-10 lg:pb-28 lg:pt-24">
+      <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-4 pb-14 pt-12 sm:gap-14 sm:px-8 sm:pb-20 sm:pt-16 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16 lg:px-10 lg:pb-24 lg:pt-20">
         {/* Copy */}
         <div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/15 bg-emerald-400/8 px-3.5 py-2 text-[11px] font-bold uppercase tracking-[0.12em] text-emerald-300">
+          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/15 bg-emerald-400/8 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-emerald-300 sm:px-3.5 sm:py-2 sm:text-[11px]">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.8)]" />
             Investment made clearer
           </div>
 
-          <h1 className="mt-6 max-w-3xl text-4xl font-black leading-[1.05] tracking-[-0.04em] text-white sm:text-5xl lg:text-[4.5rem]">
+          <h1 className="mt-5 max-w-3xl text-[2.65rem] font-black leading-[1.03] tracking-[-0.045em] text-white sm:mt-6 sm:text-5xl lg:text-[4.5rem]">
             Put your money to work.
-            <span className="mt-2 block bg-linear-to-r from-[#F7C948] via-[#FFE08A] to-emerald-300 bg-clip-text text-transparent">
+            <span className="mt-1.5 block bg-linear-to-r from-[#F7C948] via-[#FFE08A] to-emerald-300 bg-clip-text text-transparent sm:mt-2">
               Build with purpose.
             </span>
           </h1>
 
-          <p className="mt-6 max-w-xl text-sm leading-7 text-white/55 sm:text-base sm:leading-8">
-            Explore structured investment plans, manage your
-            portfolio, and keep track of your investment journey
-            from one modern platform.
+          <p className="mt-5 max-w-xl text-sm leading-6 text-white/55 sm:mt-6 sm:text-base sm:leading-8">
+            Explore structured investment plans, manage your portfolio,
+            and keep track of your investment journey from one modern
+            platform.
           </p>
 
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+          <div className="mt-7 flex flex-col gap-2.5 sm:mt-8 sm:flex-row sm:gap-3">
             <Link
               href="/register"
-              className="group inline-flex items-center justify-center gap-2 rounded-full bg-[#F7C948] px-6 py-3.5 text-sm font-black text-[#050B18] shadow-xl shadow-[#F7C948]/10 transition hover:-translate-y-0.5 hover:bg-[#FFD96A]"
+              className="group inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#F7C948] px-5 py-3 text-sm font-black text-[#050B18] shadow-xl shadow-[#F7C948]/10 transition hover:-translate-y-0.5 hover:bg-[#FFD96A] sm:min-h-12 sm:px-6 sm:py-3.5"
             >
               Start investing
-
               <ArrowRight
                 size={17}
                 className="transition-transform group-hover:translate-x-0.5"
@@ -87,14 +84,14 @@ export default function LandingHero({
 
             <a
               href="#plans"
-              className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/5 px-6 py-3.5 text-sm font-bold text-white/80 backdrop-blur-sm transition hover:bg-white/10 hover:text-white"
+              className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-bold text-white/80 backdrop-blur-sm transition hover:bg-white/10 hover:text-white sm:min-h-12 sm:px-6 sm:py-3.5"
             >
               Explore plans
             </a>
           </div>
 
           {/* Trust points */}
-          <div className="mt-9 grid gap-3 sm:grid-cols-3">
+          <div className="mt-7 grid grid-cols-1 gap-2.5 sm:mt-9 sm:grid-cols-3 sm:gap-3">
             <TrustPoint
               icon={ShieldCheck}
               title="Security"
@@ -115,55 +112,55 @@ export default function LandingHero({
         {/* Portfolio visual */}
         <div className="relative mx-auto w-full max-w-130 lg:ml-auto">
           {/* Outer glow */}
-          <div className="absolute -inset-5 rounded-[2.5rem] bg-emerald-400/5 blur-2xl" />
+          <div className="absolute -inset-4 rounded-[2rem] bg-emerald-400/5 blur-2xl sm:-inset-5 sm:rounded-[2.5rem]" />
 
-          <div className="relative rounded-4x1 border border-white/10 bg-white/5 p-2 shadow-2xl backdrop-blur-xl">
-            <div className="overflow-hidden rounded-[1.55rem] border border-white/10 bg-[#0A1424]">
+          <div className="relative rounded-[2rem] border border-white/10 bg-white/5 p-1.5 shadow-2xl backdrop-blur-xl sm:rounded-[2.25rem] sm:p-2">
+            <div className="overflow-hidden rounded-[1.45rem] border border-white/10 bg-[#0A1424] sm:rounded-[1.55rem]">
               {/* Card header */}
-              <div className="flex items-start justify-between border-b border-white/8 px-5 py-5 sm:px-6">
-                <div>
+              <div className="flex items-start justify-between border-b border-white/8 px-4 py-4 sm:px-6 sm:py-5">
+                <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)]" />
+                    <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)]" />
 
-                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/35">
+                    <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/35 sm:text-[10px]">
                       Portfolio overview
                     </p>
                   </div>
 
-                  <p className="mt-3 text-2xl font-black tracking-tight text-white sm:text-3xl">
+                  <p className="mt-2.5 text-xl font-black tracking-tight text-white sm:mt-3 sm:text-3xl">
                     Your investment journey
                   </p>
                 </div>
 
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/8 bg-white/5 text-emerald-300">
-                  <BarChart3 size={18} />
+                <div className="ml-3 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/8 bg-white/5 text-emerald-300 sm:h-10 sm:w-10">
+                  <BarChart3 size={17} />
                 </div>
               </div>
 
               {/* Portfolio balance */}
-              <div className="px-5 py-6 sm:px-6">
+              <div className="px-4 py-5 sm:px-6 sm:py-6">
                 <p className="text-xs font-medium text-white/35">
                   Available investment plans
                 </p>
 
-                <div className="mt-2 flex items-end justify-between gap-4">
+                <div className="mt-2 flex items-end justify-between gap-3">
                   <div>
-                    <p className="text-4xl font-black tracking-tight text-white">
+                    <p className="text-3xl font-black tracking-tight text-white sm:text-4xl">
                       {availablePlans ?? '—'}
                     </p>
 
-                    <p className="mt-1 text-xs text-white/35">
+                    <p className="mt-1 text-[11px] text-white/35 sm:text-xs">
                       Published opportunities
                     </p>
                   </div>
 
-                  <div className="rounded-full border border-emerald-400/15 bg-emerald-400/8 px-3 py-1.5 text-[10px] font-bold text-emerald-300">
+                  <div className="rounded-full border border-emerald-400/15 bg-emerald-400/8 px-2.5 py-1 text-[9px] font-bold text-emerald-300 sm:px-3 sm:py-1.5 sm:text-[10px]">
                     Available
                   </div>
                 </div>
 
                 {/* Chart */}
-                <div className="relative mt-7 h-36 overflow-hidden rounded-2xl border border-white/6 bg-white/2.5">
+                <div className="relative mt-5 h-28 overflow-hidden rounded-xl border border-white/6 bg-white/2.5 sm:mt-7 sm:h-36 sm:rounded-2xl">
                   <div className="absolute inset-x-0 top-1/4 border-t border-dashed border-white/6" />
                   <div className="absolute inset-x-0 top-1/2 border-t border-dashed border-white/6" />
                   <div className="absolute inset-x-0 top-3/4 border-t border-dashed border-white/6" />
@@ -210,17 +207,17 @@ export default function LandingHero({
                     />
                   </svg>
 
-                  <div className="absolute bottom-3 left-4 text-[9px] font-semibold text-white/20">
+                  <div className="absolute bottom-2.5 left-3 text-[8px] font-semibold text-white/20 sm:bottom-3 sm:left-4 sm:text-[9px]">
                     START
                   </div>
 
-                  <div className="absolute bottom-3 right-4 text-[9px] font-semibold text-white/20">
+                  <div className="absolute bottom-2.5 right-3 text-[8px] font-semibold text-white/20 sm:bottom-3 sm:right-4 sm:text-[9px]">
                     GROW
                   </div>
                 </div>
 
                 {/* Stats */}
-                <div className="mt-4 grid grid-cols-2 gap-3">
+                <div className="mt-3 grid grid-cols-2 gap-2.5 sm:mt-4 sm:gap-3">
                   <MiniStat
                     label="Plan choices"
                     value={availablePlans ? `${availablePlans}` : '—'}
@@ -234,9 +231,9 @@ export default function LandingHero({
               </div>
 
               {/* Bottom action */}
-              <div className="border-t border-white/8 bg-white/2.5 px-5 py-4 sm:px-6">
-                <div className="flex items-center justify-between gap-4">
-                  <div>
+              <div className="border-t border-white/8 bg-white/2.5 px-4 py-3.5 sm:px-6 sm:py-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
                     <p className="text-xs font-bold text-white">
                       Ready to explore?
                     </p>
@@ -248,7 +245,7 @@ export default function LandingHero({
 
                   <a
                     href="#plans"
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[#F7C948] transition hover:text-[#FFE08A]"
+                    className="inline-flex shrink-0 items-center gap-1.5 text-xs font-bold text-[#F7C948] transition hover:text-[#FFE08A]"
                   >
                     View plans
                     <ArrowRight size={13} />
@@ -307,7 +304,7 @@ function TrustPoint({
 }: TrustPointProps) {
   return (
     <div className="flex items-center gap-2.5 text-xs font-semibold text-white/45">
-      <div className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/8 bg-white/5 text-emerald-300">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-white/8 bg-white/5 text-emerald-300">
         <Icon size={14} />
       </div>
 
@@ -326,7 +323,7 @@ function MiniStat({
   value,
 }: MiniStatProps) {
   return (
-    <div className="rounded-2xl border border-white/7 bg-white/2.5 p-3.5">
+    <div className="rounded-xl border border-white/7 bg-white/2.5 p-3 sm:rounded-2xl sm:p-3.5">
       <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-white/25">
         {label}
       </p>
@@ -337,4 +334,3 @@ function MiniStat({
     </div>
   );
 }
-

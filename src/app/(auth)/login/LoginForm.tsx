@@ -1,4 +1,5 @@
-﻿"use client";
+
+"use client";
 
 import Image from "next/image";
 import { useEffect, useState, type FormEvent } from "react";
@@ -95,7 +96,7 @@ export default function LoginForm() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.12),transparent_32%),radial-gradient(circle_at_80%_20%,rgba(168,85,247,0.12),transparent_28%),linear-gradient(135deg,#070b24_0%,#0b1033_50%,#130d2c_100%)]" />
       </div>
 
-      <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-6xl items-center px-4 py-8 sm:px-6 lg:px-8">
+      <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-6xl items-center px-3 py-5 sm:px-6 sm:py-8 lg:px-8">
         <div className="grid w-full overflow-hidden rounded-4xl border border-white/10 bg-white/[0.035] shadow-[0_30px_100px_rgba(0,0,0,0.45)] backdrop-blur-2xl lg:grid-cols-[1.05fr_0.95fr]">
           {/* Brand / Information panel */}
           <section className="relative hidden min-h-160 overflow-hidden border-r border-white/10 p-10 lg:flex lg:flex-col lg:justify-between xl:p-14">
@@ -189,10 +190,10 @@ export default function LoginForm() {
           </section>
 
           {/* Login panel */}
-          <section className="flex items-center p-5 sm:p-8 lg:p-10 xl:p-14">
+          <section className="flex items-center p-4 sm:p-8 lg:p-10 xl:p-14">
             <div className="mx-auto w-full max-w-md">
               {/* Mobile logo */}
-              <div className="mb-8 flex items-center gap-3 lg:hidden">
+              <div className="mb-6 flex items-center gap-3 lg:hidden">
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[14px] border border-white/15 bg-white/10 shadow-[0_8px_30px_rgba(45,212,191,0.18)]">
                   <Image
                     src="/images/logo.png"
@@ -219,11 +220,11 @@ export default function LoginForm() {
                   Welcome back
                 </p>
 
-                <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+                <h2 className="text-[1.75rem] font-bold tracking-tight text-white sm:text-4xl">
                   Sign in to your account
                 </h2>
 
-                <p className="mt-3 text-sm leading-6 text-white/45">
+                <p className="mt-2.5 text-sm leading-5.5 text-white/45">
                   Enter your credentials to continue to your investment
                   dashboard.
                 </p>
@@ -240,7 +241,7 @@ export default function LoginForm() {
               )}
 
               {/* Login form */}
-              <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
+              <form className="mt-6 space-y-4 sm:mt-8 sm:space-y-5" onSubmit={handleSubmit}>
                 {/* Email */}
                 <div>
                   <label
@@ -265,7 +266,7 @@ export default function LoginForm() {
                       value={email}
                       onChange={(event) => setEmail(event.target.value)}
                       placeholder="Enter your email"
-                      className="h-14 w-full rounded-2xl border border-white/10 bg-white/5.5 pl-12 pr-4 text-sm text-white outline-none transition-all placeholder:text-white/25 hover:border-white/15 focus:border-emerald-400/50 focus:bg-white/7.5 focus:ring-4 focus:ring-emerald-400/10"
+                      className="h-12 w-full rounded-xl border border-white/10 bg-white/5.5 pl-11 pr-4 text-sm text-white outline-none transition-all placeholder:text-white/25 hover:border-white/15 focus:border-emerald-400/50 focus:bg-white/7.5 focus:ring-4 focus:ring-emerald-400/10"
                     />
                   </div>
                 </div>
@@ -303,13 +304,13 @@ export default function LoginForm() {
                       value={password}
                       onChange={(event) => setPassword(event.target.value)}
                       placeholder="Enter your password"
-                      className="h-14 w-full rounded-2xl border border-white/10 bg-white/5.5 pl-12 pr-12 text-sm text-white outline-none transition-all placeholder:text-white/25 hover:border-white/15 focus:border-emerald-400/50 focus:bg-white/7.5 focus:ring-4 focus:ring-emerald-400/10"
+                      className="h-12 w-full rounded-xl border border-white/10 bg-white/5.5 pl-11 pr-11 text-sm text-white outline-none transition-all placeholder:text-white/25 hover:border-white/15 focus:border-emerald-400/50 focus:bg-white/7.5 focus:ring-4 focus:ring-emerald-400/10"
                     />
 
                     <button
                       type="button"
                       onClick={() => setShowPassword((previous) => !previous)}
-                      className="absolute right-0 top-0 flex h-14 w-12 items-center justify-center rounded-r-2xl text-white/30 transition-colors hover:text-white/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60"
+                      className="absolute right-0 top-0 flex h-12 w-11 items-center justify-center rounded-r-xl text-white/30 transition-colors hover:text-white/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60"
                       aria-label={
                         showPassword ? "Hide password" : "Show password"
                       }
@@ -350,7 +351,7 @@ export default function LoginForm() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="group relative flex h-14 w-full items-center justify-center gap-2 overflow-hidden rounded-2xl bg-linear-to-r from-emerald-400 via-teal-400 to-cyan-400 px-5 text-sm font-bold text-[#06121a] shadow-[0_12px_35px_rgba(45,212,191,0.18)] transition-all hover:shadow-[0_16px_45px_rgba(45,212,191,0.28)] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-400/25 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
+                  className="group relative flex h-12 w-full sm:h-14 items-center justify-center gap-2 overflow-hidden rounded-2xl bg-linear-to-r from-emerald-400 via-teal-400 to-cyan-400 px-5 text-sm font-bold text-[#06121a] shadow-[0_12px_35px_rgba(45,212,191,0.18)] transition-all hover:shadow-[0_16px_45px_rgba(45,212,191,0.28)] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-400/25 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {loading ? (
                     <>
@@ -372,7 +373,7 @@ export default function LoginForm() {
               </form>
 
               {/* Register */}
-              <div className="mt-8 text-center">
+              <div className="mt-6 text-center sm:mt-8">
                 <p className="text-sm text-white/40">
                   Don&apos;t have an account?{" "}
                   <Link
@@ -385,7 +386,7 @@ export default function LoginForm() {
               </div>
 
               {/* Footer */}
-              <div className="mt-8 border-t border-white/8 pt-5 text-center">
+              <div className="mt-6 border-t border-white/8 pt-4 text-center sm:mt-8 sm:pt-5">
                 <p className="text-[11px] leading-5 text-white/25">
                   By continuing, you agree to the{" "}
                   <Link

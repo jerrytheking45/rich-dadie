@@ -1,4 +1,4 @@
-
+﻿
 'use client';
 
 import {
@@ -54,7 +54,7 @@ export default function SupportMessageComposer({
       onSubmit={handleSubmit}
       className="border-t border-white/6 bg-[#07101F] p-3 sm:p-4"
     >
-      <div className="rounded-[20px] border border-white/8 bg-[#0B1426] p-2 shadow-lg shadow-black/10">
+      <div className="rounded-2xl border border-white/8 bg-[#0B1426] p-1.5 shadow-lg shadow-black/10">
         <div className="flex items-end gap-2">
           <textarea
             value={message}
@@ -70,8 +70,8 @@ export default function SupportMessageComposer({
             rows={1}
             maxLength={10000}
             className={[
-              'min-h-11 flex-1 resize-none bg-transparent',
-              'px-2 py-2.5',
+              'min-h-10 flex-1 resize-none bg-transparent',
+              'px-2 py-2',
               'text-sm leading-5 text-white',
               'outline-none',
               'placeholder:text-white/20',
@@ -83,7 +83,7 @@ export default function SupportMessageComposer({
             type="submit"
             disabled={!canSend}
             className={[
-              'flex h-10 w-10 shrink-0 items-center justify-center',
+              'flex h-9 w-9 shrink-0 items-center justify-center',
               'rounded-xl',
               'transition-all',
               canSend

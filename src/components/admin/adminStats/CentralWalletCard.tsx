@@ -1,4 +1,4 @@
-
+﻿
 // src/features/admin/components/CentralWalletCard.tsx
 
 'use client';
@@ -62,7 +62,7 @@ function Resource({
   );
 
   return (
-    <div className="group rounded-2xl border border-white/8 bg-[#07101F]/80 p-4 transition-all duration-300 hover:border-white/12 hover:bg-[#091426]">
+    <div className="group rounded-xl border border-white/8 bg-[#07101F]/80 p-3.5 sm:rounded-2xl sm:p-4 transition-all duration-300 hover:border-white/12 hover:bg-[#091426]">
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2.5 text-sm font-medium text-white/75">
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-white/8 bg-white/4 text-white/45">
@@ -105,18 +105,18 @@ export default function CentralWalletCard({
 }: CentralWalletCardProps) {
   if (loading) {
     return (
-      <section className="overflow-hidden rounded-[26px] border border-white/8 bg-[#0B1426] p-5 shadow-[0_20px_60px_rgba(0,0,0,0.18)] md:p-6">
+      <section className="overflow-hidden rounded-2xl border border-white/8 bg-[#0B1426] p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)] sm:p-5 md:p-6">
         <div className="animate-pulse">
           <div className="h-6 w-44 rounded-lg bg-white/6" />
 
           <div className="mt-4 h-4 w-full max-w-md rounded bg-white/5" />
 
-          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
             <div className="h-28 rounded-2xl bg-white/5" />
             <div className="h-28 rounded-2xl bg-white/5" />
           </div>
 
-          <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+          <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
             <div className="h-28 rounded-2xl bg-white/5" />
             <div className="h-28 rounded-2xl bg-white/5" />
             <div className="h-28 rounded-2xl bg-white/5" />
@@ -135,15 +135,15 @@ export default function CentralWalletCard({
         : 'border-red-400/15 bg-red-400/10 text-red-300';
 
   return (
-    <section className="relative overflow-hidden rounded-[26px] border border-white/8 bg-linear-to-br from-[#101D33] via-[#0B1426] to-[#11102B] p-5 shadow-[0_20px_60px_rgba(0,0,0,0.22)] md:p-6">
+    <section className="relative overflow-hidden rounded-2xl border border-white/8 bg-linear-to-br from-[#101D33] via-[#0B1426] to-[#11102B] p-4 shadow-[0_20px_60px_rgba(0,0,0,0.22)] sm:p-5 md:p-6">
       <div className="pointer-events-none absolute -right-24 -top-24 h-56 w-56 rounded-full bg-emerald-500/8 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-28 left-1/3 h-52 w-52 rounded-full bg-purple-500/8 blur-3xl" />
 
       <div className="relative">
-        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
           <div className="min-w-0">
             <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-emerald-400/15 bg-emerald-400/10 text-emerald-300">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-emerald-400/15 bg-emerald-400/10 text-emerald-300">
                 <Wallet className="h-5 w-5" />
               </div>
 
@@ -158,7 +158,7 @@ export default function CentralWalletCard({
               </div>
             </div>
 
-            <div className="mt-4 rounded-2xl border border-white/8 bg-black/10 px-4 py-3">
+            <div className="mt-3 rounded-xl border border-white/8 bg-black/10 px-3 py-2.5 sm:px-4 sm:py-3">
               <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/30">
                 Wallet Address
               </p>
@@ -181,8 +181,8 @@ export default function CentralWalletCard({
           </span>
         </div>
 
-        <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="group rounded-2xl border border-white/8 bg-[#07101F]/80 p-4 transition-all duration-300 hover:border-emerald-400/15">
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+          <div className="group rounded-xl border border-white/8 bg-[#07101F]/80 p-3.5 sm:rounded-2xl sm:p-4 transition-all duration-300 hover:border-emerald-400/15">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm text-white/45">
                 <CircleDollarSign className="h-4 w-4 text-emerald-300/70" />
@@ -200,7 +200,7 @@ export default function CentralWalletCard({
             </p>
           </div>
 
-          <div className="group rounded-2xl border border-white/8 bg-[#07101F]/80 p-4 transition-all duration-300 hover:border-cyan-400/15">
+          <div className="group rounded-xl border border-white/8 bg-[#07101F]/80 p-3.5 sm:rounded-2xl sm:p-4 transition-all duration-300 hover:border-cyan-400/15">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm text-white/45">
                 <Radio className="h-4 w-4 text-cyan-300/70" />
@@ -219,7 +219,7 @@ export default function CentralWalletCard({
           </div>
         </div>
 
-        <div className="mt-5">
+        <div className="mt-4">
           <div className="mb-3 flex items-center justify-between">
             <div>
               <p className="text-sm font-semibold text-white/80">

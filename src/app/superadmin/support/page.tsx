@@ -229,7 +229,7 @@ function FilterSelect({
       onChange={(event) =>
         onChange(event.target.value)
       }
-      className="h-11 w-full rounded-xl border border-white/10 bg-[#07101F] px-3 text-sm text-white outline-none transition focus:border-emerald-400/30 focus:ring-2 focus:ring-emerald-400/10"
+      className="h-10 w-full rounded-xl border border-white/10 bg-[#07101F] px-3 text-sm text-white outline-none transition focus:border-emerald-400/30 focus:ring-2 focus:ring-emerald-400/10"
     >
       {options.map((option) => (
         <option
@@ -517,17 +517,17 @@ export default function AdminSupportPage() {
 
   return (
     <AdminDashboard title="Support">
-      <div className="min-h-screen space-y-6 bg-[#050B18] pb-10">
+      <div className="min-h-screen space-y-4 bg-[#050B18] pb-8 sm:space-y-5 sm:pb-10">
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-purple-400/10 bg-linear-to-br from-purple-500/15 to-blue-500/10 text-purple-300">
+          <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl sm:h-11 sm:w-11 sm:rounded-2xl border border-purple-400/10 bg-linear-to-br from-purple-500/15 to-blue-500/10 text-purple-300">
               <MessageCircle size={22} />
             </div>
 
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-2xl font-bold tracking-tight text-white">
+                <h1 className="text-xl font-bold tracking-tight text-white sm:text-2xl">
                   Support Tickets
                 </h1>
 
@@ -547,7 +547,7 @@ export default function AdminSupportPage() {
                 )}
               </div>
 
-              <p className="mt-1 text-sm text-white/35">
+              <p className="mt-0.5 text-xs text-white/35 sm:mt-1 sm:text-sm">
                 Manage customer conversations and support requests.
               </p>
             </div>
@@ -561,7 +561,7 @@ export default function AdminSupportPage() {
             disabled={
               loading || refreshing
             }
-            className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white/70 transition hover:bg-white/8 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white/70 transition hover:bg-white/8 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
           >
             <RefreshCw
               size={16}
@@ -576,8 +576,8 @@ export default function AdminSupportPage() {
         </div>
 
         {/* Filters */}
-        <section className="overflow-hidden rounded-3xl border border-white/8 bg-linear-to-br from-[#0B1426] via-[#0B1426] to-[#11102B] p-4 shadow-2xl shadow-black/10 sm:p-5">
-          <div className="mb-4 flex items-center gap-2">
+        <section className="overflow-hidden rounded-2xl border border-white/8 bg-linear-to-br from-[#0B1426] via-[#0B1426] to-[#11102B] p-3.5 shadow-2xl shadow-black/10 sm:rounded-3xl sm:p-5">
+          <div className="mb-3 flex items-center gap-2 sm:mb-4">
             <SlidersHorizontal
               size={15}
               className="text-purple-300"
@@ -603,7 +603,7 @@ export default function AdminSupportPage() {
                   )
                 }
                 placeholder="Search ticket number, subject or user ID..."
-                className="h-11 w-full rounded-xl border border-white/10 bg-[#07101F] pl-10 pr-3 text-sm text-white outline-none transition placeholder:text-white/20 focus:border-emerald-400/30 focus:ring-2 focus:ring-emerald-400/10"
+                className="h-10 w-full rounded-xl border border-white/10 bg-[#07101F] pl-10 pr-3 text-sm text-white outline-none transition placeholder:text-white/20 focus:border-emerald-400/30 focus:ring-2 focus:ring-emerald-400/10"
               />
             </div>
 
@@ -674,7 +674,7 @@ export default function AdminSupportPage() {
         {/* Tickets */}
         <div className="overflow-hidden rounded-3xl border border-white/8 bg-[#0B1426] shadow-2xl shadow-black/10">
           {loading ? (
-            <div className="flex min-h- items-center justify-center">
+            <div className="flex min-h-48 items-center justify-center sm:min-h-56">
               <div className="flex flex-col items-center gap-3 text-sm text-white/35">
                 <Loader2
                   size={24}
@@ -685,7 +685,7 @@ export default function AdminSupportPage() {
             </div>
           ) : filteredTickets.length ===
             0 ? (
-            <div className="flex min-h-90 flex-col items-center justify-center px-6 text-center">
+            <div className="flex min-h-64 flex-col items-center justify-center px-4 text-center sm:min-h-72 sm:px-6">
               <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-purple-400/10 bg-purple-400/10 text-purple-300">
                 <MessageCircle size={23} />
               </div>
@@ -828,7 +828,7 @@ export default function AdminSupportPage() {
                           ticket.id,
                         )
                       }
-                      className="w-full p-4 text-left transition hover:bg-white/3"
+                      className="w-full p-3.5 text-left transition hover:bg-white/3 sm:p-4"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">

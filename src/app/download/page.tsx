@@ -1,4 +1,7 @@
-﻿import Link from "next/link";
+﻿// src/app/download/page.tsx
+
+import Link from "next/link";
+import Image from "next/image";
 
 const APK_URL =
   "https://github.com/jerrytheking45/rich-dadie/releases/latest/download/rediq.apk";
@@ -9,9 +12,12 @@ export default function DownloadPage() {
       <div className="mx-auto flex min-h-screen max-w-6xl flex-col px-5 py-6 sm:px-8 lg:px-10">
         <header className="flex items-center justify-between">
           <Link href="/" className="inline-flex items-center">
-            <img
+            <Image
               src="/images/logo.png"
               alt="REDIQ"
+              width={192}
+              height={64}
+              priority
               className="h-10 w-auto object-contain sm:h-12"
             />
           </Link>
@@ -79,7 +85,7 @@ export default function DownloadPage() {
               <div className="absolute -inset-10 rounded-full bg-[#F7C948]/5 blur-3xl" />
 
               <div className="relative mx-auto rounded-[2.5rem] border border-white/10 bg-white/[0.035] p-3 shadow-2xl">
-                <div className="rounded-[2rem] border border-white/10 bg-[#07182F] px-5 py-8">
+                <div className="rounded-4xl border border-white/10 bg-[#07182F] px-5 py-8">
                   <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#F7C948] shadow-lg shadow-[#F7C948]/10">
                     <svg
                       viewBox="0 0 24 24"
@@ -114,7 +120,7 @@ export default function DownloadPage() {
                     ].map((item) => (
                       <div
                         key={item}
-                        className="flex items-center gap-3 rounded-xl border border-white/5 bg-white/[0.025] px-3.5 py-3"
+                        className="flex items-center gap-3 rounded-xl border border-white/5 bg-white/2.5 px-3.5 py-3"
                       >
                         <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#F7C948]/10 text-[#F7C948]">
                           <svg
@@ -171,7 +177,7 @@ export default function DownloadPage() {
               ].map((step) => (
                 <div
                   key={step.number}
-                  className="rounded-2xl border border-white/7 bg-white/[0.025] p-5"
+                  className="rounded-2xl border border-white/7 bg-white/2.5 p-5"
                 >
                   <span className="text-xs font-black tracking-[0.15em] text-[#F7C948]">
                     {step.number}

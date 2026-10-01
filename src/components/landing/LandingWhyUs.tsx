@@ -1,5 +1,4 @@
-﻿
-import {
+﻿import {
   ArrowUpRight,
   BarChart3,
   Gift,
@@ -40,31 +39,31 @@ export default function LandingWhyUs() {
       id="why-us"
       className="relative overflow-hidden bg-[#07101F]"
     >
-      <div className="absolute left-[-15%] top-1/2 h-96 w-96 -translate-y-1/2 rounded-full bg-blue-500/5 blur-[130px]" />
-      <div className="absolute right-[-10%] top-10 h-80 w-80 rounded-full bg-emerald-400/5 blur-[120px]" />
+      <div className="absolute left-[-18%] top-1/2 h-64 w-64 -translate-y-1/2 rounded-full bg-blue-500/5 blur-[100px] sm:h-96 sm:w-96 sm:blur-[130px]" />
+      <div className="absolute right-[-15%] top-10 h-64 w-64 rounded-full bg-emerald-400/5 blur-[100px] sm:right-[-10%] sm:h-80 sm:w-80 sm:blur-[120px]" />
 
-      <div className="relative mx-auto max-w-7xl px-5 py-20 sm:px-8 sm:py-24 lg:px-10">
-        <div className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:items-center lg:gap-20">
-          {/* Introduction */}
+      <div className="relative mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-18 md:px-8 md:py-20 lg:px-10 lg:py-24">
+        <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-center lg:gap-16 xl:gap-20">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-white/8 bg-white/5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-white/45">
               <span className="h-1.5 w-1.5 rounded-full bg-[#F7C948]" />
               Built around your journey
             </div>
 
-            <h2 className="mt-5 text-3xl font-black tracking-[-0.03em] text-white sm:text-4xl lg:text-5xl">
+            <h2 className="mt-4 text-[1.85rem] font-black leading-[1.08] tracking-[-0.03em] text-white sm:mt-5 sm:text-4xl lg:text-5xl">
               Everything you need to manage your investment journey.
             </h2>
 
-            <p className="mt-5 max-w-lg text-sm leading-7 text-white/40 sm:text-base">
+            <p className="mt-4 max-w-lg text-sm leading-6 text-white/40 sm:mt-5 sm:text-base sm:leading-7">
               REDIQ brings your investment plans, deposits,
               portfolio activity, and account information together
               in one platform.
             </p>
 
-            <div className="mt-8 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#F7C948]/15 bg-[#F7C948]/5 text-[#F7C948]">
-                <BarChart3 size={17} />
+            <div className="mt-6 flex items-center gap-3 sm:mt-8">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#F7C948]/15 bg-[#F7C948]/5 text-[#F7C948] sm:h-10 sm:w-10">
+                <BarChart3 size={16} className="sm:hidden" />
+                <BarChart3 size={17} className="hidden sm:block" />
               </div>
 
               <div>
@@ -79,7 +78,6 @@ export default function LandingWhyUs() {
             </div>
           </div>
 
-          {/* Benefits */}
           <div className="grid gap-3 sm:grid-cols-2">
             {benefits.map((item) => {
               const Icon = item.icon;
@@ -87,11 +85,12 @@ export default function LandingWhyUs() {
               return (
                 <article
                   key={item.number}
-                  className="group rounded-[1.75rem] border border-white/8 bg-white/[0.035] p-5 transition duration-300 hover:-translate-y-1 hover:border-white/15 hover:bg-white/5.5"
+                  className="group rounded-[1.35rem] border border-white/8 bg-white/[0.035] p-4 transition duration-300 hover:-translate-y-1 hover:border-white/15 hover:bg-white/5.5 sm:rounded-[1.6rem] sm:p-5"
                 >
                   <div className="flex items-center justify-between">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/8 bg-[#0B192B] text-emerald-300 transition group-hover:border-emerald-400/20">
-                      <Icon size={18} />
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/8 bg-[#0B192B] text-emerald-300 transition group-hover:border-emerald-400/20 sm:h-11 sm:w-11 sm:rounded-2xl">
+                      <Icon size={17} className="sm:hidden" />
+                      <Icon size={18} className="hidden sm:block" />
                     </div>
 
                     <span className="text-[10px] font-black tracking-[0.14em] text-white/15">
@@ -99,15 +98,15 @@ export default function LandingWhyUs() {
                     </span>
                   </div>
 
-                  <h3 className="mt-6 text-base font-black text-white">
+                  <h3 className="mt-4 text-base font-black text-white sm:mt-6">
                     {item.title}
                   </h3>
 
-                  <p className="mt-2 text-xs leading-6 text-white/35">
+                  <p className="mt-2 text-xs leading-5 text-white/35 sm:leading-6">
                     {item.text}
                   </p>
 
-                  <div className="mt-5 flex items-center justify-between border-t border-white/6 pt-4">
+                  <div className="mt-4 flex items-center justify-between border-t border-white/6 pt-3 sm:mt-5 sm:pt-4">
                     <span className="text-[9px] font-bold uppercase tracking-[0.12em] text-white/20">
                       REDIQ
                     </span>
@@ -126,5 +125,3 @@ export default function LandingWhyUs() {
     </section>
   );
 }
-
-

@@ -73,46 +73,42 @@ export default function SearchResultItem({
       type="button"
       onClick={handleClick}
       disabled={!result.route}
-      className="
-        group
-        flex
-        w-full
-        min-w-0
-        items-center
-        gap-3
-        rounded-[20px]
-        border
-        border-white/8
-        bg-[#07101F]
-        p-3
-        text-left
-        shadow-lg
-        shadow-black/5
-        transition
-        hover:border-white/12
-        hover:bg-[#0A1628]
-        hover:shadow-xl
-        active:scale-[0.995]
-        disabled:cursor-default
-        sm:gap-4
-        sm:p-4
-      "
+className="
+  group
+  flex
+  w-full
+  min-w-0
+  items-center
+  gap-3
+  rounded-[18px]
+  border
+  border-white/8
+  bg-[#07101F]
+  p-3
+  text-left
+  transition
+  hover:border-white/12
+  hover:bg-[#0A1628]
+  active:scale-[0.995]
+  disabled:cursor-default
+  sm:p-3.5
+"
     >
       {/* ICON */}
       <div
-        className={`
-          flex
-          h-10
-          w-10
-          shrink-0
-          items-center
-          justify-center
-          rounded-xl
-          border
-          sm:h-11
-          sm:w-11
-          ${iconStyles[result.type]}
-        `}
+className={`
+  flex
+  h-10
+  w-10
+  shrink-0
+  items-center
+  justify-center
+  rounded-xl
+  border
+  sm:h-10
+  sm:w-10
+  ${iconStyles[result.type]}
+`}
       >
         <Icon size={18} />
       </div>

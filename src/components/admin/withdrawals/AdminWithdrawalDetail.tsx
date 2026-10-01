@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   CheckCircle2,
@@ -86,23 +86,23 @@ export default function AdminWithdrawalDetail({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-2 backdrop-blur-sm sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
     >
-      <div className="max-h-[92vh] w-full max-w-3xl overflow-hidden rounded-3xl border border-white/10 bg-[#0B1426] shadow-2xl shadow-black/50">
+      <div className="flex max-h-[96vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#0B1426] shadow-2xl shadow-black/50 sm:rounded-3xl">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-white/8 bg-[#0B1426]/95 px-6 py-5 backdrop-blur">
+        <div className="flex shrink-0 items-center justify-between border-b border-white/8 bg-[#0B1426]/95 px-4 py-3 backdrop-blur sm:px-6 sm:py-4">
           <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
+            <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-slate-500">
               Withdrawal details
             </p>
 
-            <div className="mt-2 flex flex-wrap items-center gap-3">
+            <div className="mt-1.5 flex flex-wrap items-center gap-2">
               <h2
                 id={titleId}
-                className="font-mono text-sm font-semibold text-white"
+                className="font-mono text-xs font-semibold text-white sm:text-sm"
               >
                 {shortId(withdrawal.id)}
               </h2>
@@ -116,17 +116,17 @@ export default function AdminWithdrawalDetail({
           <button
             type="button"
             onClick={onClose}
-            className="ml-4 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/8 bg-white/3 text-slate-500 transition hover:border-white/15 hover:bg-white/6 hover:text-white"
+            className="ml-3 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/8 bg-white/3 text-slate-500 transition hover:border-white/15 hover:bg-white/6 hover:text-white sm:h-9 sm:w-9"
             aria-label="Close withdrawal details"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="max-h-[calc(92vh-88px)] overflow-y-auto p-6">
+        <div className="min-h-0 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5">
           {/* Amount summary */}
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 sm:gap-3">
             <SummaryCard
               label="Requested"
               value={`${formatAmount(withdrawal.amount)} USDT`}
@@ -148,7 +148,7 @@ export default function AdminWithdrawalDetail({
           </div>
 
           {/* Destination */}
-          <section className="mt-5 overflow-hidden rounded-2xl border border-white/8 bg-white/1.5">
+          <section className="mt-3 overflow-hidden rounded-xl border border-white/8 bg-white/1.5 sm:mt-4 sm:rounded-2xl">
             <SectionHeader title="Destination" />
 
             <div className="divide-y divide-white/5">
@@ -195,10 +195,10 @@ export default function AdminWithdrawalDetail({
           </section>
 
           {/* Processing */}
-          <section className="mt-5 overflow-hidden rounded-2xl border border-white/8 bg-white/1.5">
+          <section className="mt-3 overflow-hidden rounded-xl border border-white/8 bg-white/1.5 sm:mt-4 sm:rounded-2xl">
             <SectionHeader title="Processing" />
 
-            <div className="grid gap-5 p-5 sm:grid-cols-2">
+            <div className="grid gap-3 p-4 sm:grid-cols-2 sm:gap-4 sm:p-5">
               <InfoItem
                 label="Confirmations"
                 value={`${withdrawal.confirmations} / ${withdrawal.required_confirmations}`}
@@ -233,19 +233,19 @@ export default function AdminWithdrawalDetail({
 
           {/* Transaction */}
           {showTxLink && (
-            <section className="mt-5 rounded-2xl border border-white/8 bg-white/1.5 p-5">
-              <div className="flex items-start justify-between gap-4">
+            <section className="mt-3 rounded-xl border border-white/8 bg-white/1.5 p-4 sm:mt-4 sm:rounded-2xl sm:p-5">
+              <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <h3 className="text-sm font-semibold text-white">
+                  <h3 className="text-xs font-semibold text-white sm:text-sm">
                     Transaction
                   </h3>
 
-                  <p className="mt-2 break-all font-mono text-xs leading-5 text-slate-500">
+                  <p className="mt-1.5 break-all font-mono text-[10px] leading-4 text-slate-500 sm:text-xs sm:leading-5">
                     {withdrawal.tx_hash}
                   </p>
                 </div>
 
-                <div className="flex shrink-0 items-center gap-2">
+                <div className="flex shrink-0 items-center gap-1.5">
                   <button
                     type="button"
                     onClick={() =>
@@ -254,14 +254,14 @@ export default function AdminWithdrawalDetail({
                         withdrawal.tx_hash,
                       )
                     }
-                    className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/8 bg-white/3 text-slate-500 transition hover:border-purple-400/20 hover:bg-purple-400/10 hover:text-purple-300"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/8 bg-white/3 text-slate-500 transition hover:border-purple-400/20 hover:bg-purple-400/10 hover:text-purple-300"
                     aria-label="Copy transaction hash"
                     title="Copy transaction hash"
                   >
                     {copied === "tx" ? (
-                      <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
                     ) : (
-                      <Copy className="h-4 w-4" />
+                      <Copy className="h-3.5 w-3.5" />
                     )}
                   </button>
 
@@ -269,11 +269,11 @@ export default function AdminWithdrawalDetail({
                     href={`https://tronscan.org/#/transaction/${withdrawal.tx_hash}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/8 bg-white/3 text-slate-500 transition hover:border-purple-400/20 hover:bg-purple-400/10 hover:text-purple-300"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/8 bg-white/3 text-slate-500 transition hover:border-purple-400/20 hover:bg-purple-400/10 hover:text-purple-300"
                     aria-label="Open transaction"
                     title="Open transaction"
                   >
-                    <ExternalLink className="h-4 w-4" />
+                    <ExternalLink className="h-3.5 w-3.5" />
                   </a>
                 </div>
               </div>
@@ -282,17 +282,17 @@ export default function AdminWithdrawalDetail({
 
           {/* Failure */}
           {withdrawal.failure_reason && (
-            <section className="mt-5 flex items-start gap-3 rounded-2xl border border-red-400/15 bg-red-400/5 p-5">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-red-400/10">
+            <section className="mt-3 flex items-start gap-2.5 rounded-xl border border-red-400/15 bg-red-400/5 p-4 sm:mt-4 sm:rounded-2xl">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-400/10">
                 <XCircle className="h-4 w-4 text-red-400" />
               </div>
 
-              <div>
-                <h3 className="text-sm font-semibold text-red-300">
+              <div className="min-w-0">
+                <h3 className="text-xs font-semibold text-red-300">
                   Failure reason
                 </h3>
 
-                <p className="mt-1 text-xs leading-5 text-red-300/70">
+                <p className="mt-1 text-[11px] leading-4.5 text-red-300/70">
                   {withdrawal.failure_reason}
                 </p>
               </div>
@@ -301,17 +301,17 @@ export default function AdminWithdrawalDetail({
 
           {/* Pending action */}
           {withdrawal.status === "PENDING" && (
-            <section className="mt-5 flex items-start gap-3 rounded-2xl border border-amber-400/15 bg-amber-400/5 p-5">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-400/10">
+            <section className="mt-3 flex items-start gap-2.5 rounded-xl border border-amber-400/15 bg-amber-400/5 p-4 sm:mt-4 sm:rounded-2xl">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-400/10">
                 <Clock3 className="h-4 w-4 text-amber-300" />
               </div>
 
-              <div className="flex-1">
-                <h3 className="text-sm font-semibold text-amber-300">
+              <div className="min-w-0 flex-1">
+                <h3 className="text-xs font-semibold text-amber-300">
                   Pending administrator action
                 </h3>
 
-                <p className="mt-1 text-xs leading-5 text-amber-200/70">
+                <p className="mt-1 text-[11px] leading-4.5 text-amber-200/70">
                   This withdrawal has not entered on-chain
                   processing. Rejecting it will mark the request
                   as failed and restore the requested amount
@@ -321,7 +321,7 @@ export default function AdminWithdrawalDetail({
                 <button
                   type="button"
                   onClick={onReject}
-                  className="mt-4 rounded-xl border border-red-400/20 bg-red-500/10 px-4 py-2.5 text-xs font-semibold text-red-300 transition hover:bg-red-500/15"
+                  className="mt-3 min-h-9 rounded-lg border border-red-400/20 bg-red-500/10 px-3 py-2 text-[11px] font-semibold text-red-300 transition hover:bg-red-500/15"
                 >
                   Reject withdrawal
                 </button>
@@ -331,17 +331,17 @@ export default function AdminWithdrawalDetail({
 
           {/* Failed state */}
           {withdrawal.status === "FAILED" && (
-            <section className="mt-5 flex items-start gap-3 rounded-2xl border border-red-400/15 bg-red-400/5 p-5">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-red-400/10">
+            <section className="mt-3 flex items-start gap-2.5 rounded-xl border border-red-400/15 bg-red-400/5 p-4 sm:mt-4 sm:rounded-2xl">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-400/10">
                 <XCircle className="h-4 w-4 text-red-400" />
               </div>
 
-              <div>
-                <h3 className="text-sm font-semibold text-red-300">
+              <div className="min-w-0">
+                <h3 className="text-xs font-semibold text-red-300">
                   Withdrawal failed
                 </h3>
 
-                <p className="mt-1 text-xs leading-5 text-red-300/70">
+                <p className="mt-1 text-[11px] leading-4.5 text-red-300/70">
                   This withdrawal is in a terminal failed state.
                   The backend refund workflow is idempotent, so
                   the withdrawal cannot be refunded twice.
@@ -351,8 +351,8 @@ export default function AdminWithdrawalDetail({
           )}
 
           {/* Metadata */}
-          <section className="mt-5 rounded-2xl border border-white/8 bg-white/1.5 p-5">
-            <div className="grid gap-5 sm:grid-cols-2">
+          <section className="mt-3 rounded-xl border border-white/8 bg-white/1.5 p-4 sm:mt-4 sm:rounded-2xl sm:p-5">
+            <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
               <InfoItem
                 label="Idempotency key"
                 value={withdrawal.idempotency_key}
@@ -385,28 +385,28 @@ function SummaryCard({
 }: SummaryCardProps) {
   return (
     <div
-      className={`rounded-2xl border p-4 ${
+      className={`rounded-xl border p-3 ${
         positive
           ? "border-emerald-400/15 bg-emerald-400/5"
           : "border-white/8 bg-white/2.5"
       }`}
     >
       <div
-        className={`mb-3 flex h-9 w-9 items-center justify-center rounded-xl ${
+        className={`mb-2 flex h-8 w-8 items-center justify-center rounded-lg ${
           positive
             ? "bg-emerald-400/10 text-emerald-300"
             : "bg-purple-400/10 text-purple-300"
         }`}
       >
-        <Icon className="h-4 w-4" />
+        <Icon className="h-3.5 w-3.5" />
       </div>
 
-      <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+      <p className="text-[9px] font-semibold uppercase tracking-wider text-slate-500">
         {label}
       </p>
 
       <p
-        className={`mt-1 text-lg font-semibold ${
+        className={`mt-1 text-sm font-semibold sm:text-base ${
           positive ? "text-emerald-300" : "text-white"
         }`}
       >
@@ -416,14 +416,10 @@ function SummaryCard({
   );
 }
 
-interface SectionHeaderProps {
-  title: string;
-}
-
-function SectionHeader({ title }: SectionHeaderProps) {
+function SectionHeader({ title }: { title: string }) {
   return (
-    <div className="border-b border-white/8 px-5 py-4">
-      <h3 className="text-sm font-semibold text-white">
+    <div className="border-b border-white/8 px-4 py-3 sm:px-5 sm:py-3.5">
+      <h3 className="text-xs font-semibold text-white sm:text-sm">
         {title}
       </h3>
     </div>
@@ -449,13 +445,13 @@ function DetailRow({
   onCopy,
 }: DetailRowProps) {
   return (
-    <div className="flex items-start justify-between gap-4 px-5 py-4">
-      <div className="min-w-0">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-600">
+    <div className="flex items-start justify-between gap-3 px-4 py-3 sm:px-5 sm:py-3.5">
+      <div className="min-w-0 flex-1">
+        <p className="text-[9px] font-semibold uppercase tracking-wider text-slate-600">
           {label}
         </p>
 
-        <p className="mt-1 break-all font-mono text-xs leading-5 text-slate-300">
+        <p className="mt-0.5 break-all font-mono text-[10px] leading-4 text-slate-300 sm:text-xs sm:leading-5">
           {value || "—"}
         </p>
       </div>
@@ -480,22 +476,20 @@ function DetailRow({
   );
 }
 
-interface InfoItemProps {
-  label: string;
-  value: string;
-}
-
 function InfoItem({
   label,
   value,
-}: InfoItemProps) {
+}: {
+  label: string;
+  value: string;
+}) {
   return (
-    <div>
-      <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-600">
+    <div className="min-w-0">
+      <p className="text-[9px] font-semibold uppercase tracking-wider text-slate-600">
         {label}
       </p>
 
-      <p className="mt-1 break-all text-xs font-medium leading-5 text-slate-300">
+      <p className="mt-0.5 break-all text-[10px] font-medium leading-4 text-slate-300 sm:text-xs sm:leading-5">
         {value || "—"}
       </p>
     </div>

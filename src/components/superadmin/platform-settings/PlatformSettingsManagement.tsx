@@ -1,4 +1,5 @@
-﻿"use client";
+
+"use client";
 
 import {
   Check,
@@ -608,9 +609,9 @@ export default function PlatformSettingsManagement() {
 
   return (
     <div className="min-h-screen bg-[#050B18] text-slate-100">
-      <div className="mx-auto max-w-7xl space-y-6 p-4 sm:p-6 lg:p-8">
+      <div className="mx-auto max-w-7xl space-y-4 p-3 sm:space-y-5 sm:p-5 lg:space-y-6 lg:p-6">
         {/* Header */}
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <div className="flex items-center gap-2">
               <span className="h-1.5 w-1.5 rounded-full bg-purple-400" />
@@ -620,7 +621,7 @@ export default function PlatformSettingsManagement() {
               </p>
             </div>
 
-            <h1 className="mt-2 text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
+            <h1 className="mt-2 text-xl font-extrabold tracking-tight sm:text-3xl text-white ">
               Platform Settings
             </h1>
 
@@ -688,7 +689,7 @@ export default function PlatformSettingsManagement() {
         )}
 
         {/* Filters */}
-        <section className="rounded-2xl border border-white/10 bg-[#0B1426] p-4 shadow-xl shadow-black/10">
+        <section className="rounded-2xl border border-white/10 bg-[#0B1426] p-3.5 shadow-xl shadow-black/10 sm:p-4">
           <div className="flex flex-col gap-3 lg:flex-row">
             <div className="relative min-w-0 flex-1">
               <input
@@ -699,7 +700,7 @@ export default function PlatformSettingsManagement() {
                   )
                 }
                 placeholder="Search by key, description, or value..."
-                className="w-full rounded-xl border border-white/10 bg-white/3 px-4 py-2.5 text-sm text-slate-100 outline-none transition placeholder:text-slate-600 focus:border-purple-400/40 focus:bg-white/4 focus:ring-4 focus:ring-purple-400/5"
+                className="w-full rounded-xl border border-white/10 bg-white/3 px-3 py-2 text-sm sm:px-4 sm:py-2.5 text-slate-100 outline-none transition placeholder:text-slate-600 focus:border-purple-400/40 focus:bg-white/4 focus:ring-4 focus:ring-purple-400/5"
               />
             </div>
 
@@ -712,7 +713,7 @@ export default function PlatformSettingsManagement() {
                     | "ALL",
                 )
               }
-              className="rounded-xl border border-white/10 bg-[#0B1426] px-4 py-2.5 text-sm font-medium text-slate-300 outline-none transition focus:border-purple-400/40 focus:ring-4 focus:ring-purple-400/5"
+              className="w-full rounded-xl border border-white/10 bg-[#0B1426] px-3 py-2 text-sm sm:w-auto sm:px-4 sm:py-2.5 font-medium text-slate-300 outline-none transition focus:border-purple-400/40 focus:ring-4 focus:ring-purple-400/5"
             >
               <option
                 value="ALL"
@@ -804,7 +805,7 @@ export default function PlatformSettingsManagement() {
                           category.value,
                         )
                       }
-                      className="flex w-full items-center justify-between border-b border-white/5 px-5 py-4 text-left transition hover:bg-white/2.5"
+                      className="flex w-full items-center justify-between border-b border-white/5 px-3.5 py-3 text-left transition sm:px-5 sm:py-4 hover:bg-white/2.5"
                     >
                       <div className="flex items-center gap-3">
                         <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-purple-400/10 bg-purple-400/10">
@@ -843,12 +844,12 @@ export default function PlatformSettingsManagement() {
                               key={
                                 setting.id
                               }
-                              className="px-5 py-5 transition hover:bg-white/1.5"
+                              className="px-3.5 py-3.5 transition hover:bg-white/1.5 sm:px-5 sm:py-4"
                             >
-                              <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
+                              <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
                                 <div className="min-w-0 flex-1">
                                   <div className="flex flex-wrap items-center gap-2">
-                                    <code className="rounded-lg border border-white/8 bg-white/[0.035] px-2.5 py-1.5 text-xs font-semibold text-purple-200">
+                                    <code className="rounded-lg border border-white/8 bg-white/[0.035] px-2 py-1.5 text-xs font-semibold text-purple-200">
                                       {
                                         setting.key
                                       }
@@ -882,7 +883,7 @@ export default function PlatformSettingsManagement() {
                                     }
                                   </p>
 
-                                  <div className="mt-3 rounded-xl border border-white/6 bg-[#07111F] px-3.5 py-3">
+                                  <div className="mt-2.5 rounded-xl border border-white/6 bg-[#07111F] px-3 py-2.5 sm:mt-3 sm:px-3.5 sm:py-3">
                                     <span className="break-all font-mono text-xs leading-5 text-slate-400">
                                       {valuePreview(
                                         setting,
@@ -905,7 +906,7 @@ export default function PlatformSettingsManagement() {
                                   </p>
                                 </div>
 
-                                <div className="flex shrink-0 items-center gap-2">
+                                <div className="flex shrink-0 flex-wrap items-center gap-1.5 sm:gap-2">
                                   <button
                                     type="button"
                                     onClick={() =>
@@ -913,7 +914,7 @@ export default function PlatformSettingsManagement() {
                                         setting,
                                       )
                                     }
-                                    className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/3 px-3.5 py-2 text-xs font-bold text-slate-300 transition hover:bg-white/[0.07] hover:text-white"
+                                    className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/3 px-2.5 py-1.5 text-xs sm:rounded-xl sm:px-3.5 sm:py-2 font-bold text-slate-300 transition hover:bg-white/[0.07] hover:text-white"
                                   >
                                     <Pencil className="h-3.5 w-3.5" />
 
@@ -931,7 +932,7 @@ export default function PlatformSettingsManagement() {
                                       deletingKey ===
                                       setting.key
                                     }
-                                    className="inline-flex items-center gap-2 rounded-xl border border-red-400/15 bg-red-500/4 px-3.5 py-2 text-xs font-bold text-red-400 transition hover:bg-red-500/10 hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-50"
+                                    className="inline-flex items-center gap-2 rounded-lg border border-red-400/15 bg-red-500/4 px-2.5 py-1.5 text-xs sm:rounded-xl sm:px-3.5 sm:py-2 font-bold text-red-400 transition hover:bg-red-500/10 hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-50"
                                   >
                                     <Trash2 className="h-3.5 w-3.5" />
 
@@ -958,7 +959,7 @@ export default function PlatformSettingsManagement() {
       {/* Form modal */}
       {editingKey !== null && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-[#020617]/80 p-4 backdrop-blur-md"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#020617]/80 p-2 sm:p-4 backdrop-blur-md"
           onClick={() => {
             if (!saving) {
               closeForm();
@@ -972,9 +973,9 @@ export default function PlatformSettingsManagement() {
             onClick={(event) =>
               event.stopPropagation()
             }
-            className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-white/10 bg-[#07111F] shadow-2xl shadow-black/50"
+            className="max-h-[96vh] w-full max-w-2xl overflow-y-auto rounded-2xl sm:rounded-3xl border border-white/10 bg-[#07111F] shadow-2xl shadow-black/50"
           >
-            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/8 bg-[#07111F]/95 px-6 py-5 backdrop-blur-xl">
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/8 bg-[#07111F]/95 px-4 py-3.5 sm:px-6 sm:py-5 backdrop-blur-xl">
               <div>
                 <div className="flex items-center gap-2">
                   <span className="h-1.5 w-1.5 rounded-full bg-purple-400" />
@@ -1015,7 +1016,7 @@ export default function PlatformSettingsManagement() {
 
             <form
               onSubmit={handleSubmit}
-              className="space-y-5 p-6"
+              className="space-y-4 p-4 sm:space-y-5 sm:p-6"
             >
               {editingKey ===
                 "__create__" && (

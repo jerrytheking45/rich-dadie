@@ -1,4 +1,4 @@
-﻿
+
 import { Suspense } from "react";
 import Image from "next/image";
 import RegisterForm from "./RegisterForm";
@@ -17,10 +17,10 @@ function RegisterLoading() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.12),transparent_32%),radial-gradient(circle_at_80%_20%,rgba(168,85,247,0.12),transparent_28%),linear-gradient(135deg,#070b24_0%,#0b1033_50%,#130d2c_100%)]" />
       </div>
 
-      <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-6xl items-center px-4 py-8 sm:px-6 lg:px-8">
-        <div className="grid w-full overflow-hidden rounded-4xl border border-white/10 bg-white/[0.035] shadow-[0_30px_100px_rgba(0,0,0,0.45)] backdrop-blur-2xl lg:grid-cols-[1.05fr_0.95fr]">
+      <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-6xl items-center px-3 py-5 sm:px-6 sm:py-8 lg:px-8">
+        <div className="grid w-full overflow-hidden rounded-3xl sm:rounded-4xl border border-white/10 bg-white/[0.035] shadow-[0_30px_100px_rgba(0,0,0,0.45)] backdrop-blur-2xl lg:grid-cols-[1.05fr_0.95fr]">
           {/* Desktop branding panel */}
-          <section className="relative hidden min-h-160 overflow-hidden border-r border-white/10 p-10 lg:flex lg:flex-col lg:justify-between xl:p-14">
+          <section className="relative hidden min-h-160 overflow-hidden border-r border-white/10 p-8 lg:flex lg:flex-col lg:justify-between xl:p-14">
             <div className="absolute -right-32 -top-32 h-80 w-80 rounded-full bg-cyan-400/10 blur-3xl" />
 
             <div className="absolute -bottom-40 -left-20 h-96 w-96 rounded-full bg-purple-500/10 blur-3xl" />
@@ -91,10 +91,10 @@ function RegisterLoading() {
           </section>
 
           {/* Registration loading panel */}
-          <section className="flex items-center p-5 sm:p-8 lg:p-10 xl:p-14">
+          <section className="flex items-center p-4 sm:p-8 lg:p-10 xl:p-14">
             <div className="mx-auto w-full max-w-md animate-pulse">
               {/* Mobile logo */}
-              <div className="mb-8 flex items-center gap-3 lg:hidden">
+              <div className="mb-6 flex items-center gap-3 lg:hidden">
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[14px] border border-white/15 bg-white/10 shadow-[0_8px_30px_rgba(45,212,191,0.18)]">
                   <Image
                     src="/images/logo.png"
@@ -125,41 +125,41 @@ function RegisterLoading() {
               </div>
 
               {/* Form */}
-              <div className="mt-8 space-y-5">
+              <div className="mt-6 space-y-4 sm:mt-8 sm:space-y-5">
                 <div>
                   <div className="mb-2 h-4 w-24 rounded bg-white/6" />
 
-                  <div className="h-14 rounded-2xl border border-white/10 bg-white/5.5" />
+                  <div className="h-12 rounded-xl border border-white/10 bg-white/5.5 sm:h-14 sm:rounded-2xl" />
                 </div>
 
                 <div>
                   <div className="mb-2 h-4 w-24 rounded bg-white/6" />
 
-                  <div className="h-14 rounded-2xl border border-white/10 bg-white/5.5" />
+                  <div className="h-12 rounded-xl border border-white/10 bg-white/5.5 sm:h-14 sm:rounded-2xl" />
                 </div>
 
                 <div>
                   <div className="mb-2 h-4 w-32 rounded bg-white/6" />
 
-                  <div className="h-14 rounded-2xl border border-white/10 bg-white/5.5" />
+                  <div className="h-12 rounded-xl border border-white/10 bg-white/5.5 sm:h-14 sm:rounded-2xl" />
                 </div>
 
                 <div>
                   <div className="mb-2 h-4 w-28 rounded bg-white/6" />
 
-                  <div className="h-14 rounded-2xl border border-white/10 bg-white/5.5" />
+                  <div className="h-12 rounded-xl border border-white/10 bg-white/5.5 sm:h-14 sm:rounded-2xl" />
                 </div>
 
                 {/* CTA */}
-                <div className="h-14 rounded-2xl bg-emerald-400/20" />
+                <div className="h-12 rounded-xl bg-emerald-400/20 sm:h-14 sm:rounded-2xl" />
               </div>
 
               {/* Footer */}
-              <div className="mt-8 flex justify-center">
+              <div className="mt-6 flex justify-center sm:mt-8">
                 <div className="h-4 w-64 rounded bg-white/4" />
               </div>
 
-              <div className="mt-8 border-t border-white/8 pt-5">
+              <div className="mt-6 border-t sm:mt-8 border-white/8 pt-5">
                 <div className="mx-auto h-3 w-72 max-w-full rounded bg-white/[0.035]" />
               </div>
             </div>

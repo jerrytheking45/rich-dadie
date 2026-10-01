@@ -1,4 +1,4 @@
-﻿
+
 'use client';
 
 import {
@@ -150,13 +150,13 @@ export default function NewSupportTicketPage() {
 
       {/* Body */}
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <main className="px-4 py-5 sm:px-6 sm:py-6">
-          <div className="mb-5">
+        <main className="px-3.5 py-4 sm:px-5 sm:py-5">
+          <div className="mb-4">
             <p className="text-[9px] font-black uppercase tracking-[0.18em] text-emerald-300">
               New request
             </p>
 
-            <h2 className="mt-2 text-xl font-black tracking-tight text-white">
+            <h2 className="mt-1.5 text-xl font-black tracking-tight text-white">
               Create a support ticket
             </h2>
 
@@ -169,7 +169,7 @@ export default function NewSupportTicketPage() {
 
           {investmentId &&
             initialCategory === 'INVESTMENT' && (
-              <div className="mb-5 rounded-2xl border border-emerald-400/10 bg-emerald-400/7 px-4 py-3">
+              <div className="mb-4 rounded-2xl border border-emerald-400/10 bg-emerald-400/7 px-4 py-3">
                 <p className="text-[9px] font-black uppercase tracking-widest text-emerald-300">
                   Investment issue
                 </p>
@@ -184,7 +184,7 @@ export default function NewSupportTicketPage() {
               </div>
             )}
 
-          <div className="rounded-3xl border border-white/7 bg-[#0B1426] p-4 shadow-xl shadow-black/10 sm:p-6">
+          <div className="rounded-2xl border border-white/7 bg-[#0B1426] p-3.5 shadow-xl shadow-black/10 sm:rounded-3xl sm:p-5">
             <CreateSupportTicketForm
               initialCategory={initialCategory}
               initialSubject={initialSubject}

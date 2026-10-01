@@ -1,4 +1,4 @@
-﻿
+
 'use client';
 
 import {
@@ -99,13 +99,13 @@ export default function SupportPage() {
 
       {/* Header */}
       <header className="sticky top-0 z-30 border-b border-white/6 bg-[#050B18]/90 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-2xl items-center justify-between gap-3 px-4 py-3.5 sm:px-6">
+        <div className="mx-auto flex max-w-2xl items-center justify-between gap-2.5 px-3 py-3 sm:gap-3 sm:px-5 sm:py-3.5">
           <div className="flex min-w-0 items-center gap-3">
             <button
               type="button"
               onClick={() => router.back()}
               className={[
-                'flex h-10 w-10 shrink-0 items-center justify-center',
+                'flex h-9 w-9 shrink-0 items-center justify-center',
                 'rounded-xl border border-white/7 bg-white/4',
                 'text-white/45 transition',
                 'hover:bg-white/7 hover:text-white',
@@ -116,7 +116,7 @@ export default function SupportPage() {
               <ArrowLeft size={18} aria-hidden="true" />
             </button>
 
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-emerald-400/10 bg-emerald-400/10">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-emerald-400/10 bg-emerald-400/10">
               <Headphones
                 size={19}
                 className="text-emerald-300"
@@ -139,7 +139,7 @@ export default function SupportPage() {
             type="button"
             onClick={() => router.push('/investment/support/new')}
             className={[
-              'flex h-10 shrink-0 items-center gap-1.5',
+              'flex h-9 shrink-0 items-center gap-1.5',
               'rounded-xl',
               'bg-emerald-400 px-3',
               'text-[10px] font-black text-[#04110B]',
@@ -158,9 +158,9 @@ export default function SupportPage() {
       </header>
 
       {/* Main */}
-      <main className="relative mx-auto max-w-2xl px-4 py-5 sm:px-6 sm:py-6">
+      <main className="relative mx-auto max-w-2xl px-3 py-4 sm:px-5 sm:py-5">
         {/* Hero */}
-        <section className="relative mb-6 overflow-hidden rounded-[26px] border border-white/7 bg-linear-to-br from-[#101D33] via-[#0B1426] to-[#11102B] p-5 shadow-xl shadow-black/15 sm:p-6">
+        <section className="relative mb-4 overflow-hidden rounded-[22px] border border-white/7 bg-linear-to-br from-[#101D33] via-[#0B1426] to-[#11102B] p-4 shadow-xl shadow-black/15 sm:p-5">
           <div className="pointer-events-none absolute -right-16 -top-20 h-44 w-44 rounded-full bg-purple-500/8 blur-3xl" />
 
           <div className="relative">
@@ -184,7 +184,7 @@ export default function SupportPage() {
               </div>
             </div>
 
-            <h2 className="mt-5 text-xl font-black tracking-tight text-white sm:text-2xl">
+            <h2 className="mt-4 text-xl font-black tracking-tight text-white sm:text-2xl">
               How can we help?
             </h2>
 
@@ -269,5 +269,3 @@ export default function SupportPage() {
     </div>
   );
 }
-
-

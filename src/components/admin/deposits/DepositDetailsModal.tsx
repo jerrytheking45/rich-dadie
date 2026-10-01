@@ -3,6 +3,7 @@
 
 import {
   CheckCircle2,
+  ChevronDown,
   Clock3,
   Copy,
   Hash,
@@ -33,6 +34,13 @@ export default function DepositDetailsModal({
   onReject,
   processing = false,
 }: DepositDetailsModalProps) {
+
+  const [openSections, setOpenSections] = useState({
+    deposit: true,
+    blockchain: true,
+    activity: false,
+  });
+
   const [copied, setCopied] = useState<
     'transaction' | 'address' | null
   >(null);
@@ -65,26 +73,26 @@ export default function DepositDetailsModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-[#020617]/80 p-4 backdrop-blur-md"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[#020617]/80 p-2 sm:p-4 backdrop-blur-md"
       onClick={onClose}
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="deposit-details-title"
-        className="flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-[28px] border border-white/10 bg-[#0B1426] shadow-[0_30px_100px_rgba(0,0,0,0.55)]"
+        className="flex max-h-[96vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl sm:rounded-[28px] border border-white/10 bg-[#0B1426] shadow-[0_30px_100px_rgba(0,0,0,0.55)]"
         onClick={(event) => event.stopPropagation()}
       >
         {/* Header */}
-        <div className="relative overflow-hidden border-b border-white/7 px-5 py-5 sm:px-7">
+        <div className="relative overflow-hidden border-b border-white/7 px-4 py-4 sm:px-7 sm:py-5">
           <div className="pointer-events-none absolute -right-20 -top-24 h-56 w-56 rounded-full bg-purple-600/10 blur-3xl" />
 
           <div className="pointer-events-none absolute -left-20 bottom-0 h-40 w-40 rounded-full bg-emerald-500/6 blur-3xl" />
 
-          <div className="relative flex items-start justify-between gap-4">
+          <div className="relative flex items-start justify-between gap-3 sm:gap-4">
             <div className="flex min-w-0 items-center gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-emerald-400/10 bg-emerald-400/8 text-emerald-300">
-                <Wallet className="h-5 w-5" />
+              <div className="flex h-10 w-10 shrink-0 sm:h-11 sm:w-11 items-center justify-center rounded-2xl border border-emerald-400/10 bg-emerald-400/8 text-emerald-300">
+                <Wallet className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
 
               <div className="min-w-0">
@@ -109,7 +117,7 @@ export default function DepositDetailsModal({
               type="button"
               onClick={onClose}
               aria-label="Close deposit details"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/8 bg-white/3 text-white/40 transition hover:border-white/15 hover:bg-white/6 hover:text-white"
+              className="flex h-8 w-8 shrink-0 sm:h-9 sm:w-9 items-center justify-center rounded-xl border border-white/8 bg-white/3 text-white/40 transition hover:border-white/15 hover:bg-white/6 hover:text-white"
             >
               <X className="h-4 w-4" />
             </button>
@@ -117,9 +125,9 @@ export default function DepositDetailsModal({
         </div>
 
         {/* Content */}
-        <div className="overflow-y-auto px-5 py-5 sm:px-7 sm:py-6">
+        <div className="overflow-y-auto px-4 py-4 sm:px-7 sm:py-6">
           {/* Summary */}
-          <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="mb-4 grid grid-cols-1 gap-2.5 sm:mb-6 sm:gap-3 sm:grid-cols-3">
             <SummaryCard
               label="Expected"
               value={`${deposit.expected_amount} ${deposit.asset_symbol}`}
@@ -144,8 +152,12 @@ export default function DepositDetailsModal({
           </div>
 
           {/* Deposit information */}
-          <Section title="Deposit Information">
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <Section
+            title="Deposit Information"
+            open={openSections.deposit}
+            onToggle={() => setOpenSections((current) => ({ ...current, deposit: !current.deposit }))}
+          >
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5">
               <Detail
                 icon={<Wallet className="h-3.5 w-3.5" />}
                 label="User"
@@ -192,8 +204,12 @@ export default function DepositDetailsModal({
           </Section>
 
           {/* Blockchain */}
-          <Section title="Blockchain Information">
-            <div className="space-y-3">
+          <Section
+            title="Blockchain Information"
+            open={openSections.blockchain}
+            onToggle={() => setOpenSections((current) => ({ ...current, blockchain: !current.blockchain }))}
+          >
+            <div className="space-y-2.5 sm:space-y-3">
               <CopyableDetail
                 icon={<Hash className="h-3.5 w-3.5" />}
                 label="Transaction Hash"
@@ -222,8 +238,12 @@ export default function DepositDetailsModal({
           </Section>
 
           {/* Activity */}
-          <Section title="Activity">
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <Section
+            title="Activity"
+            open={openSections.activity}
+            onToggle={() => setOpenSections((current) => ({ ...current, activity: !current.activity }))}
+          >
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5">
               <Detail
                 icon={<Clock3 className="h-3.5 w-3.5" />}
                 label="Created"
@@ -241,13 +261,13 @@ export default function DepositDetailsModal({
 
         {/* Footer */}
         {pending ? (
-          <div className="border-t border-white/7 bg-[#080F1D]/95 px-5 py-4 sm:px-7">
-            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <div className="border-t border-white/7 bg-[#080F1D]/95 px-4 py-3 sm:px-7 sm:py-4">
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:gap-3 sm:justify-end">
               <button
                 type="button"
                 onClick={() => onReject(deposit)}
                 disabled={processing}
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-red-400/15 bg-red-400/7 px-5 text-sm font-semibold text-red-300 transition hover:border-red-400/25 hover:bg-red-400/12 disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex min-h-10 items-center justify-center sm:min-h-11 gap-2 rounded-xl border border-red-400/15 bg-red-400/7 px-5 text-sm font-semibold text-red-300 transition hover:border-red-400/25 hover:bg-red-400/12 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <XCircle className="h-4 w-4" />
                 Reject Deposit
@@ -257,7 +277,7 @@ export default function DepositDetailsModal({
                 type="button"
                 onClick={() => onVerify(deposit)}
                 disabled={processing}
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-linear-to-r from-purple-600 to-blue-600 px-5 text-sm font-semibold text-white shadow-lg shadow-purple-950/20 transition hover:from-purple-500 hover:to-blue-500 disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex min-h-10 items-center justify-center sm:min-h-11 gap-2 rounded-xl bg-linear-to-r from-purple-600 to-blue-600 px-5 text-sm font-semibold text-white shadow-lg shadow-purple-950/20 transition hover:from-purple-500 hover:to-blue-500 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {processing ? (
                   <>
@@ -274,7 +294,7 @@ export default function DepositDetailsModal({
             </div>
           </div>
         ) : (
-          <div className="flex justify-end border-t border-white/7 bg-[#080F1D]/95 px-5 py-4 sm:px-7">
+          <div className="flex justify-end border-t border-white/7 bg-[#080F1D]/95 px-4 py-3 sm:px-7 sm:py-4">
             <button
               type="button"
               onClick={onClose}
@@ -292,19 +312,38 @@ export default function DepositDetailsModal({
 function Section({
   title,
   children,
+  open,
+  onToggle,
 }: {
   title: string;
   children: React.ReactNode;
+  open: boolean;
+  onToggle: () => void;
 }) {
   return (
-    <section className="mb-6 last:mb-0">
-      <h3 className="mb-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-white/30">
-        {title}
-      </h3>
+    <section className="mb-4 last:mb-0 sm:mb-6">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between gap-3 rounded-xl px-1 py-2 text-left transition hover:bg-white/2.5"
+      >
+        <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/35">
+          {title}
+        </span>
 
-      <div className="rounded-2xl border border-white/7 bg-white/2.5 p-4">
-        {children}
-      </div>
+        <ChevronDown
+          className={`h-4 w-4 shrink-0 text-white/30 transition-transform ${
+            open ? 'rotate-180' : ''
+          }`}
+        />
+      </button>
+
+      {open && (
+        <div className="mt-1.5 rounded-2xl border border-white/7 bg-white/2.5 p-3 sm:p-4">
+          {children}
+        </div>
+      )}
     </section>
   );
 }

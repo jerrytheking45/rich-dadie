@@ -12,7 +12,7 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 
-import InvestmentBottomNav from "@/src/components/InvestmentBottomNav";
+
 import WithdrawalForm from "@/src/components/withdraw/WithdrawalForm";
 import WithdrawalPINManager from "@/src/components/withdraw/WithdrawalPINManager";
 import WithdrawalStatus from "@/src/components/withdraw/WithdrawalStatus";
@@ -831,8 +831,6 @@ export default function WithdrawPage() {
             <div className="h-14 rounded-2xl bg-[#0C2244]" />
           </div>
         </div>
-
-        <InvestmentBottomNav />
       </main>
     );
   }
@@ -923,8 +921,6 @@ export default function WithdrawPage() {
           }
         />
       </div>
-
-      <InvestmentBottomNav />
     </main>
   );
 }

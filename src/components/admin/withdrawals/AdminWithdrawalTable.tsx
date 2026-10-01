@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   ChevronLeft,
@@ -54,6 +54,34 @@ function formatDate(value: string | null): string {
   });
 }
 
+function MobileField({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="min-w-0">
+      <p className="text-[9px] font-semibold uppercase tracking-wider text-slate-600">
+        {label}
+      </p>
+
+      <div className="mt-0.5 min-w-0 text-xs text-slate-300">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function Th({ children }: { children: React.ReactNode }) {
+  return (
+    <th className="px-4 py-3 text-[9px] font-semibold uppercase tracking-wider text-slate-600">
+      {children}
+    </th>
+  );
+}
+
 export default function AdminWithdrawalTable({
   withdrawals,
   page,
@@ -73,11 +101,11 @@ export default function AdminWithdrawalTable({
 
   if (loading) {
     return (
-      <div className="flex min-h-72 items-center justify-center rounded-2xl border border-white/8 bg-[#0B1426]">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="h-7 w-7 animate-spin text-purple-400" />
+      <div className="flex min-h-56 items-center justify-center rounded-2xl border border-white/8 bg-[#0B1426]">
+        <div className="flex flex-col items-center gap-2.5">
+          <Loader2 className="h-6 w-6 animate-spin text-purple-400" />
 
-          <p className="text-sm text-slate-500">
+          <p className="text-xs text-slate-500">
             Loading withdrawals...
           </p>
         </div>
@@ -87,8 +115,8 @@ export default function AdminWithdrawalTable({
 
   if (withdrawals.length === 0) {
     return (
-      <div className="flex min-h-72 flex-col items-center justify-center rounded-2xl border border-white/8 bg-[#0B1426] px-6 text-center">
-        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-white/8 bg-white/3">
+      <div className="flex min-h-56 flex-col items-center justify-center rounded-2xl border border-white/8 bg-[#0B1426] px-5 text-center">
+        <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl border border-white/8 bg-white/3">
           <WalletCards className="h-5 w-5 text-slate-600" />
         </div>
 
@@ -118,35 +146,92 @@ export default function AdminWithdrawalTable({
 
   return (
     <div className="overflow-hidden rounded-2xl border border-white/8 bg-[#0B1426] shadow-xl shadow-black/10">
-      <div className="overflow-x-auto">
-        <table className="min-w-275 w-full text-left">
+      {/* Mobile cards */}
+      <div className="divide-y divide-white/5 md:hidden">
+        {withdrawals.map((withdrawal) => (
+          <article
+            key={withdrawal.id}
+            className="p-4"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <button
+                type="button"
+                onClick={() => onSelect(withdrawal)}
+                className="min-w-0 flex-1 text-left"
+              >
+                <p className="truncate font-mono text-xs font-semibold text-slate-200">
+                  {shorten(withdrawal.id)}
+                </p>
+
+                <p className="mt-0.5 truncate font-mono text-[10px] text-slate-600">
+                  {shorten(withdrawal.user_id)}
+                </p>
+              </button>
+
+              <WithdrawalStatusBadge
+                status={withdrawal.status}
+              />
+            </div>
+
+            <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3">
+              <MobileField label="Amount">
+                <p className="font-semibold text-white">
+                  {formatAmount(withdrawal.amount)}{" "}
+                  <span className="text-[10px] font-medium text-slate-500">
+                    USDT
+                  </span>
+                </p>
+
+                <p className="mt-0.5 text-[10px] text-slate-600">
+                  Net {formatAmount(withdrawal.net_amount)} · Fee{" "}
+                  {formatAmount(withdrawal.fee)}
+                </p>
+              </MobileField>
+
+              <MobileField label="Created">
+                <p className="text-[11px] text-slate-400">
+                  {formatDate(withdrawal.created_at)}
+                </p>
+              </MobileField>
+
+              <MobileField label="Destination">
+                <p className="break-all font-mono text-[10px] leading-4 text-slate-400">
+                  {withdrawal.destination_address}
+                </p>
+              </MobileField>
+
+              <MobileField label="Network">
+                <p className="font-mono text-[10px] text-slate-400">
+                  {withdrawal.network_id}
+                </p>
+              </MobileField>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => onSelect(withdrawal)}
+              className="mt-3 flex min-h-10 w-full items-center justify-center gap-1.5 rounded-xl border border-purple-400/15 bg-purple-400/10 px-3 py-2 text-xs font-semibold text-purple-300 transition hover:bg-purple-400/15"
+            >
+              <Eye className="h-3.5 w-3.5" />
+              View withdrawal
+            </button>
+          </article>
+        ))}
+      </div>
+
+      {/* Tablet / desktop table */}
+      <div className="hidden overflow-x-auto md:block">
+        <table className="w-full text-left">
           <thead>
             <tr className="border-b border-white/8 bg-white/2">
-              <th className="px-5 py-4 text-[10px] font-semibold uppercase tracking-wider text-slate-600">
-                Withdrawal
-              </th>
+              <Th>Withdrawal</Th>
+              <Th>User</Th>
+              <Th>Destination</Th>
+              <Th>Amount</Th>
+              <Th>Status</Th>
+              <Th>Created</Th>
 
-              <th className="px-5 py-4 text-[10px] font-semibold uppercase tracking-wider text-slate-600">
-                User
-              </th>
-
-              <th className="px-5 py-4 text-[10px] font-semibold uppercase tracking-wider text-slate-600">
-                Destination
-              </th>
-
-              <th className="px-5 py-4 text-[10px] font-semibold uppercase tracking-wider text-slate-600">
-                Amount
-              </th>
-
-              <th className="px-5 py-4 text-[10px] font-semibold uppercase tracking-wider text-slate-600">
-                Status
-              </th>
-
-              <th className="px-5 py-4 text-[10px] font-semibold uppercase tracking-wider text-slate-600">
-                Created
-              </th>
-
-              <th className="px-5 py-4 text-right text-[10px] font-semibold uppercase tracking-wider text-slate-600">
+              <th className="px-4 py-3 text-right text-[9px] font-semibold uppercase tracking-wider text-slate-600">
                 Action
               </th>
             </tr>
@@ -156,74 +241,66 @@ export default function AdminWithdrawalTable({
             {withdrawals.map((withdrawal) => (
               <tr
                 key={withdrawal.id}
-                className="transition-colors hover:bg-white/[2.5"
+                className="transition-colors hover:bg-white/2.5"
               >
-                <td className="px-5 py-4">
+                <td className="px-4 py-3">
                   <button
                     type="button"
-                    onClick={() =>
-                      onSelect(withdrawal)
-                    }
+                    onClick={() => onSelect(withdrawal)}
                     className="text-left"
                   >
-                    <p className="font-mono text-xs font-semibold text-slate-200">
+                    <p className="font-mono text-[11px] font-semibold text-slate-200">
                       {shorten(withdrawal.id)}
                     </p>
 
-                    <p className="mt-1 text-[10px] text-slate-600">
+                    <p className="mt-0.5 text-[9px] text-slate-600">
                       {withdrawal.asset_id.slice(0, 8)} ·{" "}
                       {withdrawal.network_id.slice(0, 8)}
                     </p>
                   </button>
                 </td>
 
-                <td className="px-5 py-4">
-                  <p className="font-mono text-xs text-slate-400">
+                <td className="px-4 py-3">
+                  <p className="font-mono text-[11px] text-slate-400">
                     {shorten(withdrawal.user_id)}
                   </p>
                 </td>
 
-                <td className="px-5 py-4">
-                  <p className="max-w-55 truncate font-mono text-xs text-slate-400">
+                <td className="px-4 py-3">
+                  <p className="max-w-55 truncate font-mono text-[10px] text-slate-400">
                     {withdrawal.destination_address}
                   </p>
                 </td>
 
-                <td className="px-5 py-4">
-                  <p className="text-sm font-semibold text-white">
+                <td className="px-4 py-3">
+                  <p className="text-xs font-semibold text-white">
                     {formatAmount(withdrawal.amount)}{" "}
-                    <span className="text-xs font-medium text-slate-500">
+                    <span className="text-[10px] font-medium text-slate-500">
                       USDT
                     </span>
                   </p>
 
-                  <p className="mt-1 text-[10px] text-slate-600">
-                    Net{" "}
-                    {formatAmount(
-                      withdrawal.net_amount,
-                    )}{" "}
-                    · Fee{" "}
+                  <p className="mt-0.5 text-[9px] text-slate-600">
+                    Net {formatAmount(withdrawal.net_amount)} · Fee{" "}
                     {formatAmount(withdrawal.fee)}
                   </p>
                 </td>
 
-                <td className="px-5 py-4">
+                <td className="px-4 py-3">
                   <WithdrawalStatusBadge
                     status={withdrawal.status}
                   />
                 </td>
 
-                <td className="px-5 py-4 text-xs text-slate-500">
+                <td className="px-4 py-3 text-[10px] text-slate-500">
                   {formatDate(withdrawal.created_at)}
                 </td>
 
-                <td className="px-5 py-4 text-right">
+                <td className="px-4 py-3 text-right">
                   <button
                     type="button"
-                    onClick={() =>
-                      onSelect(withdrawal)
-                    }
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-white/8 bg-white/3 px-3 py-2 text-xs font-medium text-slate-400 transition hover:border-purple-400/20 hover:bg-purple-400/10 hover:text-purple-300"
+                    onClick={() => onSelect(withdrawal)}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-white/8 bg-white/3 px-2.5 py-1.5 text-[10px] font-medium text-slate-400 transition hover:border-purple-400/20 hover:bg-purple-400/10 hover:text-purple-300"
                   >
                     <Eye className="h-3.5 w-3.5" />
                     Details
@@ -236,8 +313,8 @@ export default function AdminWithdrawalTable({
       </div>
 
       {/* Pagination */}
-      <div className="flex flex-col gap-3 border-t border-white/8 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-xs text-slate-600">
+      <div className="flex flex-col gap-2.5 border-t border-white/8 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-[10px] text-slate-600">
           Showing{" "}
           <span className="font-medium text-slate-400">
             {firstItem}
@@ -252,20 +329,20 @@ export default function AdminWithdrawalTable({
           </span>
         </p>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <button
             type="button"
             disabled={!canPrevious}
             onClick={() =>
               onPageChange(page - 1)
             }
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/8 bg-white/3 text-slate-500 transition hover:bg-white/6 hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/8 bg-white/3 text-slate-500 transition hover:bg-white/6 hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
             aria-label="Previous page"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
 
-          <span className="min-w-22 rounded-xl border border-purple-400/15 bg-purple-400/10 px-3 py-2 text-center text-xs font-medium text-purple-300">
+          <span className="min-w-20 rounded-lg border border-purple-400/15 bg-purple-400/10 px-2.5 py-2 text-center text-[10px] font-medium text-purple-300">
             Page {page} of {totalPages}
           </span>
 
@@ -275,7 +352,7 @@ export default function AdminWithdrawalTable({
             onClick={() =>
               onPageChange(page + 1)
             }
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/8 bg-white/3 text-slate-500 transition hover:bg-white/6 hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/8 bg-white/3 text-slate-500 transition hover:bg-white/6 hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
             aria-label="Next page"
           >
             <ChevronRight className="h-4 w-4" />

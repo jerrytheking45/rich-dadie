@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import {
   AlertCircle,
@@ -168,8 +168,8 @@ export default function SupportAttachmentPanel({
   };
 
   return (
-    <section className="overflow-hidden rounded-3xl border border-white/8 bg-[#0B1426] shadow-xl shadow-black/10">
-      <div className="border-b border-white/7 px-5 py-4">
+    <section className="overflow-hidden rounded-2xl border border-white/8 bg-[#0B1426] shadow-xl shadow-black/10">
+      <div className="border-b border-white/7 px-4 py-3.5 sm:px-5">
         <div className="flex items-start justify-between gap-4">
           <div className="flex min-w-0 items-start gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-emerald-400/10 bg-emerald-400/8 text-emerald-300">
@@ -193,7 +193,7 @@ export default function SupportAttachmentPanel({
         </div>
       </div>
 
-      <div className="p-5">
+      <div className="p-4 sm:p-5">
         {error && (
           <div className="mb-4 flex items-start gap-2 rounded-xl border border-rose-400/15 bg-rose-400/8 px-3 py-2.5">
             <AlertCircle
@@ -226,7 +226,7 @@ export default function SupportAttachmentPanel({
           disabled={
             disabled || uploading
           }
-          className="inline-flex items-center gap-2 rounded-xl border border-emerald-400/15 bg-emerald-400/8 px-4 py-2.5 text-xs font-bold text-emerald-300 transition hover:border-emerald-400/25 hover:bg-emerald-400/12 disabled:cursor-not-allowed disabled:opacity-40"
+          className="inline-flex items-center gap-2 rounded-xl border border-emerald-400/15 bg-emerald-400/8 px-3 py-2 text-xs font-bold text-emerald-300 transition hover:border-emerald-400/25 hover:bg-emerald-400/12 disabled:cursor-not-allowed disabled:opacity-40"
         >
           {uploading ? (
             <Loader2
@@ -262,7 +262,7 @@ export default function SupportAttachmentPanel({
                 return (
                   <div
                     key={attachment.id}
-                    className="flex items-center gap-3 px-4 py-3"
+                    className="flex items-center gap-2.5 px-3 py-2.5 sm:px-4 sm:py-3"
                   >
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/5 text-white/45">
                       <Icon size={17} />

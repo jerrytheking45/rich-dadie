@@ -2,11 +2,18 @@
 'use client';
 
 import {
+  Search,
+  SlidersHorizontal,
+  X,
+} from 'lucide-react';
+
+import {
   useCallback,
   useEffect,
   useMemo,
   useState,
 } from 'react';
+import type { ReactNode } from 'react';
 
 import {
   adminApi,
@@ -320,16 +327,12 @@ export default function AccountDepositManagement({
             directly to user account balances.
           </p>
         </div>
-
-        {/* Filters */}
-        <div className="rounded-2xl border border-white/[0.07] bg-[#0B1426] p-4 shadow-xl shadow-black/10">
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
-
+        {/* Search & filters */}
+        <div className="rounded-xl border border-white/[0.07] bg-[#0B1426] p-3 shadow-xl shadow-black/10 sm:rounded-2xl sm:p-4">
+          <div className="flex flex-col gap-2.5">
             {/* Search */}
             <div className="relative">
-              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">
-                ⌕
-              </span>
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
 
               <input
                 value={search}
@@ -337,114 +340,121 @@ export default function AccountDepositManagement({
                   setSearch(event.target.value);
                   setPage(1);
                 }}
-                placeholder="Search user, ID or TX hash..."
-                className="w-full rounded-xl border border-white/8 bg-[#07101F] py-2.5 pl-9 pr-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-emerald-400/50 focus:ring-2 focus:ring-emerald-400/10"
+                placeholder="Search user, email, deposit ID or TX hash..."
+                aria-label="Search account deposits"
+                className="h-10 w-full rounded-lg border border-white/8 bg-[#07101F] pl-9 pr-9 text-xs text-white outline-none transition placeholder:text-slate-600 focus:border-emerald-400/50 focus:ring-2 focus:ring-emerald-400/10 sm:h-11 sm:text-sm"
               />
+
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearch('');
+                    setPage(1);
+                  }}
+                  aria-label="Clear search"
+                  className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-slate-500 transition hover:bg-white/5 hover:text-white"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
             </div>
 
-            {/* Status */}
-            <select
-              value={statusFilter}
-              onChange={(event) => {
-                setStatusFilter(
-                  event.target.value,
-                );
-                setPage(1);
-              }}
-              className="rounded-xl border border-white/8 bg-[#07101F] px-3 py-2.5 text-sm text-slate-300 outline-none transition focus:border-emerald-400/50 focus:ring-2 focus:ring-emerald-400/10"
-            >
-              <option value="ALL">
-                All statuses
-              </option>
+            {/* Filter controls */}
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+              <FilterSelect
+                label="Status"
+                value={statusFilter}
+                onChange={(value) => {
+                  setStatusFilter(value);
+                  setPage(1);
+                }}
+              >
+                <option value="ALL">All statuses</option>
+                <option value="PENDING">Pending</option>
+                <option value="VERIFYING">Verifying</option>
+                <option value="PROCESSING">Processing</option>
+                <option value="CONFIRMED">Confirmed</option>
+                <option value="VERIFIED">Verified</option>
+                <option value="REJECTED">Rejected</option>
+                <option value="FAILED">Failed</option>
+                <option value="EXPIRED">Expired</option>
+                <option value="UNMATCHED">Unmatched</option>
+              </FilterSelect>
 
-              <option value="PENDING">
-                Pending
-              </option>
+              <FilterSelect
+                label="Asset"
+                value={assetFilter}
+                onChange={(value) => {
+                  setAssetFilter(value);
+                  setPage(1);
+                }}
+              >
+                <option value="ALL">All assets</option>
 
-              <option value="VERIFYING">
-                Verifying
-              </option>
+                {assets.map((asset) => (
+                  <option key={`asset-${asset}`} value={asset}>
+                    {asset}
+                  </option>
+                ))}
+              </FilterSelect>
 
-              <option value="PROCESSING">
-                Processing
-              </option>
+              <FilterSelect
+                label="Network"
+                value={networkFilter}
+                onChange={(value) => {
+                  setNetworkFilter(value);
+                  setPage(1);
+                }}
+              >
+                <option value="ALL">All networks</option>
 
-              <option value="CONFIRMED">
-                Confirmed
-              </option>
+                {networks.map((network) => (
+                  <option key={`network-${network}`} value={network}>
+                    {network}
+                  </option>
+                ))}
+              </FilterSelect>
 
-              <option value="VERIFIED">
-                Verified
-              </option>
+              {/* Filter summary */}
+              <div className="flex min-h-10 items-center justify-between rounded-lg border border-white/6 bg-white/[0.02] px-2.5 sm:min-h-11 sm:px-3">
+                <div className="flex min-w-0 items-center gap-1.5">
+                  <SlidersHorizontal className="h-3.5 w-3.5 shrink-0 text-emerald-400/70" />
 
-              <option value="REJECTED">
-                Rejected
-              </option>
+                  <span className="truncate text-[10px] font-medium text-slate-400 sm:text-xs">
+                    {[
+                      search.trim() ? 1 : 0,
+                      statusFilter !== 'ALL' ? 1 : 0,
+                      assetFilter !== 'ALL' ? 1 : 0,
+                      networkFilter !== 'ALL' ? 1 : 0,
+                    ].reduce((sum, value) => sum + value, 0)}{' '}
+                    active
+                  </span>
+                </div>
 
-              <option value="FAILED">
-                Failed
-              </option>
-
-              <option value="EXPIRED">
-                Expired
-              </option>
-
-              <option value="UNMATCHED">
-                Unmatched
-              </option>
-            </select>
-
-            {/* Asset */}
-            <select
-              value={assetFilter}
-              onChange={(event) => {
-                setAssetFilter(
-                  event.target.value,
-                );
-                setPage(1);
-              }}
-              className="rounded-xl border border-white/8 bg-[#07101F] px-3 py-2.5 text-sm text-slate-300 outline-none transition focus:border-emerald-400/50 focus:ring-2 focus:ring-emerald-400/10"
-            >
-              <option value="ALL">
-                All assets
-              </option>
-
-              {assets.map((asset) => (
-                <option
-                  key={`asset-${asset}`}
-                  value={asset}
-                >
-                  {asset}
-                </option>
-              ))}
-            </select>
-
-            {/* Network */}
-            <select
-              value={networkFilter}
-              onChange={(event) => {
-                setNetworkFilter(
-                  event.target.value,
-                );
-                setPage(1);
-              }}
-              className="rounded-xl border border-white/8 bg-[#07101F] px-3 py-2.5 text-sm text-slate-300 outline-none transition focus:border-emerald-400/50 focus:ring-2 focus:ring-emerald-400/10"
-            >
-              <option value="ALL">
-                All networks
-              </option>
-
-              {networks.map((network) => (
-                <option
-                  key={`network-${network}`}
-                  value={network}
-                >
-                  {network}
-                </option>
-              ))}
-            </select>
+                {(search ||
+                  statusFilter !== 'ALL' ||
+                  assetFilter !== 'ALL' ||
+                  networkFilter !== 'ALL') && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearch('');
+                      setStatusFilter('ALL');
+                      setAssetFilter('ALL');
+                      setNetworkFilter('ALL');
+                      setPage(1);
+                    }}
+                    className="ml-2 shrink-0 text-[10px] font-semibold text-emerald-400 transition hover:text-emerald-300 sm:text-xs"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         </div>
+
 
         {/* Table card */}
         <div className="overflow-hidden rounded-2xl border border-white/[0.07] bg-[#0B1426] shadow-xl shadow-black/10">
@@ -578,5 +588,36 @@ export default function AccountDepositManagement({
         }
       />
     </>
+  );
+}
+
+function FilterSelect({
+  label,
+  value,
+  onChange,
+  children,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  children: ReactNode;
+}) {
+  return (
+    <label className="relative block min-w-0">
+      <span className="sr-only">{label}</span>
+
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        aria-label={label}
+        className="h-10 w-full appearance-none rounded-lg border border-white/8 bg-[#07101F] px-2.5 pr-7 text-[10px] text-slate-300 outline-none transition focus:border-emerald-400/50 focus:ring-2 focus:ring-emerald-400/10 sm:h-11 sm:px-3 sm:pr-8 sm:text-xs"
+      >
+        {children}
+      </select>
+
+      <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-500">
+        ?
+      </span>
+    </label>
   );
 }

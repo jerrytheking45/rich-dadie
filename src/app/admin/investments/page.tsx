@@ -1,3 +1,4 @@
+
 'use client';
 
 import AdminDashboard from '@/src/components/admin/AdminDashboard';

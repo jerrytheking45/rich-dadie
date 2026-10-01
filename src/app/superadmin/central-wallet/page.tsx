@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   Activity,
@@ -72,7 +72,7 @@ function ResourceCard({
     percentage >= 80;
 
   return (
-    <section className="rounded-2xl border border-white/10 bg-[#0B1426] p-5 shadow-xl shadow-black/10">
+    <section className="rounded-xl border border-white/10 bg-[#0B1426] p-3.5 shadow-xl shadow-black/10 sm:rounded-2xl sm:p-5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-purple-400/10 bg-purple-400/10 text-purple-300">
@@ -237,9 +237,9 @@ export default function AdminCentralWalletPage() {
   return (
     <AdminDashboard title="Central Wallet">
       <div className="min-h-screen bg-[#050B18]">
-        <div className="space-y-6 p-4 sm:p-6 lg:p-8">
+        <div className="space-y-4 p-3 sm:space-y-5 sm:p-5 lg:space-y-6 lg:p-6">
           {/* Page heading */}
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div className="flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <div className="flex items-center gap-2">
                 <span className="h-1.5 w-1.5 rounded-full bg-purple-400" />
@@ -249,11 +249,11 @@ export default function AdminCentralWalletPage() {
                 </p>
               </div>
 
-              <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
+              <h2 className="mt-1.5 text-xl font-extrabold tracking-tight text-white sm:text-2xl lg:text-3xl">
                 Central Wallet
               </h2>
 
-              <p className="mt-2 text-sm text-slate-400">
+              <p className="mt-1.5 text-xs leading-5 text-slate-400 sm:text-sm">
                 Monitor the platform&apos;s
                 TRON operating wallet and
                 network resources.
@@ -268,7 +268,7 @@ export default function AdminCentralWalletPage() {
               disabled={
                 loading || refreshing
               }
-              className="inline-flex items-center justify-center gap-2 self-start rounded-xl border border-white/10 bg-white/4 px-4 py-2.5 text-sm font-bold text-slate-300 transition hover:bg-white/[0.07] hover:text-white disabled:cursor-not-allowed disabled:opacity-50 lg:self-auto"
+              className="inline-flex min-h-9 items-center justify-center gap-2 self-start rounded-lg border border-white/10 bg-white/4 px-3 py-2 text-xs font-bold sm:rounded-xl sm:px-4 sm:py-2.5 sm:text-sm text-slate-300 transition hover:bg-white/[0.07] hover:text-white disabled:cursor-not-allowed disabled:opacity-50 lg:self-auto"
             >
               <RefreshCw
                 size={16}
@@ -285,7 +285,7 @@ export default function AdminCentralWalletPage() {
 
           {/* Error */}
           {error && (
-            <div className="flex items-start gap-3 rounded-2xl border border-red-400/20 bg-red-500/[0.07] p-4 text-sm text-red-300">
+            <div className="flex items-start gap-2.5 rounded-xl border border-red-400/20 bg-red-500/[0.07] p-3 text-xs sm:rounded-2xl sm:p-4 sm:text-sm text-red-300">
               <AlertTriangle
                 size={18}
                 className="mt-0.5 shrink-0"
@@ -298,7 +298,7 @@ export default function AdminCentralWalletPage() {
           {/* Initial loading */}
           {loading && !wallet ? (
             <>
-              <section className="rounded-2xl border border-white/10 bg-[#0B1426] p-5 shadow-xl shadow-black/10">
+              <section className="rounded-xl border border-white/10 bg-[#0B1426] p-3.5 shadow-xl shadow-black/10 sm:rounded-2xl sm:p-5">
                 <div className="animate-pulse space-y-4">
                   <div className="h-4 w-28 rounded bg-white/[0.07]" />
 
@@ -306,7 +306,7 @@ export default function AdminCentralWalletPage() {
                 </div>
               </section>
 
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              <div className="grid gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-4">
                 {[1, 2, 3, 4].map(
                   (item) => (
                     <div
@@ -331,8 +331,8 @@ export default function AdminCentralWalletPage() {
           ) : wallet ? (
             <>
               {/* Wallet identity */}
-              <section className="rounded-2xl border border-white/10 bg-[#0B1426] p-5 shadow-xl shadow-black/10">
-                <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+              <section className="rounded-xl border border-white/10 bg-[#0B1426] p-3.5 shadow-xl shadow-black/10 sm:rounded-2xl sm:p-5">
+                <div className="flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-center lg:justify-between">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       {wallet.status ===
@@ -370,7 +370,7 @@ export default function AdminCentralWalletPage() {
                       </div>
                     </div>
 
-                    <div className="mt-4 flex flex-wrap items-center gap-2">
+                    <div className="mt-3 flex flex-wrap items-center gap-1.5 sm:gap-2">
                       <code className="max-w-full break-all rounded-xl border border-white/8 bg-[#07111F] px-3 py-2 text-xs text-slate-400">
                         {wallet.address}
                       </code>
@@ -388,7 +388,7 @@ export default function AdminCentralWalletPage() {
                     </div>
                   </div>
 
-                  <div className="flex shrink-0 items-center gap-2 text-xs text-slate-500">
+                  <div className="flex shrink-0 items-center gap-1.5 text-[11px] text-slate-500 sm:gap-2 sm:text-xs">
                     <Clock3 size={14} />
 
                     <span>
@@ -402,9 +402,9 @@ export default function AdminCentralWalletPage() {
               </section>
 
               {/* Balance cards */}
-              <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              <section className="grid gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-4">
                 {/* TRX */}
-                <div className="rounded-2xl border border-white/10 bg-[#0B1426] p-5 shadow-xl shadow-black/10">
+                <div className="rounded-xl border border-white/10 bg-[#0B1426] p-3.5 shadow-xl shadow-black/10 sm:rounded-2xl sm:p-5">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-purple-400/10 bg-purple-400/10">
@@ -433,7 +433,7 @@ export default function AdminCentralWalletPage() {
                 </div>
 
                 {/* USDT */}
-                <div className="rounded-2xl border border-white/10 bg-[#0B1426] p-5 shadow-xl shadow-black/10">
+                <div className="rounded-xl border border-white/10 bg-[#0B1426] p-3.5 shadow-xl shadow-black/10 sm:rounded-2xl sm:p-5">
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-400/10 bg-emerald-400/10">
                       <Activity
@@ -460,7 +460,7 @@ export default function AdminCentralWalletPage() {
                 </div>
 
                 {/* Energy */}
-                <div className="rounded-2xl border border-white/10 bg-[#0B1426] p-5 shadow-xl shadow-black/10">
+                <div className="rounded-xl border border-white/10 bg-[#0B1426] p-3.5 shadow-xl shadow-black/10 sm:rounded-2xl sm:p-5">
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-purple-400/10 bg-purple-400/10">
                       <Gauge
@@ -487,7 +487,7 @@ export default function AdminCentralWalletPage() {
                 </div>
 
                 {/* Bandwidth */}
-                <div className="rounded-2xl border border-white/10 bg-[#0B1426] p-5 shadow-xl shadow-black/10">
+                <div className="rounded-xl border border-white/10 bg-[#0B1426] p-3.5 shadow-xl shadow-black/10 sm:rounded-2xl sm:p-5">
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-sky-400/10 bg-sky-400/10">
                       <BatteryCharging

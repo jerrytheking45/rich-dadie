@@ -1,3 +1,4 @@
+﻿
 'use client';
 
 import {
@@ -673,7 +674,7 @@ export default function AdminSupportPage() {
         {/* Tickets */}
         <div className="overflow-hidden rounded-3xl border border-white/8 bg-[#0B1426] shadow-2xl shadow-black/10">
           {loading ? (
-            <div className="flex min-h- items-center justify-center">
+            <div className="flex min-h-48 items-center justify-center sm:min-h-56">
               <div className="flex flex-col items-center gap-3 text-sm text-white/35">
                 <Loader2
                   size={24}
@@ -684,7 +685,7 @@ export default function AdminSupportPage() {
             </div>
           ) : filteredTickets.length ===
             0 ? (
-            <div className="flex min-h-90 flex-col items-center justify-center px-6 text-center">
+            <div className="flex min-h-64 flex-col items-center justify-center px-4 text-center sm:min-h-72 sm:px-6">
               <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-purple-400/10 bg-purple-400/10 text-purple-300">
                 <MessageCircle size={23} />
               </div>
@@ -827,7 +828,7 @@ export default function AdminSupportPage() {
                           ticket.id,
                         )
                       }
-                      className="w-full p-4 text-left transition hover:bg-white/3"
+                      className="w-full p-3.5 text-left transition hover:bg-white/3 sm:p-4"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">

@@ -1,5 +1,4 @@
-﻿
-import {
+﻿import {
   ChevronDown,
   CircleHelp,
 } from 'lucide-react';
@@ -38,42 +37,39 @@ export default function LandingFAQ() {
       id="faq"
       className="relative overflow-hidden bg-[#050B18]"
     >
-      {/* Ambient background */}
-      <div className="absolute left-[-15%] top-1/2 h-96 w-96 -translate-y-1/2 rounded-full bg-emerald-400/5 blur-[130px]" />
+      <div className="absolute left-[-18%] top-1/2 h-64 w-64 -translate-y-1/2 rounded-full bg-emerald-400/5 blur-[100px] sm:h-96 sm:w-96 sm:blur-[130px]" />
 
-      <div className="relative mx-auto max-w-4xl px-5 py-20 sm:px-8 sm:py-24">
-        {/* Heading */}
+      <div className="relative mx-auto max-w-4xl px-4 py-14 sm:px-6 sm:py-18 md:px-8 md:py-20">
         <div className="text-center">
           <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-white/8 bg-white/5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-white/40">
             <CircleHelp size={12} className="text-[#F7C948]" />
             Frequently asked
           </div>
 
-          <h2 className="mt-5 text-3xl font-black tracking-[-0.03em] text-white sm:text-4xl lg:text-5xl">
+          <h2 className="mt-4 text-[1.85rem] font-black leading-[1.08] tracking-[-0.03em] text-white sm:mt-5 sm:text-4xl lg:text-5xl">
             Questions,
             <span className="text-white/35"> answered.</span>
           </h2>
 
-          <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-white/40">
+          <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-white/40 sm:leading-7">
             A few answers to common questions about the REDIQ
             platform, investment plans, and account experience.
           </p>
         </div>
 
-        {/* FAQ */}
-        <div className="mt-10 overflow-hidden rounded-4xl border border-white/8 bg-white/2.5">
+        <div className="mt-7 overflow-hidden rounded-[1.5rem] border border-white/8 bg-white/2.5 sm:mt-10 sm:rounded-[2rem]">
           {faqs.map((item, index) => (
             <details
               key={item.question}
               className="group border-b border-white/7 last:border-b-0"
             >
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-5 px-5 py-5 text-left transition hover:bg-white/2.5 sm:px-7 sm:py-6 [&::-webkit-details-marker]:hidden">
-                <div className="flex min-w-0 items-center gap-4">
-                  <span className="hidden text-[10px] font-black tracking-[0.12em] text-[#F7C948]/40 sm:block">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-4 text-left transition hover:bg-white/2.5 sm:gap-5 sm:px-7 sm:py-6 [&::-webkit-details-marker]:hidden">
+                <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+                  <span className="hidden shrink-0 text-[10px] font-black tracking-[0.12em] text-[#F7C948]/40 sm:block">
                     {String(index + 1).padStart(2, '0')}
                   </span>
 
-                  <span className="text-sm font-bold text-white sm:text-[15px]">
+                  <span className="text-sm font-bold leading-5 text-white sm:text-[15px]">
                     {item.question}
                   </span>
                 </div>
@@ -83,9 +79,9 @@ export default function LandingFAQ() {
                 </span>
               </summary>
 
-              <div className="px-5 pb-6 sm:px-7 sm:pb-7">
-                <div className="ml-0 border-l border-[#F7C948]/15 pl-4 sm:ml-8">
-                  <p className="max-w-2xl text-xs leading-6 text-white/40 sm:text-sm">
+              <div className="px-4 pb-5 sm:px-7 sm:pb-7">
+                <div className="border-l border-[#F7C948]/15 pl-3 sm:ml-8 sm:pl-4">
+                  <p className="max-w-2xl text-xs leading-5 text-white/40 sm:text-sm sm:leading-6">
                     {item.answer}
                   </p>
                 </div>
@@ -97,5 +93,3 @@ export default function LandingFAQ() {
     </section>
   );
 }
-
-

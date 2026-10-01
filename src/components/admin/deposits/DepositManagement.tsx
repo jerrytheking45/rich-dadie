@@ -9,6 +9,11 @@ import {
 } from 'react';
 
 import {
+  Search,
+  SlidersHorizontal,
+  X,
+} from 'lucide-react';
+import {
   adminApi,
   type AdminDeposit,
 } from '@/src/lib/api/admin';
@@ -324,17 +329,38 @@ export default function DepositManagement({
             Review, verify and manage investment
             deposits.
           </p>
-        </div>
-
-        {/* Filters */}
-        <div className="rounded-2xl border border-white/[0.07] bg-[#0B1426] p-4 shadow-xl shadow-black/10">
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
-
-            {/* Search */}
-            <div className="relative">
-              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">
-                ⌕
+        </div>        {/* Filters */}
+        <div className="rounded-xl border border-white/[0.07] bg-[#0B1426] p-3 shadow-xl shadow-black/10 sm:rounded-2xl sm:p-4">
+          <div className="flex items-center justify-between gap-3 pb-2.5 sm:pb-3">
+            <div className="flex min-w-0 items-center gap-2">
+              <SlidersHorizontal className="h-3.5 w-3.5 shrink-0 text-white/35" />
+              <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-white/35">
+                Filters
               </span>
+            </div>
+
+            {(search || statusFilter !== 'ALL' || assetFilter !== 'ALL' || networkFilter !== 'ALL') && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearch('');
+                  setStatusFilter('ALL');
+                  setAssetFilter('ALL');
+                  setNetworkFilter('ALL');
+                  setPage(1);
+                }}
+                className="inline-flex h-7 shrink-0 items-center gap-1 rounded-md border border-white/7 bg-white/3 px-2 text-[9px] font-semibold text-white/45 transition hover:bg-white/7 hover:text-white"
+              >
+                <X className="h-3 w-3" />
+                Clear
+              </button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 sm:gap-2.5 xl:grid-cols-4">
+            {/* Search */}
+            <div className="relative col-span-2 xl:col-span-1">
+              <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/25" />
 
               <input
                 value={search}
@@ -343,8 +369,22 @@ export default function DepositManagement({
                   setPage(1);
                 }}
                 placeholder="Search user, ID or TX hash..."
-                className="w-full rounded-xl border border-white/8 bg-[#07101F] py-2.5 pl-9 pr-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-emerald-400/50 focus:ring-2 focus:ring-emerald-400/10"
+                className="h-9 w-full rounded-lg border border-white/8 bg-[#07101F] pl-8 pr-8 text-[11px] text-white outline-none transition placeholder:text-white/20 focus:border-emerald-400/40 focus:ring-2 focus:ring-emerald-400/10"
               />
+
+              {search && (
+                <button
+                  type="button"
+                  aria-label="Clear search"
+                  onClick={() => {
+                    setSearch('');
+                    setPage(1);
+                  }}
+                  className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded text-white/25 transition hover:bg-white/5 hover:text-white"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              )}
             </div>
 
             {/* Status */}
@@ -354,47 +394,18 @@ export default function DepositManagement({
                 setStatusFilter(event.target.value);
                 setPage(1);
               }}
-              className="rounded-xl border border-white/8 bg-[#07101F] px-3 py-2.5 text-sm text-slate-300 outline-none transition focus:border-emerald-400/50 focus:ring-2 focus:ring-emerald-400/10"
+              className="h-9 min-w-0 rounded-lg border border-white/8 bg-[#07101F] px-2.5 text-[10px] text-white/60 outline-none transition focus:border-emerald-400/40 focus:ring-2 focus:ring-emerald-400/10"
             >
-              <option value="ALL">
-                All statuses
-              </option>
-
-              <option value="PENDING">
-                Pending
-              </option>
-
-              <option value="VERIFYING">
-                Verifying
-              </option>
-
-              <option value="PROCESSING">
-                Processing
-              </option>
-
-              <option value="CONFIRMED">
-                Confirmed
-              </option>
-
-              <option value="VERIFIED">
-                Verified
-              </option>
-
-              <option value="REJECTED">
-                Rejected
-              </option>
-
-              <option value="FAILED">
-                Failed
-              </option>
-
-              <option value="EXPIRED">
-                Expired
-              </option>
-
-              <option value="UNMATCHED">
-                Unmatched
-              </option>
+              <option value="ALL">All statuses</option>
+              <option value="PENDING">Pending</option>
+              <option value="VERIFYING">Verifying</option>
+              <option value="PROCESSING">Processing</option>
+              <option value="CONFIRMED">Confirmed</option>
+              <option value="VERIFIED">Verified</option>
+              <option value="FAILED">Failed</option>
+              <option value="REJECTED">Rejected</option>
+              <option value="EXPIRED">Expired</option>
+              <option value="UNMATCHED">Unmatched</option>
             </select>
 
             {/* Asset */}
@@ -404,17 +415,11 @@ export default function DepositManagement({
                 setAssetFilter(event.target.value);
                 setPage(1);
               }}
-              className="rounded-xl border border-white/8 bg-[#07101F] px-3 py-2.5 text-sm text-slate-300 outline-none transition focus:border-emerald-400/50 focus:ring-2 focus:ring-emerald-400/10"
+              className="h-9 min-w-0 rounded-lg border border-white/8 bg-[#07101F] px-2.5 text-[10px] text-white/60 outline-none transition focus:border-emerald-400/40 focus:ring-2 focus:ring-emerald-400/10"
             >
-              <option value="ALL">
-                All assets
-              </option>
-
+              <option value="ALL">All assets</option>
               {assets.map((asset) => (
-                <option
-                  key={`asset-${asset}`}
-                  value={asset}
-                >
+                <option key={asset} value={asset}>
                   {asset}
                 </option>
               ))}
@@ -427,17 +432,11 @@ export default function DepositManagement({
                 setNetworkFilter(event.target.value);
                 setPage(1);
               }}
-              className="rounded-xl border border-white/8 bg-[#07101F] px-3 py-2.5 text-sm text-slate-300 outline-none transition focus:border-emerald-400/50 focus:ring-2 focus:ring-emerald-400/10"
+              className="h-9 min-w-0 rounded-lg border border-white/8 bg-[#07101F] px-2.5 text-[10px] text-white/60 outline-none transition focus:border-emerald-400/40 focus:ring-2 focus:ring-emerald-400/10"
             >
-              <option value="ALL">
-                All networks
-              </option>
-
+              <option value="ALL">All networks</option>
               {networks.map((network) => (
-                <option
-                  key={`network-${network}`}
-                  value={network}
-                >
+                <option key={network} value={network}>
                   {network}
                 </option>
               ))}

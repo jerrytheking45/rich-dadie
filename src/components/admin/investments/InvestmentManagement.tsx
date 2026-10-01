@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import {
   CheckCircle2,
@@ -66,7 +66,8 @@ function getErrorMessage(error: unknown): string {
       };
     }).response;
 
-    const message = response?.data?.message ?? response?.data?.error;
+    const message =
+      response?.data?.message ?? response?.data?.error;
 
     if (typeof message === 'string' && message.trim()) {
       return message;
@@ -83,14 +84,11 @@ export default function InvestmentManagement({
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
-
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
-
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] =
     useState<InvestmentStatus>('ALL');
-
   const [selectedInvestment, setSelectedInvestment] =
     useState<AdminInvestment | null>(null);
 
@@ -208,17 +206,15 @@ export default function InvestmentManagement({
     [investments],
   );
 
-  const handleStatusChange = (
-    value: InvestmentStatus,
-  ) => {
+  const handleStatusChange = (value: InvestmentStatus) => {
     setStatusFilter(value);
     setPage(1);
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-5 lg:space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <div className="flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-purple-300">
@@ -232,11 +228,11 @@ export default function InvestmentManagement({
             )}
           </div>
 
-          <h1 className="mt-2 text-2xl font-bold tracking-tight text-white">
+          <h1 className="mt-1.5 text-xl font-bold tracking-tight text-white sm:mt-2 sm:text-2xl">
             Investment Management
           </h1>
 
-          <p className="mt-1.5 text-sm text-slate-500">
+          <p className="mt-1 text-xs text-slate-500 sm:mt-1.5 sm:text-sm">
             Monitor and manage user investments across the platform.
           </p>
         </div>
@@ -245,19 +241,20 @@ export default function InvestmentManagement({
           type="button"
           onClick={() => void loadInvestments(true)}
           disabled={loading || refreshing}
-          className="inline-flex w-fit items-center gap-2 rounded-xl border border-white/10 bg-white/3 px-4 py-2.5 text-xs font-semibold text-slate-300 transition hover:border-purple-400/20 hover:bg-purple-400/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex min-h-9 w-full items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/3 px-3 py-2 text-xs font-semibold text-slate-300 transition hover:border-purple-400/20 hover:bg-purple-400/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50 sm:w-fit sm:rounded-xl sm:px-4 sm:py-2.5"
         >
           <RefreshCw
             className={`h-3.5 w-3.5 ${
               refreshing ? 'animate-spin' : ''
             }`}
           />
+
           {refreshing ? 'Refreshing...' : 'Refresh'}
         </button>
       </div>
 
       {/* Summary */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4 lg:gap-4">
         <SummaryCard
           icon={WalletCards}
           label="Total Investments"
@@ -292,9 +289,8 @@ export default function InvestmentManagement({
       </div>
 
       {/* Filters */}
-      <div className="rounded-2xl border border-white/8 bg-[#07111F] p-4 shadow-xl shadow-black/5">
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_220px]">
-          {/* Search */}
+      <div className="rounded-xl border border-white/8 bg-[#07111F] p-3 shadow-xl shadow-black/5 sm:rounded-2xl sm:p-4">
+        <div className="grid grid-cols-1 gap-2.5 sm:gap-3 lg:grid-cols-[minmax(0,1fr)_200px]">
           <div className="relative">
             <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-600" />
 
@@ -305,11 +301,10 @@ export default function InvestmentManagement({
                 setPage(1);
               }}
               placeholder="Search user, email, plan, asset, or ID..."
-              className="w-full rounded-xl border border-white/8 bg-[#050B18] py-3 pl-10 pr-4 text-sm text-slate-200 outline-none transition placeholder:text-slate-600 focus:border-purple-400/30 focus:bg-[#07111F] focus:ring-2 focus:ring-purple-400/10"
+              className="w-full rounded-lg border border-white/8 bg-[#050B18] py-2.5 pl-10 pr-4 text-sm text-slate-200 outline-none transition placeholder:text-slate-600 focus:border-purple-400/30 focus:bg-[#07111F] focus:ring-2 focus:ring-purple-400/10"
             />
           </div>
 
-          {/* Status */}
           <select
             value={statusFilter}
             onChange={(event) =>
@@ -317,7 +312,7 @@ export default function InvestmentManagement({
                 event.target.value as InvestmentStatus,
               )
             }
-            className="rounded-xl border border-white/8 bg-[#050B18] px-3.5 py-3 text-sm text-slate-300 outline-none transition focus:border-purple-400/30 focus:ring-2 focus:ring-purple-400/10"
+            className="rounded-lg border border-white/8 bg-[#050B18] px-3 py-2.5 text-sm text-slate-300 outline-none transition focus:border-purple-400/30 focus:ring-2 focus:ring-purple-400/10"
           >
             {STATUS_OPTIONS.map((option) => (
               <option
@@ -334,7 +329,7 @@ export default function InvestmentManagement({
 
       {/* Error */}
       {error && (
-        <div className="flex items-start gap-3 rounded-2xl border border-red-500/15 bg-red-500/6 p-4">
+        <div className="flex items-start gap-2.5 rounded-xl border border-red-500/15 bg-red-500/6 p-3 sm:gap-3 sm:rounded-2xl sm:p-4">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-red-500/10">
             <XCircle className="h-4 w-4 text-red-400" />
           </div>
@@ -352,8 +347,8 @@ export default function InvestmentManagement({
       )}
 
       {/* Table card */}
-      <div className="overflow-hidden rounded-2xl border border-white/8 bg-[#07111F] shadow-xl shadow-black/5">
-        <div className="flex flex-col gap-3 border-b border-white/8 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="overflow-hidden rounded-xl border border-white/8 bg-[#07111F] shadow-xl shadow-black/5 sm:rounded-2xl">
+        <div className="flex flex-col gap-2.5 border-b border-white/8 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-5 sm:py-4">
           <div>
             <h2 className="font-semibold text-white">
               Investments
@@ -393,7 +388,7 @@ export default function InvestmentManagement({
 
         {/* Pagination */}
         {!loading && !error && (
-          <div className="flex flex-col gap-3 border-t border-white/8 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-2.5 border-t border-white/8 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-5 sm:py-4">
             <p className="text-xs text-slate-500">
               Page{' '}
               <span className="font-semibold text-slate-300">
@@ -405,7 +400,7 @@ export default function InvestmentManagement({
               </span>
             </p>
 
-            <div className="flex items-center gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
               <button
                 type="button"
                 disabled={page <= 1}
@@ -414,7 +409,7 @@ export default function InvestmentManagement({
                     Math.max(1, current - 1),
                   )
                 }
-                className="inline-flex items-center gap-1.5 rounded-xl border border-white/8 bg-white/2.5 px-3 py-2 text-xs font-semibold text-slate-400 transition hover:bg-white/6 hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
+                className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg border border-white/8 bg-white/2.5 px-2.5 py-2 text-xs font-semibold text-slate-400 transition hover:bg-white/6 hover:text-white disabled:cursor-not-allowed disabled:opacity-30 sm:rounded-xl sm:px-3"
               >
                 <ChevronLeft className="h-3.5 w-3.5" />
                 Previous
@@ -428,7 +423,7 @@ export default function InvestmentManagement({
                     Math.min(totalPages, current + 1),
                   )
                 }
-                className="inline-flex items-center gap-1.5 rounded-xl border border-white/8 bg-white/2.5 px-3 py-2 text-xs font-semibold text-slate-400 transition hover:bg-white/6 hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
+                className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg border border-white/8 bg-white/2.5 px-2.5 py-2 text-xs font-semibold text-slate-400 transition hover:bg-white/6 hover:text-white disabled:cursor-not-allowed disabled:opacity-30 sm:rounded-xl sm:px-3"
               >
                 Next
                 <ChevronRight className="h-3.5 w-3.5" />
@@ -481,11 +476,11 @@ function SummaryCard({
 
   return (
     <div
-      className={`rounded-2xl border bg-[#07111F] p-4 shadow-xl shadow-black/5 ${toneStyles.border}`}
+      className={`rounded-xl border bg-[#07111F] p-3 shadow-xl shadow-black/5 sm:rounded-2xl sm:p-4 ${toneStyles.border}`}
     >
       <div className="flex items-center justify-between gap-3">
         <div
-          className={`flex h-9 w-9 items-center justify-center rounded-xl ${toneStyles.icon}`}
+          className={`flex h-8 w-8 items-center justify-center rounded-lg ${toneStyles.icon} sm:h-9 sm:w-9 sm:rounded-xl`}
         >
           <Icon className="h-4 w-4" />
         </div>
@@ -495,11 +490,11 @@ function SummaryCard({
         </span>
       </div>
 
-      <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+      <p className="mt-3 text-[9px] font-semibold uppercase tracking-[0.12em] text-slate-500 sm:mt-4 sm:text-[10px]">
         {label}
       </p>
 
-      <p className="mt-1 text-xl font-bold text-white">
+      <p className="mt-0.5 text-lg font-bold text-white sm:mt-1 sm:text-xl">
         {value}
       </p>
 

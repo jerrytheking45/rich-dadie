@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import {
   useCallback,
@@ -419,7 +419,7 @@ export default function AdminSupportTicketPage() {
       <AdminDashboard title="Support Ticket">
         <div className="flex min-h-[60vh] items-center justify-center bg-[#050B18]">
           <div className="text-center">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-emerald-400/10 bg-emerald-400/5">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl sm:h-14 sm:w-14 sm:rounded-2xl border border-emerald-400/10 bg-emerald-400/5">
               <Loader2
                 size={25}
                 className="animate-spin text-emerald-400"
@@ -438,7 +438,7 @@ export default function AdminSupportTicketPage() {
   if (error || !data) {
     return (
       <AdminDashboard title="Support Ticket">
-        <div className="min-h-[60vh] bg-[#050B18]">
+        <div className="min-h-[50vh] bg-[#050B18] sm:min-h-[60vh]">
           <div className="mx-auto max-w-3xl">
             <button
               type="button"
@@ -447,13 +447,13 @@ export default function AdminSupportTicketPage() {
                   '/admin/support',
                 )
               }
-              className="mb-6 inline-flex h-10 items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 text-sm font-semibold text-white/60 transition hover:bg-white/8 hover:text-white"
+              className="mb-4 inline-flex h-9 items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 text-sm font-semibold text-white/60 transition hover:bg-white/8 hover:text-white"
             >
               <ArrowLeft size={16} />
               Back to support
             </button>
 
-            <div className="rounded-3xl border border-red-400/15 bg-[#0B1426] p-6 shadow-2xl shadow-black/10">
+            <div className="rounded-2xl border border-red-400/15 bg-[#0B1426] p-4 sm:rounded-3xl sm:p-6 shadow-2xl shadow-black/10">
               <div className="flex items-start gap-4">
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-red-400/10 text-red-300">
                   <AlertCircle size={21} />
@@ -494,8 +494,8 @@ export default function AdminSupportTicketPage() {
 
   return (
     <AdminDashboard title="Support Ticket">
-      <div className="min-h-screen bg-[#050B18] pb-10">
-        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="min-h-screen bg-[#050B18] pb-8 sm:pb-10">
+        <div className="mb-4 flex flex-col gap-2.5 sm:mb-5 sm:flex-row sm:items-center sm:justify-between">
           <button
             type="button"
             onClick={() =>
@@ -503,7 +503,7 @@ export default function AdminSupportTicketPage() {
                 '/admin/support',
               )
             }
-            className="inline-flex h-10 w-fit items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 text-sm font-semibold text-white/60 transition hover:bg-white/8 hover:text-white"
+            className="inline-flex h-9 w-fit items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 text-sm font-semibold text-white/60 transition hover:bg-white/8 hover:text-white"
           >
             <ArrowLeft size={16} />
             Back to support
@@ -521,7 +521,7 @@ export default function AdminSupportTicketPage() {
                   refreshing ||
                   actionLoading
                 }
-                className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-red-400/15 bg-red-400/8 px-4 text-sm font-semibold text-red-300 transition hover:bg-red-400/15 disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-red-400/15 bg-red-400/8 px-4 text-sm font-semibold text-red-300 transition hover:bg-red-400/15 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {deleting ? (
                   <Loader2
@@ -547,7 +547,7 @@ export default function AdminSupportTicketPage() {
                 refreshing ||
                 deleting
               }
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 text-sm font-semibold text-white/60 transition hover:bg-white/8 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+              className="inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 text-sm font-semibold text-white/60 transition hover:bg-white/8 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
             >
               <RefreshCw
                 size={16}
@@ -566,7 +566,7 @@ export default function AdminSupportTicketPage() {
           ticket={data.ticket}
         />
 
-        <div className="mt-5 space-y-3">
+        <div className="mt-4 space-y-2.5 sm:mt-5 sm:space-y-3">
           {deleteError && (
             <ErrorBanner
               title="Unable to delete ticket"
@@ -588,7 +588,7 @@ export default function AdminSupportTicketPage() {
           )}
         </div>
 
-        <div className="mt-5">
+        <div className="mt-4 sm:mt-5">
           <AdminSupportControls
             ticket={data.ticket}
             updating={actionLoading}
@@ -604,8 +604,8 @@ export default function AdminSupportTicketPage() {
           />
         </div>
 
-        <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
-          <div className="min-w-0 space-y-5">
+        <div className="mt-4 grid gap-4 lg:mt-5 lg:grid-cols-[minmax(0,1fr)_340px]">
+          <div className="min-w-0 space-y-4 sm:space-y-5">
             <AdminSupportMessageList
               messages={
                 data.messages
@@ -641,8 +641,8 @@ export default function AdminSupportTicketPage() {
 
         {data.attachments.length >
           0 && (
-          <section className="mt-5 overflow-hidden rounded-3xl border border-white/8 bg-linear-to-br from-[#0B1426] via-[#0B1426] to-[#11102B] shadow-2xl shadow-black/10">
-            <div className="border-b border-white/8 px-5 py-5">
+          <section className="mt-4 overflow-hidden rounded-2xl sm:mt-5 sm:rounded-3xl border border-white/8 bg-linear-to-br from-[#0B1426] via-[#0B1426] to-[#11102B] shadow-2xl shadow-black/10">
+            <div className="border-b border-white/8 px-4 py-3.5 sm:px-5 sm:py-4">
               <h2 className="text-base font-semibold text-white">
                 Attachments
               </h2>
@@ -664,7 +664,7 @@ export default function AdminSupportTicketPage() {
                     key={
                       attachment.id
                     }
-                    className="flex items-center justify-between gap-4 px-5 py-4"
+                    className="flex flex-wrap items-center justify-between gap-2.5 px-4 py-3 sm:gap-4 sm:px-5 sm:py-4"
                   >
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium text-white/75">

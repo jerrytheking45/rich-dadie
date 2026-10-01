@@ -1,16 +1,17 @@
-
 'use client';
 
 import {
   Search,
   X,
 } from 'lucide-react';
+import type { RefObject } from 'react';
 
 interface SearchInputProps {
   value: string;
   onChange: (value: string) => void;
   onClear: () => void;
   autoFocus?: boolean;
+  inputRef?: RefObject<HTMLInputElement | null>;
 }
 
 export default function SearchInput({
@@ -18,16 +19,25 @@ export default function SearchInput({
   onChange,
   onClear,
   autoFocus = false,
+  inputRef,
 }: SearchInputProps) {
   return (
     <div className="relative w-full">
       <Search
         size={18}
         aria-hidden="true"
-        className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-emerald-400/45"
+        className="
+          pointer-events-none
+          absolute
+          left-4
+          top-1/2
+          -translate-y-1/2
+          text-emerald-400/50
+        "
       />
 
       <input
+        ref={inputRef}
         type="search"
         value={value}
         onChange={(event) =>
@@ -45,17 +55,22 @@ export default function SearchInput({
           pl-11
           pr-11
           text-sm
+          font-medium
           text-white
           shadow-inner
           shadow-black/10
           outline-none
           transition
+
           placeholder:text-white/20
+
           hover:border-white/12
+
           focus:border-emerald-400/25
           focus:bg-[#091525]
           focus:ring-4
           focus:ring-emerald-400/5
+
           sm:h-13
         "
       />

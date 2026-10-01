@@ -1,4 +1,4 @@
-﻿
+
 'use client';
 
 import {
@@ -177,7 +177,7 @@ function AttachmentPreview({
             </p>
 
             <p className="mt-0.5 text-[10px] text-white/30">
-              {attachment.content_type} Â·{' '}
+              {attachment.content_type} ·{' '}
               {formatFileSize(attachment.file_size)}
             </p>
           </div>
@@ -743,7 +743,7 @@ export default function SupportTicketPage() {
     <div className="min-h-screen bg-[#020611] text-white">
       {/* Page header */}
       <header className="sticky top-0 z-30 border-b border-white/6 bg-[#07101F]/95 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between gap-3 px-3 sm:h-16 sm:gap-4 sm:px-5 lg:px-7">
           <div className="flex min-w-0 items-center gap-3">
             <button
               type="button"
@@ -797,19 +797,19 @@ export default function SupportTicketPage() {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
+      <main className="mx-auto w-full max-w-7xl px-3 py-4 sm:px-5 sm:py-5 lg:px-7">
         {loading ? (
-          <div className="space-y-5">
+          <div className="space-y-4 sm:space-y-5">
             <div className="h-28 animate-pulse rounded-3xl bg-white/4" />
 
-            <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
+            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
               <div className="h-140 animate-pulse rounded-3xl bg-white/4" />
               <div className="h-140 animate-pulse rounded-3xl bg-white/4" />
             </div>
           </div>
         ) : error ? (
           <div className="flex min-h-[70vh] items-center justify-center">
-            <div className="w-full max-w-md rounded-3xl border border-rose-400/15 bg-rose-400/8 p-7 text-center">
+            <div className="w-full max-w-md rounded-2xl border border-rose-400/15 bg-rose-400/8 p-4 text-center sm:rounded-3xl sm:p-6">
               <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-400/10">
                 <AlertCircle
                   size={25}
@@ -866,9 +866,9 @@ export default function SupportTicketPage() {
             </section>
 
             {/* Main workspace */}
-            <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_380px]">
+            <div className="mt-4 grid gap-4 lg:mt-5 lg:grid-cols-[minmax(0,1fr)_340px]">
               {/* Conversation */}
-              <section className="flex min-h-170 flex-col overflow-hidden rounded-3xl border border-white/6 bg-[#07101F]">
+              <section className="flex min-h-[32rem] flex-col overflow-hidden rounded-3xl border border-white/6 bg-[#07101F] sm:min-h-170">
                 <div className="flex shrink-0 items-center justify-between border-b border-white/6 px-4 py-3 sm:px-5">
                   <div>
                     <h2 className="text-xs font-black text-white">
@@ -914,7 +914,7 @@ export default function SupportTicketPage() {
               </section>
 
               {/* Attachments / Preview */}
-              <aside className="flex min-h-170 flex-col gap-4">
+              <aside className="flex min-h-0 flex-col gap-3 sm:min-h-170 sm:gap-4">
                 <section className="shrink-0 overflow-hidden rounded-3xl border border-white/6 bg-[#07101F]">
                   <SupportAttachmentPanel
                     attachments={attachments}
@@ -1063,5 +1063,3 @@ export default function SupportTicketPage() {
     </div>
   );
 }
-
-
