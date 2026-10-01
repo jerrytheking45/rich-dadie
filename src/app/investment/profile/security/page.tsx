@@ -47,6 +47,9 @@ export default function SecurityPage() {
   const [pinStatusError, setPinStatusError] =
     useState("");
 
+  const [forgotPINSuccess, setForgotPINSuccess] =
+    useState(false);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -230,11 +233,15 @@ export default function SecurityPage() {
     }
 
     setPinError("");
+    setForgotPINSuccess(false);
     setPinSubmitting(true);
 
     try {
       await withdrawalPinApi.forgotPIN();
+      setForgotPINSuccess(true);
     } catch (error) {
+      setForgotPINSuccess(false);
+
       console.error(
         "Failed to request wallet PIN reset:",
         error,
@@ -516,6 +523,7 @@ export default function SecurityPage() {
         onSetPIN={handleSetPIN}
         onChangePIN={handleChangePIN}
         onForgotPIN={handleForgotPIN}
+        forgotSuccess={forgotPINSuccess}
       />
     </div>
   );
