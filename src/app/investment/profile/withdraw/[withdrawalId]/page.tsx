@@ -11,8 +11,6 @@ import {
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
-import InvestmentBottomNav from "@/src/components/InvestmentBottomNav";
-
 import type { Withdrawal } from "@/src/lib/types/investment";
 import { withdrawalService } from "@/src/lib/services/withdrawalService";
 
@@ -152,9 +150,7 @@ export default function WithdrawalDetailsPage() {
             </p>
           </div>
         </div>
-
-        <InvestmentBottomNav />
-      </main>
+</main>
     );
   }
 
@@ -191,9 +187,7 @@ export default function WithdrawalDetailsPage() {
             </button>
           </div>
         </div>
-
-        <InvestmentBottomNav />
-      </main>
+</main>
     );
   }
 
@@ -243,9 +237,7 @@ export default function WithdrawalDetailsPage() {
           withdrawal={withdrawal}
         />
       </div>
-
-      <InvestmentBottomNav />
-    </main>
+</main>
   );
 }
 

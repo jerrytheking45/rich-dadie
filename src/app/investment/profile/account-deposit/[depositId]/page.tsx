@@ -23,8 +23,6 @@ import {
   useParams,
   useRouter,
 } from 'next/navigation';
-
-import InvestmentBottomNav from '@/src/components/InvestmentBottomNav';
 import { useSettings } from '@/src/context/useSettings';
 import { investmentApi } from '@/src/lib/api/investmentApi';
 import { formatUSDT } from '@/src/lib/utils/currency';
@@ -453,8 +451,6 @@ export default function AccountDepositDetailPage() {
             </button>
           </section>
         </main>
-
-        <InvestmentBottomNav />
       </div>
     );
   }
@@ -987,8 +983,6 @@ export default function AccountDepositDetailPage() {
           </div>
         </section>
       </main>
-
-      <InvestmentBottomNav />
     </div>
   );
 }
