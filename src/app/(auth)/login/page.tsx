@@ -4,33 +4,55 @@ import LoginForm from "./LoginForm";
 
 function LoginLoading() {
   return (
-    <main className="min-h-dvh bg-[#070b24] px-3 py-4 sm:px-6 sm:py-6">
-      <div className="mx-auto flex min-h-[calc(100dvh-2rem)] sm:min-h-[calc(100dvh-3rem)] w-full max-w-md items-center justify-center">
-        <div className="w-full rounded-2xl border border-white/10 bg-white/6 p-4 shadow-[0_24px_80px_rgba(0,0,0,0.35)] backdrop-blur-2xl sm:rounded-3xl sm:p-8">
-          <div className="animate-pulse space-y-5 sm:space-y-7">
-            <div className="mx-auto h-12 w-12 rounded-2xl bg-white/10" />
+    <main className="flex min-h-dvh items-center justify-center bg-[#050B18] px-3 py-5 sm:px-6">
 
-            <div className="space-y-3 text-center">
-              <div className="mx-auto h-8 w-44 rounded-xl bg-white/10" />
-              <div className="mx-auto h-4 w-64 max-w-full rounded-lg bg-white/6" />
+      <div className="w-full max-w-105 overflow-hidden rounded-[20px] border border-white/10 bg-[#0B1426] p-5 shadow-2xl sm:p-7">
+
+        <div
+          role="status"
+          aria-label="Loading sign-in form"
+          className="animate-pulse space-y-5"
+        >
+
+          {/* Logo */}
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-lg bg-[#E60033]/25" />
+
+            <div className="space-y-2">
+              <div className="h-4 w-20 rounded bg-white/10" />
+              <div className="h-2 w-28 rounded bg-white/5" />
             </div>
-
-            <div className="space-y-4 sm:space-y-5">
-              <div className="space-y-2">
-                <div className="h-3 w-20 rounded bg-white/10" />
-                <div className="h-12 rounded-xl bg-white/6 sm:h-14 sm:rounded-2xl" />
-              </div>
-
-              <div className="space-y-2">
-                <div className="h-3 w-20 rounded bg-white/10" />
-                <div className="h-12 rounded-xl bg-white/6 sm:h-14 sm:rounded-2xl" />
-              </div>
-
-              <div className="h-12 rounded-xl bg-emerald-400/20 sm:h-14 sm:rounded-2xl" />
-            </div>
-
-            <div className="mx-auto h-4 w-52 rounded bg-white/6" />
           </div>
+
+          {/* Heading */}
+          <div className="space-y-2">
+            <div className="h-3 w-24 rounded bg-[#E60033]/20" />
+            <div className="h-6 w-48 rounded-lg bg-white/10" />
+            <div className="h-3 w-60 max-w-full rounded bg-white/5" />
+          </div>
+
+          {/* Form fields */}
+          <div className="space-y-4">
+
+            <div className="space-y-2">
+              <div className="h-3 w-20 rounded bg-white/10" />
+              <div className="h-10 rounded-xl bg-white/5" />
+            </div>
+
+            <div className="space-y-2">
+              <div className="h-3 w-20 rounded bg-white/10" />
+              <div className="h-10 rounded-xl bg-white/5" />
+            </div>
+
+            {/* Security strip */}
+            <div className="h-12 rounded-xl bg-white/5" />
+
+            {/* Login button */}
+            <div className="h-11 rounded-xl bg-[#E60033]/25" />
+          </div>
+
+          {/* Footer */}
+          <div className="mx-auto h-3 w-44 rounded bg-white/5" />
         </div>
       </div>
     </main>
@@ -44,4 +66,3 @@ export default function LoginPage() {
     </Suspense>
   );
 }
-

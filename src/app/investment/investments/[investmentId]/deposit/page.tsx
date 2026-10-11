@@ -380,10 +380,63 @@ export default function InvestmentDepositPage() {
         err,
       );
 
-      const message =
-        err instanceof Error && err.message
+      const responseData =
+        err && typeof err === "object" && "response" in err
+          ? (
+              err as {
+                response?: {
+                  data?: {
+                    error?: unknown;
+                    message?: unknown;
+                    detail?: unknown;
+                  };
+                };
+              }
+            ).response?.data
+          : undefined;
+
+      const backendMessage =
+        typeof responseData?.error === "string"
+          ? responseData.error
+          : typeof responseData?.message === "string"
+            ? responseData.message
+            : typeof responseData?.detail === "string"
+              ? responseData.detail
+              : "";
+
+      let message =
+        backendMessage ||
+        (err instanceof Error && err.message
           ? err.message
-          : 'Failed to submit the transaction hash.';
+          : "Failed to submit the transaction hash.");
+
+      const normalizedMessage = message.toLowerCase();
+
+      if (
+        normalizedMessage.includes(
+          "idx_investment_deposits_network_tx_hash_unique",
+        ) ||
+        normalizedMessage.includes("duplicate key value") ||
+        normalizedMessage.includes("transaction hash already used") ||
+        normalizedMessage.includes("transaction hash has already been used")
+      ) {
+        message =
+          "This transaction hash has already been submitted for another deposit. Each transaction hash can only be used once. Please check the transaction ID and submit the correct hash.";
+      } else if (
+        normalizedMessage.includes("sqlstate") ||
+        normalizedMessage.includes("duplicate key") ||
+        normalizedMessage.includes("update pending investment deposit:")
+      ) {
+        // Do not expose internal database or SQL details to users.
+        message =
+          "We couldn't submit this transaction. Please verify the transaction hash and try again.";
+      } else if (
+        normalizedMessage.includes("invalid transaction hash") ||
+        normalizedMessage.includes("invalid tx hash")
+      ) {
+        message =
+          "This transaction ID appears to be invalid. Please check the hash and try again.";
+      }
 
       setError(message);
     } finally {
@@ -565,22 +618,6 @@ export default function InvestmentDepositPage() {
         </section>
       )}
 
-      {/* Error */}
-      {error && (
-        <section className="mt-4 rounded-2xl border border-red-400/15 bg-red-400/8 p-4">
-          <div className="flex gap-3">
-            <XCircle
-              size={18}
-              className="mt-0.5 shrink-0 text-red-300"
-            />
-
-            <p className="text-xs leading-5 text-red-200">
-              {error}
-            </p>
-          </div>
-        </section>
-      )}
-
       {/* Completed */}
       {isCompleted ? (
         <section className="mt-4 rounded-[26px] border border-emerald-400/15 bg-emerald-400/7 p-5">
@@ -733,7 +770,7 @@ export default function InvestmentDepositPage() {
                   setTxHash(event.target.value)
                 }
                 placeholder="Paste your TRON transaction hash"
-                rows={4}
+                rows={1}
                 disabled={submissionLocked}
                 className="mt-2 w-full resize-none rounded-xl border border-white/8 bg-[#07101F] px-3 py-3 font-mono text-[11px] text-white outline-none transition placeholder:font-sans placeholder:text-white/20 focus:border-emerald-400/40 focus:ring-2 focus:ring-emerald-400/10 disabled:cursor-not-allowed disabled:opacity-60"
               />
@@ -793,6 +830,22 @@ export default function InvestmentDepositPage() {
               )}
             </form>
           </section>
+
+      {/* Error */}
+      {error && (
+        <section className="mt-4 rounded-2xl border border-red-400/15 bg-red-400/8 p-4">
+          <div className="flex gap-3">
+            <XCircle
+              size={18}
+              className="mt-0.5 shrink-0 text-red-300"
+            />
+
+            <p className="text-xs leading-5 text-red-200">
+              {error}
+            </p>
+          </div>
+        </section>
+      )}
 
           {/* Current deposit */}
           <section className="mt-4 rounded-[26px] border border-white/8 bg-[#0B1426] p-5">

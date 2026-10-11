@@ -34,7 +34,6 @@ interface StepPaymentDetailsProps {
   amount: number;
   onSubmit: (
     txHash: string,
-    proofUrl?: string,
   ) => void;
   onBack: () => void;
   submitting: boolean;
@@ -110,11 +109,6 @@ export default function StepPaymentDetails({
 
   const [txHash, setTxHash] =
     useState("");
-
-  const [proofUrl, setProofUrl] =
-    useState(
-      existingDeposit?.proofUrl ?? "",
-    );
 
   const [copied, setCopied] =
     useState(false);
@@ -196,7 +190,6 @@ export default function StepPaymentDetails({
 
     onSubmit(
       trimmedTxHash,
-      proofUrl.trim() || undefined,
     );
   };
 
@@ -349,25 +342,6 @@ export default function StepPaymentDetails({
           }
           placeholder={t(
             "payment.tx_hash_placeholder",
-          )}
-          className="mt-2 w-full rounded-2xl border border-white/8 bg-[#07101F] px-4 py-3 text-xs text-white outline-none placeholder:text-white/20 focus:border-emerald-400/40 focus:ring-2 focus:ring-emerald-400/10"
-        />
-
-        <label className="mt-4 block text-xs font-bold text-white/70">
-          {t("payment.proof_url_label")}{" "}
-          <span className="font-medium text-white/25">
-            ({t("payment.optional")})
-          </span>
-        </label>
-
-        <input
-          type="url"
-          value={proofUrl}
-          onChange={(event) =>
-            setProofUrl(event.target.value)
-          }
-          placeholder={t(
-            "payment.proof_url_placeholder",
           )}
           className="mt-2 w-full rounded-2xl border border-white/8 bg-[#07101F] px-4 py-3 text-xs text-white outline-none placeholder:text-white/20 focus:border-emerald-400/40 focus:ring-2 focus:ring-emerald-400/10"
         />

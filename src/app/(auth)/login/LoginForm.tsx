@@ -2,9 +2,19 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState, type FormEvent } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+
+import {
+  useEffect,
+  useState,
+  type FormEvent,
+} from "react";
+
+import {
+  useRouter,
+  useSearchParams,
+} from "next/navigation";
+
 import {
   ArrowRight,
   Eye,
@@ -12,7 +22,13 @@ import {
   LockKeyhole,
   Mail,
   ShieldCheck,
+  Wallet,
+  BarChart3,
+  CheckCircle2,
+  Loader2,
+  ArrowLeft,
 } from "lucide-react";
+
 import { useAuth } from "@/src/components/AuthProvider";
 
 interface ApiError {
@@ -35,14 +51,22 @@ export default function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const redirectPath = searchParams.get("redirect") || undefined;
+  const requestedRedirect = searchParams.get("redirect");
+
+  // Accept only local application paths.
+  const redirectPath =
+    requestedRedirect &&
+    requestedRedirect.startsWith("/") &&
+    !requestedRedirect.startsWith("//") &&
+    !requestedRedirect.includes("\\")
+      ? requestedRedirect
+      : undefined;
 
   const { login, isAuthenticated, user } = useAuth();
 
+  /* AUTHENTICATED USER REDIRECT */
   useEffect(() => {
-    if (!isAuthenticated || !user) {
-      return;
-    }
+    if (!isAuthenticated || !user) return;
 
     const roleDefaultPaths: Record<string, string> = {
       employee: "/investment",
@@ -50,26 +74,35 @@ export default function LoginForm() {
       superadmin: "/superadmin",
     };
 
-    const defaultPath = roleDefaultPaths[user.role] || "/investment";
-    const targetPath = redirectPath || defaultPath;
+    const defaultPath =
+      roleDefaultPaths[user.role] || "/investment";
 
-    router.replace(targetPath);
+    router.replace(redirectPath || defaultPath);
   }, [isAuthenticated, user, redirectPath, router]);
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  /* LOGIN SUBMISSION */
+  const handleSubmit = async (
+    event: FormEvent<HTMLFormElement>
+  ) => {
     event.preventDefault();
+
+    if (loading) return;
 
     setError("");
     setLoading(true);
 
     try {
-      await login(email.trim(), password, redirectPath);
+      await login(
+        email.trim(),
+        password,
+        redirectPath
+      );
     } catch (err: unknown) {
       const apiError = err as ApiError;
       const code = apiError.response?.data?.code;
 
       if (code === "INVALID_CREDENTIALS") {
-        setError("No existing account found with the credentials.");
+        setError("Invalid email or password.");
         return;
       }
 
@@ -84,177 +117,242 @@ export default function LoginForm() {
   };
 
   return (
-    <main className="relative min-h-dvh overflow-hidden bg-[#070b24] text-white">
-      {/* Background glow */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -left-40 -top-40 h-96 w-96 rounded-full bg-cyan-500/10 blur-3xl" />
+    <main className="relative isolate min-h-dvh overflow-hidden bg-[#050B18] text-white">
 
-        <div className="absolute -right-40 top-20 h-125 w-125 rounded-full bg-purple-600/15 blur-3xl" />
+      {/* CINEMATIC BACKGROUND */}
+      <Image
+        src="/images/hero.png"
+        alt=""
+        fill
+        priority
+        sizes="100vw"
+        className="pointer-events-none -z-20 object-cover object-center opacity-25"
+      />
 
-        <div className="absolute -bottom-48 left-1/3 h-96 w-96 rounded-full bg-emerald-500/10 blur-3xl" />
+      {/* Dark overlay */}
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-[#050B18]/75" />
 
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.12),transparent_32%),radial-gradient(circle_at_80%_20%,rgba(168,85,247,0.12),transparent_28%),linear-gradient(135deg,#070b24_0%,#0b1033_50%,#130d2c_100%)]" />
-      </div>
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-linear-to-br from-[#050B18]/95 via-[#07101F]/90 to-[#101426]/85" />
 
-      <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-6xl items-center px-3 py-5 sm:px-6 sm:py-8 lg:px-8">
-        <div className="grid w-full overflow-hidden rounded-4xl border border-white/10 bg-white/[0.035] shadow-[0_30px_100px_rgba(0,0,0,0.45)] backdrop-blur-2xl lg:grid-cols-[1.05fr_0.95fr]">
-          {/* Brand / Information panel */}
-          <section className="relative hidden min-h-160 overflow-hidden border-r border-white/10 p-10 lg:flex lg:flex-col lg:justify-between xl:p-14">
-            <div className="absolute -right-32 -top-32 h-80 w-80 rounded-full bg-cyan-400/10 blur-3xl" />
+      {/* REDIQ ambient lighting */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -left-20 -top-20 h-52 w-52 rounded-full bg-[#E60033]/10 blur-[80px]"
+      />
 
-            <div className="absolute -bottom-40 -left-20 h-96 w-96 rounded-full bg-purple-500/10 blur-3xl" />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-20 bottom-0 h-52 w-52 rounded-full bg-[#E60033]/10 blur-[90px]"
+      />
+
+      {/* MAIN LAYOUT */}
+      <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-5xl items-center justify-center px-3 py-5 sm:px-6 sm:py-8 lg:px-8">
+
+        <div className="grid w-full max-w-215 overflow-hidden rounded-[20px] border border-white/10 bg-[#0B1426]/95 shadow-[0_25px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl sm:rounded-3xl lg:grid-cols-[0.9fr_1.1fr]">
+
+          {/* LEFT — BRAND PANEL */}
+          <section className="relative hidden min-w-0 overflow-hidden border-r border-white/8 bg-linear-to-br from-[#131E32] via-[#101A2D] to-[#091324] p-6 lg:flex lg:flex-col lg:justify-between">
+
+            {/* Decorative glow */}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-[#E60033]/12 blur-[65px]"
+            />
 
             <div className="relative">
-              {/* Desktop logo */}
-              <div className="mb-12 flex items-center gap-3">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[14px] border border-white/15 bg-white/10 shadow-[0_8px_30px_rgba(45,212,191,0.18)]">
+
+              {/* Brand */}
+              <Link
+                href="/"
+                className="inline-flex items-center gap-2.5"
+              >
+                <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl bg-[#E60033] shadow-lg shadow-[#E60033]/20">
                   <Image
                     src="/images/logo.png"
                     alt="REDIQ logo"
-                    width={44}
-                    height={44}
+                    fill
                     priority
-                    className="h-full w-full object-cover"
+                    sizes="40px"
+                    className="object-cover"
                   />
                 </div>
 
-                <div>
-                  <p className="text-lg font-bold tracking-tight text-white">
+                <div className="leading-tight">
+                  <p className="text-lg font-black tracking-tight text-white">
                     REDIQ
                   </p>
 
-                  <p className="text-xs text-white/45">Investment Platform</p>
+                  <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/40">
+                    Investment Platform
+                  </p>
                 </div>
-              </div>
+              </Link>
 
-              <div className="max-w-lg">
-                <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1.5 text-xs font-medium text-emerald-300">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                  Secure investment dashboard
-                </p>
+              {/* Intro */}
+              <div className="mt-9">
 
-                <h1 className="text-4xl font-bold leading-tight tracking-tight text-white xl:text-5xl">
-                  Manage your money with a{" "}
-                  <span className="bg-linear-to-r from-emerald-300 via-cyan-300 to-blue-400 bg-clip-text text-transparent">
-                    smarter interface.
+                <div className="inline-flex items-center gap-1.5 rounded-full border border-[#E60033]/20 bg-[#E60033]/10 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-[#FF476B]">
+                  <ShieldCheck size={12} />
+                  Your investment workspace
+                </div>
+
+                <h1 className="mt-4 text-[28px] font-black leading-[1.13] tracking-tight text-white">
+                  Your financial journey,
+                  <span className="block text-[#FF476B]">
+                    one platform.
                   </span>
                 </h1>
 
-                <p className="mt-6 max-w-md text-base leading-7 text-white/55">
-                  Access your investments, wallet, transactions and account
-                  activity from one secure financial dashboard.
+                <p className="mt-3 max-w-xs text-xs leading-5 text-white/50">
+                  Access your investments, wallet,
+                  transactions and account activity
+                  from your REDIQ dashboard.
                 </p>
               </div>
 
-              {/* Feature cards */}
-              <div className="mt-10 grid max-w-lg grid-cols-2 gap-3">
-                <div className="rounded-2xl border border-white/10 bg-white/4.5 p-4">
-                  <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-400/10">
-                    <ShieldCheck
-                      className="h-5 w-5 text-emerald-300"
-                      aria-hidden="true"
-                    />
+              {/* FEATURE CARDS */}
+              <div className="mt-6 grid grid-cols-2 gap-2.5">
+
+                <div className="rounded-xl border border-white/8 bg-white/[0.035] p-3">
+
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#E60033]/10 text-[#FF476B]">
+                    <Wallet size={15} />
                   </div>
 
-                  <p className="text-sm font-semibold text-white">
-                    Secure access
+                  <p className="mt-2.5 text-[11px] font-bold text-white">
+                    Your wallet
                   </p>
 
-                  <p className="mt-1 text-xs leading-5 text-white/40">
-                    Protected account authentication
+                  <p className="mt-1 text-[10px] leading-4 text-white/40">
+                    View your account activity
                   </p>
                 </div>
 
-                <div className="rounded-2xl border border-white/10 bg-white/4.5 p-4">
-                  <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-400/10">
-                    <ShieldCheck
-                      className="h-5 w-5 text-cyan-300"
-                      aria-hidden="true"
-                    />
+                <div className="rounded-xl border border-white/8 bg-white/[0.035] p-3">
+
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#E60033]/10 text-[#FF476B]">
+                    <BarChart3 size={15} />
                   </div>
 
-                  <p className="text-sm font-semibold text-white">
-                    One dashboard
+                  <p className="mt-2.5 text-[11px] font-bold text-white">
+                    Investments
                   </p>
 
-                  <p className="mt-1 text-xs leading-5 text-white/40">
-                    Wallet, investments and activity
+                  <p className="mt-1 text-[10px] leading-4 text-white/40">
+                    Track plans and portfolio
                   </p>
                 </div>
               </div>
             </div>
 
-            <p className="relative text-xs text-white/30">
-              Your account information is protected during authentication.
-            </p>
+            {/* Bottom brand information */}
+            <div className="relative mt-8 flex items-center gap-2 border-t border-white/8 pt-4">
+
+              <CheckCircle2
+                size={13}
+                className="shrink-0 text-[#FF476B]"
+              />
+
+              <p className="text-[10px] text-white/40">
+                Manage your REDIQ account in one place.
+              </p>
+            </div>
           </section>
 
-          {/* Login panel */}
-          <section className="flex items-center p-4 sm:p-8 lg:p-10 xl:p-14">
-            <div className="mx-auto w-full max-w-md">
-              {/* Mobile logo */}
-              <div className="mb-6 flex items-center gap-3 lg:hidden">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[14px] border border-white/15 bg-white/10 shadow-[0_8px_30px_rgba(45,212,191,0.18)]">
-                  <Image
-                    src="/images/logo.png"
-                    alt="REDIQ logo"
-                    width={44}
-                    height={44}
-                    priority
-                    className="h-full w-full object-cover"
-                  />
-                </div>
+          {/* RIGHT — LOGIN FORM */}
+          <section className="flex min-w-0 items-center px-4 py-5 sm:px-7 sm:py-7 lg:px-8 lg:py-8">
 
-                <div>
-                  <p className="text-lg font-bold tracking-tight text-white">
-                    REDIQ
-                  </p>
+            <div className="mx-auto w-full max-w-87.5">
 
-                  <p className="text-xs text-white/45">Investment Platform</p>
-                </div>
+              {/* Mobile brand */}
+              <div className="mb-5 flex items-center justify-between gap-3 lg:hidden">
+
+                <Link
+                  href="/"
+                  className="inline-flex items-center gap-2.5"
+                >
+                  <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-lg bg-[#E60033]">
+                    <Image
+                      src="/images/logo.png"
+                      alt="REDIQ logo"
+                      fill
+                      priority
+                      sizes="36px"
+                      className="object-cover"
+                    />
+                  </div>
+
+                  <div className="leading-tight">
+                    <p className="text-base font-black text-white">
+                      REDIQ
+                    </p>
+
+                    <p className="text-[9px] text-white/40">
+                      Investment Platform
+                    </p>
+                  </div>
+                </Link>
+
+                <Link
+                  href="/"
+                  aria-label="Back to homepage"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/60 transition hover:text-white"
+                >
+                  <ArrowLeft size={15} />
+                </Link>
               </div>
 
-              {/* Heading */}
+              {/* FORM HEADING */}
               <div>
-                <p className="mb-3 text-sm font-medium text-emerald-300">
+
+                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#FF476B]">
                   Welcome back
                 </p>
 
-                <h2 className="text-[1.75rem] font-bold tracking-tight text-white sm:text-4xl">
-                  Sign in to your account
+                <h2 className="mt-2 text-[23px] font-black leading-tight tracking-tight text-white sm:text-[27px]">
+                  Sign in to REDIQ
                 </h2>
 
-                <p className="mt-2.5 text-sm leading-5.5 text-white/45">
-                  Enter your credentials to continue to your investment
-                  dashboard.
+                <p className="mt-2 text-[11px] leading-5 text-white/45 sm:text-xs">
+                  Enter your credentials to access your
+                  investment dashboard.
                 </p>
               </div>
 
-              {/* Error */}
+              {/* ERROR MESSAGE */}
               {error && (
                 <div
                   role="alert"
-                  className="mt-6 rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3.5"
+                  aria-live="polite"
+                  className="mt-4 rounded-xl border border-red-400/20 bg-red-500/10 px-3 py-2.5"
                 >
-                  <p className="text-sm leading-5 text-red-300">{error}</p>
+                  <p className="text-[11px] leading-5 text-red-300">
+                    {error}
+                  </p>
                 </div>
               )}
 
-              {/* Login form */}
-              <form className="mt-6 space-y-4 sm:mt-8 sm:space-y-5" onSubmit={handleSubmit}>
-                {/* Email */}
+              {/* LOGIN FORM */}
+              <form
+                onSubmit={handleSubmit}
+                className="mt-5 space-y-3.5"
+              >
+
+                {/* EMAIL */}
                 <div>
                   <label
                     htmlFor="email"
-                    className="mb-2 block text-sm font-medium text-white/75"
+                    className="mb-1.5 block text-[11px] font-semibold text-white/75"
                   >
                     Email address
                   </label>
 
                   <div className="group relative">
+
                     <Mail
-                      className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/30 transition-colors group-focus-within:text-emerald-300"
+                      size={15}
                       aria-hidden="true"
+                      className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-white/35 transition-colors group-focus-within:text-[#FF476B]"
                     />
 
                     <input
@@ -262,37 +360,46 @@ export default function LoginForm() {
                       name="email"
                       type="email"
                       autoComplete="email"
+                      autoCapitalize="none"
+                      spellCheck={false}
                       required
+                      disabled={loading}
                       value={email}
-                      onChange={(event) => setEmail(event.target.value)}
-                      placeholder="Enter your email"
-                      className="h-12 w-full rounded-xl border border-white/10 bg-white/5.5 pl-11 pr-4 text-sm text-white outline-none transition-all placeholder:text-white/25 hover:border-white/15 focus:border-emerald-400/50 focus:bg-white/7.5 focus:ring-4 focus:ring-emerald-400/10"
+                      onChange={(event) =>
+                        setEmail(event.target.value)
+                      }
+                      placeholder="Enter your email address"
+                      className="h-10 w-full rounded-xl border border-white/10 bg-[#07101F] pl-9 pr-3 text-xs text-white outline-none transition placeholder:text-white/25 hover:border-white/15 focus:border-[#E60033]/50 focus:ring-2 focus:ring-[#E60033]/10 disabled:cursor-not-allowed disabled:opacity-60"
                     />
                   </div>
                 </div>
 
-                {/* Password */}
+                {/* PASSWORD */}
                 <div>
-                  <div className="mb-2 flex items-center justify-between">
+
+                  <div className="mb-1.5 flex items-center justify-between gap-2">
+
                     <label
                       htmlFor="password"
-                      className="block text-sm font-medium text-white/75"
+                      className="text-[11px] font-semibold text-white/75"
                     >
                       Password
                     </label>
 
                     <Link
                       href="/forgot-password"
-                      className="text-xs font-medium text-emerald-300 transition-colors hover:text-emerald-200"
+                      className="text-[10px] font-semibold text-[#FF476B] transition hover:text-[#FF7895]"
                     >
                       Forgot password?
                     </Link>
                   </div>
 
                   <div className="group relative">
+
                     <LockKeyhole
-                      className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/30 transition-colors group-focus-within:text-emerald-300"
+                      size={15}
                       aria-hidden="true"
+                      className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-white/35 transition-colors group-focus-within:text-[#FF476B]"
                     />
 
                     <input
@@ -301,101 +408,114 @@ export default function LoginForm() {
                       type={showPassword ? "text" : "password"}
                       autoComplete="current-password"
                       required
+                      disabled={loading}
                       value={password}
-                      onChange={(event) => setPassword(event.target.value)}
+                      onChange={(event) =>
+                        setPassword(event.target.value)
+                      }
                       placeholder="Enter your password"
-                      className="h-12 w-full rounded-xl border border-white/10 bg-white/5.5 pl-11 pr-11 text-sm text-white outline-none transition-all placeholder:text-white/25 hover:border-white/15 focus:border-emerald-400/50 focus:bg-white/7.5 focus:ring-4 focus:ring-emerald-400/10"
+                      className="h-10 w-full rounded-xl border border-white/10 bg-[#07101F] pl-9 pr-10 text-xs text-white outline-none transition placeholder:text-white/25 hover:border-white/15 focus:border-[#E60033]/50 focus:ring-2 focus:ring-[#E60033]/10 disabled:cursor-not-allowed disabled:opacity-60"
                     />
 
+                    {/* Password visibility */}
                     <button
                       type="button"
-                      onClick={() => setShowPassword((previous) => !previous)}
-                      className="absolute right-0 top-0 flex h-12 w-11 items-center justify-center rounded-r-xl text-white/30 transition-colors hover:text-white/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60"
-                      aria-label={
-                        showPassword ? "Hide password" : "Show password"
+                      disabled={loading}
+                      onClick={() =>
+                        setShowPassword((previous) => !previous)
                       }
-                      title={showPassword ? "Hide password" : "Show password"}
+                      aria-label={
+                        showPassword
+                          ? "Hide password"
+                          : "Show password"
+                      }
+                      aria-pressed={showPassword}
+                      className="absolute right-0 top-0 flex h-10 w-10 items-center justify-center rounded-r-xl text-white/40 transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E60033]/50 disabled:opacity-50"
                     >
                       {showPassword ? (
-                        <EyeOff className="h-5 w-5" aria-hidden="true" />
+                        <EyeOff size={16} aria-hidden="true" />
                       ) : (
-                        <Eye className="h-5 w-5" aria-hidden="true" />
+                        <Eye size={16} aria-hidden="true" />
                       )}
                     </button>
                   </div>
                 </div>
 
-                {/* Security indicator */}
-                <div className="flex items-center gap-3 rounded-2xl border border-white/8 bg-white/3 px-4 py-3">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-400/10">
-                    <ShieldCheck
-                      className="h-4 w-4 text-emerald-300"
-                      aria-hidden="true"
-                    />
+                {/* SECURITY INFORMATION */}
+                <div className="flex items-center gap-2.5 rounded-xl border border-white/8 bg-white/2.5 px-3 py-2.5">
+
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#E60033]/10 text-[#FF476B]">
+                    <ShieldCheck size={14} />
                   </div>
 
                   <div className="min-w-0">
-                    <p className="text-xs font-medium text-white/70">
-                      Secure authentication
+                    <p className="text-[10px] font-bold text-white/70">
+                      Account authentication
                     </p>
 
-                    <p className="mt-0.5 text-[11px] text-white/30">
-                      Your credentials are transmitted securely.
+                    <p className="mt-0.5 text-[9px] leading-4 text-white/40">
+                      Sign in using your REDIQ credentials.
                     </p>
                   </div>
-
-                  <span className="ml-auto h-2 w-2 shrink-0 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.7)]" />
                 </div>
 
-                {/* Submit */}
+                {/* SUBMIT BUTTON */}
                 <button
                   type="submit"
                   disabled={loading}
-                  className="group relative flex h-12 w-full sm:h-14 items-center justify-center gap-2 overflow-hidden rounded-2xl bg-linear-to-r from-emerald-400 via-teal-400 to-cyan-400 px-5 text-sm font-bold text-[#06121a] shadow-[0_12px_35px_rgba(45,212,191,0.18)] transition-all hover:shadow-[0_16px_45px_rgba(45,212,191,0.28)] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-400/25 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
+                  className="group flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#E60033] px-4 py-2.5 text-xs font-black text-white shadow-lg shadow-[#E60033]/15 transition-all duration-300 hover:bg-[#FF174B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF476B] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B1426] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {loading ? (
                     <>
-                      <span className="h-5 w-5 animate-spin rounded-full border-2 border-[#06121a]/25 border-t-[#06121a]" />
-
-                      <span>Signing in...</span>
+                      <Loader2
+                        size={16}
+                        className="animate-spin"
+                        aria-hidden="true"
+                      />
+                      Signing in...
                     </>
                   ) : (
                     <>
-                      <span>Sign in</span>
+                      Sign in
 
                       <ArrowRight
-                        className="h-4 w-4 transition-transform group-hover:translate-x-1"
+                        size={15}
                         aria-hidden="true"
+                        className="transition-transform group-hover:translate-x-1"
                       />
                     </>
                   )}
                 </button>
               </form>
 
-              {/* Register */}
-              <div className="mt-6 text-center sm:mt-8">
-                <p className="text-sm text-white/40">
+              {/* REGISTER */}
+              <div className="mt-5 text-center">
+
+                <p className="text-[11px] text-white/45">
                   Don&apos;t have an account?{" "}
+
                   <Link
                     href="/register"
-                    className="font-semibold text-emerald-300 transition-colors hover:text-emerald-200"
+                    className="font-bold text-[#FF476B] transition hover:text-[#FF7895]"
                   >
                     Create an account
                   </Link>
                 </p>
               </div>
 
-              {/* Footer */}
-              <div className="mt-6 border-t border-white/8 pt-4 text-center sm:mt-8 sm:pt-5">
-                <p className="text-[11px] leading-5 text-white/25">
+              {/* TERMS */}
+              <div className="mt-5 border-t border-white/8 pt-3.5 text-center">
+
+                <p className="text-[10px] leading-4 text-white/35">
                   By continuing, you agree to the{" "}
+
                   <Link
                     href="/terms"
-                    className="font-semibold text-emerald-300 transition-colors hover:text-emerald-200"
+                    className="font-semibold text-[#FF476B] transition hover:text-[#FF7895]"
                   >
                     Terms & Conditions
                   </Link>{" "}
-                  of the platform.
+                  of REDIQ.
                 </p>
               </div>
             </div>

@@ -1,99 +1,83 @@
 
 // src/components/TeamMemberCard.tsx
 
+
 import {
   CheckCircle2,
   Clock3,
-} from 'lucide-react';
+} from "lucide-react";
 
-import type { TeamMemberInvestment } from '@/src/lib/types/investment';
-import { useTranslation } from '../i18n/translations';
+import type { TeamMemberInvestment } from "@/src/lib/types/investment";
+import { useTranslation } from "../i18n/translations";
 
 interface TeamMemberCardProps {
   member: TeamMemberInvestment;
 }
 
-const TeamMemberCard = ({
+export default function TeamMemberCard({
   member,
-}: TeamMemberCardProps) => {
+}: TeamMemberCardProps) {
   const { t } = useTranslation();
 
-  const isActive = member.status === 'ACTIVE';
+  const isActive = member.status === "ACTIVE";
 
-  const initial =
-    member.name.trim().charAt(0).toUpperCase();
+  const displayName = member.name.trim() || "Team member";
+
+  const initials = displayName
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join("");
 
   return (
-    <div
-      className="
-        group
-        flex items-center gap-4
-        rounded-[22px]
-        border border-white/8
-        bg-[#0B1426]
-        p-4
-        shadow-lg shadow-black/10
-        transition duration-300
-        hover:border-white/12
-        hover:bg-[#0D182C]
-      "
-    >
+    <article className="group flex min-w-0 items-center gap-3 rounded-2xl border border-white/8 bg-[#0B1426] p-3 transition duration-300 hover:border-[#E60033]/20 hover:bg-[#101D30] sm:p-3.5">
+
+      {/* MEMBER AVATAR */}
       <div
-        className="
-          flex h-12 w-12 shrink-0
-          items-center justify-center
-          rounded-2xl
-          border border-[#F7C948]/10
-          bg-[#F7C948]/8
-          text-sm font-black
-          text-[#F7C948]
-        "
         aria-hidden="true"
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#E60033]/20 bg-[#E60033]/10 text-xs font-black text-[#FF476B] sm:h-11 sm:w-11"
       >
-        {initial || '?'}
+        {initials || "?"}
       </div>
 
+      {/* MEMBER INFORMATION */}
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-bold text-white">
-          {member.name}
+        <p className="truncate text-xs font-bold text-white sm:text-[13px]">
+          {displayName}
         </p>
 
-        <p className="mt-1 truncate text-xs text-white/35">
+        <p className="mt-0.5 truncate text-[10px] leading-4 text-white/40">
           Investment participation
         </p>
       </div>
 
-      <div className="shrink-0 text-right">
-        <div className="flex items-center justify-end gap-1.5">
-          {isActive ? (
-            <>
-              <CheckCircle2
-                size={13}
-                className="text-emerald-300"
-                aria-hidden="true"
-              />
+      {/* MEMBER STATUS */}
+      <div
+        className={[
+          "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1.5",
+          isActive
+            ? "border-emerald-400/15 bg-emerald-400/10 text-emerald-300"
+            : "border-white/8 bg-white/5 text-white/45",
+        ].join(" ")}
+      >
+        {isActive ? (
+          <CheckCircle2
+            size={12}
+            aria-hidden="true"
+          />
+        ) : (
+          <Clock3
+            size={12}
+            aria-hidden="true"
+          />
+        )}
 
-              <span className="text-[10px] font-bold text-emerald-300">
-                {t('profile.active')}
-              </span>
-            </>
-          ) : (
-            <>
-              <Clock3
-                size={13}
-                className="text-white/25"
-                aria-hidden="true"
-              />
-
-              <span className="text-[10px] font-semibold text-white/30">
-                {t('team.inactive')}
-              </span>
-            </>
-          )}
-        </div>
+        <span className="text-[10px] font-bold">
+          {isActive
+            ? t("profile.active")
+            : t("team.inactive")}
+        </span>
       </div>
-    </div>
+    </article>
   );
-};
-
-export default TeamMemberCard;
+}

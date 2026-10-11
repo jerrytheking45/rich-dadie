@@ -1,37 +1,76 @@
 
 import { Suspense } from "react";
+import Image from "next/image";
+
 import ResetPasswordForm from "./ResetPasswordForm";
 
 function ResetPasswordLoading() {
   return (
-    <main className="min-h-dvh overflow-hidden bg-[#070b24] px-4 py-8 sm:px-6">
-      <div className="mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-6xl items-center justify-center">
-        <div className="w-full max-w-6xl overflow-hidden rounded-4xl border border-white/10 bg-white/3 shadow-[0_30px_100px_rgba(0,0,0,0.45)] backdrop-blur-2xl">
-          <div className="grid min-h-175 lg:grid-cols-[1.05fr_0.95fr]">
-            <div className="hidden border-r border-white/10 p-10 lg:block xl:p-14">
-              <div className="h-11 w-11 animate-pulse rounded-[14px] bg-white/10" />
+    <main className="flex min-h-dvh items-center justify-center bg-[#050B18] px-3 py-5 text-white sm:px-6">
 
-              <div className="mt-14 max-w-lg space-y-5">
-                <div className="h-7 w-48 animate-pulse rounded-lg bg-white/8" />
-                <div className="h-14 w-full animate-pulse rounded-xl bg-white/8" />
-                <div className="h-14 w-4/5 animate-pulse rounded-xl bg-white/8" />
-              </div>
+      <div className="w-full max-w-105 overflow-hidden rounded-[20px] border border-white/10 bg-[#0B1426] p-5 shadow-2xl sm:p-7">
 
-              <div className="mt-10 space-y-3">
-                <div className="h-20 animate-pulse rounded-2xl bg-white/5" />
-                <div className="h-20 animate-pulse rounded-2xl bg-white/5" />
-              </div>
+        <div
+          role="status"
+          aria-label="Loading password reset form"
+          className="animate-pulse space-y-4"
+        >
+
+          {/* BRAND */}
+          <div className="flex items-center gap-2.5">
+
+            <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-lg bg-[#E60033]">
+              <Image
+                src="/images/logo.png"
+                alt="REDIQ"
+                fill
+                sizes="36px"
+                className="object-cover"
+              />
             </div>
 
-            <div className="flex items-center p-6 sm:p-10 xl:p-14">
-              <div className="mx-auto w-full max-w-md animate-pulse space-y-6">
-                <div className="h-4 w-32 rounded bg-white/8" />
-                <div className="h-10 w-72 max-w-full rounded bg-white/8" />
-                <div className="h-12 w-full rounded bg-white/8" />
-                <div className="h-14 w-full rounded-2xl bg-white/8" />
-                <div className="h-14 w-full rounded-2xl bg-white/8" />
-              </div>
+            <div className="space-y-1.5">
+              <div className="h-4 w-20 rounded bg-white/10" />
+              <div className="h-2 w-28 rounded bg-white/5" />
             </div>
+          </div>
+
+          {/* HEADING */}
+          <div className="space-y-2">
+
+            <div className="h-3 w-28 rounded bg-[#E60033]/20" />
+
+            <div className="h-7 w-48 rounded-lg bg-white/10" />
+
+            <div className="h-3 w-60 max-w-full rounded bg-white/5" />
+          </div>
+
+          {/* PASSWORD FIELDS */}
+          <div className="space-y-3">
+
+            <div className="space-y-1.5">
+              <div className="h-3 w-24 rounded bg-white/10" />
+              <div className="h-10 rounded-xl border border-white/5 bg-white/5" />
+            </div>
+
+            <div className="space-y-1.5">
+              <div className="h-3 w-32 rounded bg-white/10" />
+              <div className="h-10 rounded-xl border border-white/5 bg-white/5" />
+            </div>
+
+            {/* Requirements */}
+            <div className="h-14 rounded-xl bg-white/5" />
+
+            {/* Submit */}
+            <div className="h-11 rounded-xl bg-[#E60033]/25" />
+          </div>
+
+          {/* BACK LINK */}
+          <div className="mx-auto h-3 w-28 rounded bg-white/5" />
+
+          {/* FOOTER */}
+          <div className="border-t border-white/8 pt-3">
+            <div className="mx-auto h-3 w-56 max-w-full rounded bg-white/5" />
           </div>
         </div>
       </div>
@@ -46,4 +85,3 @@ export default function ResetPasswordPage() {
     </Suspense>
   );
 }
-

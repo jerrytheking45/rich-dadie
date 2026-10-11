@@ -1,26 +1,37 @@
-﻿'use client';
 
-import { useEffect, useState } from 'react';
+"use client";
+
+import Image from "next/image";
+
+import {
+  useEffect,
+  useState,
+  type ComponentType,
+} from "react";
+
+import { useRouter } from "next/navigation";
+
 import {
   ArrowRight,
   ChartNoAxesCombined,
   Sparkles,
   TrendingUp,
-} from 'lucide-react';
-import { useRouter } from 'next/navigation';
+} from "lucide-react";
 
-import { isZeroUUID } from '@/src/lib/utils/uuid';
+import { isZeroUUID } from "@/src/lib/utils/uuid";
 
-import SearchModal from '@/src/components/search/SearchModal';
-import InvestmentHeader from '@/src/components/InvestmentHeader';
-import BalanceCard from '@/src/components/BalanceCard';
-import InvestmentCard from '@/src/components/InvestmentCard';
-import InvestmentPlanCard from '@/src/components/InvestmentPlanCard';
-import PromotionBanner from '@/src/components/promotions/PromotionBanner';
-import PromotionCarousel from '@/src/components/promotions/PromotionCarousel';
-import SupportFloatingButton from '@/src/components/support/SupportFloatingButton';
+import LiveCryptoMarket from "@/src/components/market/LiveCryptoMarket";
 
-import { investmentApi } from '@/src/lib/api/investmentApi';
+import SearchModal from "@/src/components/search/SearchModal";
+import InvestmentHeader from "@/src/components/InvestmentHeader";
+import BalanceCard from "@/src/components/BalanceCard";
+import InvestmentCard from "@/src/components/InvestmentCard";
+import InvestmentPlanCard from "@/src/components/InvestmentPlanCard";
+import PromotionBanner from "@/src/components/promotions/PromotionBanner";
+import PromotionCarousel from "@/src/components/promotions/PromotionCarousel";
+import SupportFloatingButton from "@/src/components/support/SupportFloatingButton";
+
+import { investmentApi } from "@/src/lib/api/investmentApi";
 
 import type {
   InvestmentPlan,
@@ -28,7 +39,39 @@ import type {
   InvestmentSummary,
   UserProfile,
   BalanceSummary,
-} from '@/src/lib/types/investment';
+} from "@/src/lib/types/investment";
+
+/* ==========================================
+   HELPERS
+========================================== */
+
+function shufflePlans(items: InvestmentPlan[]): InvestmentPlan[] {
+  const shuffled = [...items];
+
+  for (let i = shuffled.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+
+    [shuffled[i], shuffled[j]] = [
+      shuffled[j],
+      shuffled[i],
+    ];
+  }
+
+  return shuffled;
+}
+
+function getUniqueKey(
+  id: string,
+  index: number
+): string {
+  return id && !isZeroUUID(id)
+    ? id
+    : `fallback-${index}`;
+}
+
+/* ==========================================
+   HOME PAGE
+========================================== */
 
 export default function Home() {
   const router = useRouter();
@@ -36,335 +79,361 @@ export default function Home() {
   const [balanceSummary, setBalanceSummary] =
     useState<BalanceSummary | null>(null);
 
-  const [searchOpen, setSearchOpen] =
-  useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   const [plans, setPlans] = useState<InvestmentPlan[]>([]);
   const [investments, setInvestments] = useState<Investment[]>([]);
   const [user, setUser] = useState<UserProfile | null>(null);
+
   const [loading, setLoading] = useState(true);
 
+  /* ==========================================
+     LOAD DASHBOARD INFORMATION
+  ========================================== */
+
   useEffect(() => {
+    let cancelled = false;
+
     const loadData = async () => {
-      setLoading(true);
+      const [
+        plansResult,
+        investmentsResult,
+        profileResult,
+        balanceResult,
+      ] = await Promise.allSettled([
+        investmentApi.getPlans(),
+        investmentApi.getInvestments(1, 50),
+        investmentApi.getProfile(),
+        investmentApi.getBalanceSummary(),
+      ]);
 
-      try {
-        const plansPromise = investmentApi.getPlans();
-        const investmentsPromise =
-          investmentApi.getInvestments(1, 50);
-        const profilePromise = investmentApi.getProfile();
-        const balancePromise =
-          investmentApi.getBalanceSummary();
+      if (cancelled) return;
 
-        const [
-          plansResult,
-          investmentsResult,
-          profileResult,
-          balanceResult,
-        ] = await Promise.allSettled([
-          plansPromise,
-          investmentsPromise,
-          profilePromise,
-          balancePromise,
-        ]);
-
-        if (plansResult.status === 'fulfilled') {
-          const plansData = plansResult.value;
-          const shuffledPlans = [...plansData];
-
-          for (
-            let i = shuffledPlans.length - 1;
-            i > 0;
-            i -= 1
-          ) {
-            const j = Math.floor(Math.random() * (i + 1));
-
-            [shuffledPlans[i], shuffledPlans[j]] = [
-              shuffledPlans[j],
-              shuffledPlans[i],
-            ];
-          }
-
-          setPlans(shuffledPlans);
-        } else {
-          console.error(
-            'Failed to load investment plans:',
-            plansResult.reason,
-          );
-        }
-
-        if (investmentsResult.status === 'fulfilled') {
-          const investmentsData =
-            investmentsResult.value;
-
-          const validInvestments =
-            investmentsData.investments.filter(
-              (investment) =>
-                !isZeroUUID(investment.id),
-            );
-
-          setInvestments(validInvestments);
-        } else {
-          console.error(
-            'Failed to load user investments:',
-            investmentsResult.reason,
-          );
-
-          setInvestments([]);
-        }
-
-        if (profileResult.status === 'fulfilled') {
-          setUser(profileResult.value);
-        } else {
-          console.error(
-            'Failed to load user profile:',
-            profileResult.reason,
-          );
-
-          setUser(null);
-        }
-
-        if (balanceResult.status === 'fulfilled') {
-          setBalanceSummary(balanceResult.value);
-        } else {
-          console.error(
-            'Failed to load balance summary:',
-            balanceResult.reason,
-          );
-
-          setBalanceSummary(null);
-        }
-      } catch (err) {
+      if (plansResult.status === "fulfilled") {
+        setPlans(shufflePlans(plansResult.value));
+      } else {
         console.error(
-          'Failed to load dashboard data:',
-          err,
+          "Failed to load investment plans:",
+          plansResult.reason
         );
-      } finally {
-        setLoading(false);
+
+        setPlans([]);
       }
+
+      if (investmentsResult.status === "fulfilled") {
+        const validInvestments =
+          investmentsResult.value.investments.filter(
+            (investment) => !isZeroUUID(investment.id)
+          );
+
+        setInvestments(validInvestments);
+      } else {
+        console.error(
+          "Failed to load user investments:",
+          investmentsResult.reason
+        );
+
+        setInvestments([]);
+      }
+
+      if (profileResult.status === "fulfilled") {
+        setUser(profileResult.value);
+      } else {
+        console.error(
+          "Failed to load user profile:",
+          profileResult.reason
+        );
+
+        setUser(null);
+      }
+
+      if (balanceResult.status === "fulfilled") {
+        setBalanceSummary(balanceResult.value);
+      } else {
+        console.error(
+          "Failed to load balance summary:",
+          balanceResult.reason
+        );
+
+        setBalanceSummary(null);
+      }
+
+      setLoading(false);
     };
 
     void loadData();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
+  /* ==========================================
+     DASHBOARD DATA
+  ========================================== */
+
   const displayedPlans = plans.slice(0, 4);
+
   const recentInvestments = investments.slice(0, 2);
 
   const summary: InvestmentSummary = {
-    totalInvested:
-      balanceSummary?.totalInvested ?? 0,
-
-    totalExpectedProfit:
-      balanceSummary?.totalExpectedProfit ?? 0,
-
-    totalLockedBalance:
-      balanceSummary?.totalLockedBalance ?? 0,
-
-    activeBalance:
-      balanceSummary?.activeBalance ?? 0,
-
-    activeInvestments:
-      balanceSummary?.activeInvestments ?? 0,
-
-    maturedInvestments:
-      balanceSummary?.maturedInvestments ?? 0,
-
-    assetSymbol:
-      balanceSummary?.assetSymbol ?? 'USDT',
+    totalInvested: balanceSummary?.totalInvested ?? 0,
+    totalExpectedProfit: balanceSummary?.totalExpectedProfit ?? 0,
+    totalLockedBalance: balanceSummary?.totalLockedBalance ?? 0,
+    activeBalance: balanceSummary?.activeBalance ?? 0,
+    activeInvestments: balanceSummary?.activeInvestments ?? 0,
+    maturedInvestments: balanceSummary?.maturedInvestments ?? 0,
+    assetSymbol: balanceSummary?.assetSymbol ?? "USDT",
   };
 
-  const getUniqueKey = (
-    id: string,
-    index: number,
-  ): string =>
-    id &&
-    id !== '00000000-0000-0000-0000-000000000000'
-      ? id
-      : `fallback-${index}`;
-
-  const displayName = user?.name || '';
+  /* ==========================================
+     RENDER
+  ========================================== */
 
   return (
     <>
-      <main className="relative mx-auto w-full max-w-2xl overflow-hidden px-4 pb-32 pt-5 sm:px-6 lg:max-w-5xl lg:px-8">
-        {/* Ambient background */}
+      <main className="relative mx-auto w-full max-w-2xl px-4 pb-32 pt-4 text-white sm:px-6 sm:pt-6 lg:max-w-5xl lg:px-8">
+
+        {/* BACKGROUND */}
         <div
           aria-hidden="true"
           className="pointer-events-none fixed inset-0 -z-10 overflow-hidden"
         >
-          <div className="absolute left-1/2 top-62.5 h-125 w-125 -translate-x-1/2 rounded-full bg-emerald-400/6 blur-3xl" />
+          <div className="absolute -left-20 top-16 h-64 w-64 rounded-full bg-[#E60033]/6 blur-[100px]" />
 
-          <div className="absolute bottom-62.5 right-37.5 h-125 w-125 rounded-full bg-purple-500/5 blur-3xl" />
-
-          <div className="absolute left-45 top-[35%] h-100 w-100 rounded-full bg-[#F7C948]/4 blur-3xl" />
+          <div className="absolute -right-20 top-[45%] h-64 w-64 rounded-full bg-[#E60033]/5 blur-[100px]" />
         </div>
 
-        {/* Header */}
+        {/* =====================================
+            HEADER
+        ====================================== */}
+
         <InvestmentHeader
-  name={displayName}
-  onSearch={() => setSearchOpen(true)}
-/>
+          name={user?.name || ""}
+          onSearch={() => setSearchOpen(true)}
+        />
 
-        {/* Welcome */}
-        <section className="mt-7">
-          <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-xl border border-[#F7C948]/15 bg-[#F7C948]/8">
-              <Sparkles
-                size={14}
-                className="text-[#F7C948]"
-                aria-hidden="true"
-              />
-            </div>
+        {/* =====================================
+            WELCOME
+        ====================================== */}
 
-            <span className="text-[10px] font-black uppercase tracking-[0.18em] text-[#F7C948]/70">
-              Investment dashboard
-            </span>
+        <section className="mt-6 sm:mt-7">
+
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-[#E60033]/20 bg-[#E60033]/10 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.13em] text-[#FF476B]">
+            <Sparkles size={12} aria-hidden="true" />
+            Investment dashboard
           </div>
 
-          <h1 className="mt-3 text-[28px] font-black tracking-tight text-white sm:text-3xl">
-            Grow your future.
+          <h1 className="mt-3 text-[25px] font-black leading-tight tracking-tight text-white sm:text-[30px]">
+            Grow your future
+            <span className="text-[#FF476B]">.</span>
           </h1>
 
-          <p className="mt-2 max-w-lg text-xs leading-6 text-white/35 sm:text-sm">
-            Monitor your portfolio, explore investment
-            opportunities and keep track of your growth
-            from one place.
+          <p className="mt-1.5 max-w-xl text-[11px] leading-5 text-white/45 sm:text-xs">
+            Monitor your portfolio, explore available plans
+            and follow your investment activity in one place.
           </p>
         </section>
 
-        {/* Portfolio */}
-        <section className="mt-6">
+        {/* =====================================
+            PORTFOLIO BALANCE
+        ====================================== */}
+
+        <section className="mt-5">
           <BalanceCard summary={summary} />
         </section>
 
-        {/* Quick actions */}
-        <section className="mt-4 grid grid-cols-2 gap-3">
+        {/* =====================================
+            NEW REDIQ ADVERTISEMENT BANNER
+        ====================================== */}
+
+        <section
+          aria-label="REDIQ platform advertisement"
+          className="mt-4 min-w-0"
+        >
+          <div className="group relative overflow-hidden rounded-2xl border border-[#E60033]/20 bg-[#050B18] shadow-lg shadow-black/20">
+
+            {/* Original artwork - no cropping */}
+            <Image
+              src="/images/futuristic.png"
+              alt="REDIQ promotional artwork featuring the investment platform, portfolio dashboard and digital asset market."
+              width={1200}
+              height={630}
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 960px"
+              className="block h-auto w-full object-contain"
+              priority
+            />
+
+            {/* Bottom brand accent */}
+            <div
+              aria-hidden="true"
+              className="absolute inset-x-0 bottom-0 h-0.5 bg-linear-to-r from-[#E60033] via-[#FF476B]/70 to-transparent"
+            />
+          </div>
+
+          <p className="mt-1.5 px-1 text-[9px] leading-4 text-white/35">
+            Your future begins with the decisions you make today.
+            Discover new possibilities with REDIQ. Explore digital investment
+            opportunities, stay connected to global markets, and build your financial
+            journey with confidence. Every great ambition starts with a single step.
+
+          </p>
+        </section>
+
+        {/* =====================================
+            QUICK ACTIONS
+        ====================================== */}
+
+        <section
+          aria-label="Quick actions"
+          className="mt-4 grid grid-cols-2 gap-2.5 sm:gap-3"
+        >
           <QuickAction
             icon={ChartNoAxesCombined}
             label="My investments"
             description="Track portfolio"
             onClick={() =>
-              router.push('/investment/investments')
+              router.push("/investment/investments")
             }
           />
 
           <QuickAction
             icon={TrendingUp}
             label="Explore plans"
-            description="Find opportunities"
+            description="View opportunities"
             onClick={() =>
-              router.push('/investment/plans')
+              router.push("/investment/plans")
             }
           />
         </section>
 
-        {/* Investments */}
-        <section className="mt-9">
+        {/* =====================================
+            RECENT INVESTMENTS
+        ====================================== */}
+
+        <section className="mt-7">
+
           <SectionHeader
             eyebrow="Portfolio"
             title="My investments"
             action="View all"
             onClick={() =>
-              router.push('/investment/investments')
+              router.push("/investment/investments")
             }
           />
 
-          <div className="mt-4 space-y-3">
+          <div className="mt-3 space-y-2.5">
             {loading ? (
               <InvestmentSkeleton />
             ) : recentInvestments.length > 0 ? (
-              recentInvestments.map(
-                (investment, index) => (
-                  <InvestmentCard
-                    key={getUniqueKey(
-                      investment.id,
-                      index,
-                    )}
-                    investment={investment}
-                    onClick={() =>
-                      router.push(
-                        `/investment/investments/${investment.id}`,
-                      )
-                    }
-                  />
-                ),
-              )
+              recentInvestments.map((investment, index) => (
+                <InvestmentCard
+                  key={getUniqueKey(investment.id, index)}
+                  investment={investment}
+                  onClick={() =>
+                    router.push(
+                      `/investment/investments/${investment.id}`
+                    )
+                  }
+                />
+              ))
             ) : (
               <EmptySection
                 title="No investments yet"
-                description="Start building your portfolio by exploring the available investment plans."
+                description="Explore available investment plans to begin building your portfolio."
                 action="Explore plans"
                 onClick={() =>
-                  router.push('/investment/plans')
+                  router.push("/investment/plans")
                 }
               />
             )}
           </div>
         </section>
 
-        {/* Plans */}
-        <section className="mt-10">
+        {/* =====================================
+            INVESTMENT PLANS
+        ====================================== */}
+
+        <section className="mt-8">
+
           <SectionHeader
             eyebrow="Opportunities"
             title="Explore investment plans"
             action="See all"
             onClick={() =>
-              router.push('/investment/plans')
+              router.push("/investment/plans")
             }
           />
 
           {loading ? (
             <PlansSkeleton />
           ) : displayedPlans.length > 0 ? (
-            <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
-              {displayedPlans.map(
-                (plan, index) => (
-                  <InvestmentPlanCard
-                    key={getUniqueKey(
-                      plan.id,
-                      index,
-                    )}
-                    plan={plan}
-                    onClick={() =>
-                      router.push(
-                        `/investment/plans/${plan.id}`,
-                      )
-                    }
-                  />
-                ),
-              )}
+            <div className="mt-3 grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
+              {displayedPlans.map((plan, index) => (
+                <InvestmentPlanCard
+                  key={getUniqueKey(plan.id, index)}
+                  plan={plan}
+                  onClick={() =>
+                    router.push(`/investment/plans/${plan.id}`)
+                  }
+                />
+              ))}
             </div>
           ) : (
-            <EmptySection
-              title="No investment plans available"
-              description="Check back later for new investment opportunities."
-            />
+            <div className="mt-3">
+              <EmptySection
+                title="No plans available"
+                description="Check back later for new investment opportunities."
+              />
+            </div>
           )}
         </section>
 
-        {/* Promotion */}
-        <section className="mt-8">
+        {/* =====================================
+            FEATURED PROMOTION
+        ====================================== */}
+
+        <section className="mt-7">
           <PromotionBanner />
         </section>
 
-        {/* Promotions */}
+        {/* =====================================
+            PROMOTION CAROUSEL
+        ====================================== */}
+
         <section className="mt-5">
           <PromotionCarousel
             title="Latest promotions"
-            description="Discover current opportunities and platform offers."
+            description="Explore current platform offers and promotions."
             limit={4}
           />
         </section>
+
+        {/* =====================================
+            LIVE CRYPTO MARKET
+        ====================================== */}
+
+        <section className="mt-7">
+          <LiveCryptoMarket />
+        </section>
+
       </main>
 
-<SearchModal
-  open={searchOpen}
-  onClose={() => setSearchOpen(false)}
-/>
+      {/* SEARCH MODAL */}
+      <SearchModal
+        open={searchOpen}
+        onClose={() => setSearchOpen(false)}
+      />
+
+      {/* SUPPORT BUTTON */}
       <SupportFloatingButton />
     </>
   );
 }
+
+/* ==========================================
+   SECTION HEADER
+========================================== */
 
 interface SectionHeaderProps {
   eyebrow: string;
@@ -380,13 +449,14 @@ function SectionHeader({
   onClick,
 }: SectionHeaderProps) {
   return (
-    <div className="flex items-end justify-between gap-4">
-      <div>
-        <p className="text-[9px] font-black uppercase tracking-[0.18em] text-emerald-300/50">
+    <div className="flex items-end justify-between gap-3">
+
+      <div className="min-w-0">
+        <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[#FF476B]">
           {eyebrow}
         </p>
 
-        <h2 className="mt-1 text-lg font-black tracking-tight text-white">
+        <h2 className="mt-1 text-base font-black tracking-tight text-white sm:text-lg">
           {title}
         </h2>
       </div>
@@ -394,17 +464,31 @@ function SectionHeader({
       <button
         type="button"
         onClick={onClick}
-        className="inline-flex shrink-0 items-center gap-1 text-[11px] font-bold text-emerald-300 transition hover:text-emerald-200"
+        className="group inline-flex shrink-0 items-center gap-1 text-[11px] font-bold text-[#FF476B] transition hover:text-[#FF7895] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E60033]/50"
       >
         {action}
-        <ArrowRight size={13} />
+
+        <ArrowRight
+          size={13}
+          className="transition-transform group-hover:translate-x-0.5"
+          aria-hidden="true"
+        />
       </button>
     </div>
   );
 }
 
+/* ==========================================
+   QUICK ACTION
+========================================== */
+
 interface QuickActionProps {
-  icon: typeof ChartNoAxesCombined;
+  icon: ComponentType<{
+    size?: number;
+    className?: string;
+    "aria-hidden"?: boolean;
+  }>;
+
   label: string;
   description: string;
   onClick: () => void;
@@ -420,54 +504,77 @@ function QuickAction({
     <button
       type="button"
       onClick={onClick}
-      className="group flex items-center gap-3 rounded-[20px] border border-white/8 bg-[#0B1426]/80 p-3.5 text-left backdrop-blur-xl transition hover:-translate-y-0.5 hover:border-emerald-300/20 hover:bg-[#101D33]"
+      className="group flex min-w-0 items-center gap-2.5 rounded-xl border border-white/8 bg-[#0B1426] p-3 text-left transition duration-200 hover:-translate-y-0.5 hover:border-[#E60033]/25 hover:bg-[#101D30] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E60033]/50 sm:p-3.5"
     >
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-emerald-300/10 bg-emerald-400/8">
-        <Icon
-          size={17}
-          className="text-emerald-300"
-          aria-hidden="true"
-        />
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[#E60033]/20 bg-[#E60033]/10 text-[#FF476B]">
+        <Icon size={17} aria-hidden={true} />
       </div>
 
-      <div className="min-w-0">
-        <p className="truncate text-xs font-bold text-white">
+      <div className="min-w-0 flex-1">
+
+        <p className="truncate text-[11px] font-bold text-white sm:text-xs">
           {label}
         </p>
 
-        <p className="mt-0.5 text-[10px] text-white/30">
+        <p className="mt-0.5 truncate text-[10px] text-white/40">
           {description}
         </p>
       </div>
+
+      <ArrowRight
+        size={13}
+        aria-hidden="true"
+        className="hidden shrink-0 text-white/25 transition group-hover:translate-x-0.5 group-hover:text-[#FF476B] sm:block"
+      />
     </button>
   );
 }
 
+/* ==========================================
+   INVESTMENT LOADING SKELETON
+========================================== */
+
 function InvestmentSkeleton() {
   return (
-    <div className="space-y-3">
+    <div
+      role="status"
+      aria-label="Loading investments"
+      className="space-y-2.5"
+    >
       {[1, 2].map((item) => (
         <div
           key={item}
-          className="h-48 animate-pulse rounded-3xl border border-white/7 bg-[#0B1426]"
+          className="h-44 animate-pulse rounded-2xl border border-white/8 bg-[#0B1426] sm:h-48"
         />
       ))}
     </div>
   );
 }
 
+/* ==========================================
+   PLANS LOADING SKELETON
+========================================== */
+
 function PlansSkeleton() {
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div
+      role="status"
+      aria-label="Loading investment plans"
+      className="mt-3 grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4"
+    >
       {[1, 2, 3, 4].map((item) => (
         <div
           key={item}
-          className="h-80 animate-pulse rounded-[22px] border border-white/7 bg-[#0B1426]"
+          className="h-71.25 animate-pulse rounded-2xl border border-white/8 bg-[#0B1426]"
         />
       ))}
     </div>
   );
 }
+
+/* ==========================================
+   EMPTY STATE
+========================================== */
 
 interface EmptySectionProps {
   title: string;
@@ -483,20 +590,17 @@ function EmptySection({
   onClick,
 }: EmptySectionProps) {
   return (
-    <div className="rounded-3xl border border-dashed border-white/10 bg-[#0B1426]/70 px-5 py-9 text-center">
-      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-white/8 bg-white/2.5">
-        <Sparkles
-          size={18}
-          className="text-white/25"
-          aria-hidden="true"
-        />
+    <div className="rounded-2xl border border-dashed border-white/10 bg-[#0B1426]/80 px-4 py-7 text-center">
+
+      <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-[#E60033]/10 text-[#FF476B]">
+        <Sparkles size={18} aria-hidden="true" />
       </div>
 
-      <h3 className="mt-4 text-sm font-bold text-white">
+      <h3 className="mt-3 text-xs font-bold text-white">
         {title}
       </h3>
 
-      <p className="mx-auto mt-2 max-w-xs text-[11px] leading-5 text-white/30">
+      <p className="mx-auto mt-1.5 max-w-xs text-[11px] leading-5 text-white/45">
         {description}
       </p>
 
@@ -504,10 +608,10 @@ function EmptySection({
         <button
           type="button"
           onClick={onClick}
-          className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#F7C948] px-4 py-2.5 text-xs font-black text-[#050B18] transition hover:bg-[#FFD96A]"
+          className="mt-4 inline-flex min-h-9 items-center gap-2 rounded-lg bg-[#E60033] px-4 text-[11px] font-black text-white transition hover:bg-[#FF174B]"
         >
           {action}
-          <ArrowRight size={13} />
+          <ArrowRight size={13} aria-hidden="true" />
         </button>
       )}
     </div>

@@ -1,39 +1,52 @@
 ﻿// src/app/investment/team/Page.tsx
 
+
+
 "use client";
+
+import Image from "next/image";
+
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+
+import { useRouter } from "next/navigation";
 
 import {
   ArrowLeft,
+  ArrowRight,
   Check,
   CheckCircle2,
-  ChevronRight,
   Copy,
   Gift,
-  Loader2,
-  Share2,
-  Users,
   Link2,
-  Wallet,
-  Sparkles,
+  Loader2,
   RefreshCw,
+  Share2,
+  Sparkles,
+  Users,
+  Wallet,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
 
 import referralApi from "@/src/lib/api/referralApi";
+
 import type {
   ReferralCodeResponse,
   ReferralSummary,
   ReferralTeamMember,
 } from "@/src/lib/types/referral";
 
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
+/* ==========================================
+   HELPERS
+========================================== */
 
 function safeString(
   value: unknown,
-  fallback = "",
+  fallback = ""
 ): string {
   return typeof value === "string" ? value : fallback;
 }
@@ -44,13 +57,16 @@ function safeUpper(value: unknown): string {
 
 function safeNumber(
   value: unknown,
-  fallback = 0,
+  fallback = 0
 ): number {
-  if (typeof value === "number" && Number.isFinite(value)) {
+  if (
+    typeof value === "number" &&
+    Number.isFinite(value)
+  ) {
     return value;
   }
 
-  if (typeof value === "string") {
+  if (typeof value === "string" && value.trim()) {
     const parsed = Number(value);
 
     if (Number.isFinite(parsed)) {
@@ -68,17 +84,21 @@ function formatUSDT(value: unknown): string {
   }).format(safeNumber(value));
 }
 
+function formatCount(value: unknown): string {
+  return new Intl.NumberFormat("en-US", {
+    maximumFractionDigits: 0,
+  }).format(safeNumber(value));
+}
+
 function formatDate(value: unknown): string {
   const raw = safeString(value).trim();
 
-  if (!raw) {
-    return "â€”";
-  }
+  if (!raw) return "—";
 
   const date = new Date(raw);
 
   if (Number.isNaN(date.getTime())) {
-    return "â€”";
+    return "—";
   }
 
   return new Intl.DateTimeFormat("en-US", {
@@ -91,17 +111,9 @@ function formatDate(value: unknown): string {
 function getInitials(value: unknown): string {
   const name = safeString(value).trim();
 
-  if (!name) {
-    return "?";
-  }
+  if (!name) return "?";
 
-  const parts = name
-    .split(/\s+/)
-    .filter(Boolean);
-
-  if (parts.length === 0) {
-    return "?";
-  }
+  const parts = name.split(/\s+/).filter(Boolean);
 
   if (parts.length === 1) {
     return parts[0].slice(0, 2).toUpperCase();
@@ -113,50 +125,63 @@ function getInitials(value: unknown): string {
   ).toUpperCase();
 }
 
-/* -------------------------------------------------------------------------- */
-/* Referral status                                                            */
-/* -------------------------------------------------------------------------- */
-
 function getStatusLabel(
-  member: ReferralTeamMember,
+  member: ReferralTeamMember
 ): string {
-  const referralStatus = safeUpper(
-    member.referralStatus,
-  );
-
-  switch (referralStatus) {
+  switch (safeUpper(member.referralStatus)) {
     case "REWARDED":
       return "Rewarded";
 
     case "QUALIFIED":
       return "Qualified";
 
-    case "PENDING":
-      return "Pending";
-
     default:
       return "Pending";
   }
 }
 
-function getStatusClass(
-  status: string,
-): string {
+function getStatusClass(status: string): string {
   switch (status) {
     case "Rewarded":
-      return "border-emerald-400/10 bg-emerald-400/10 text-emerald-300";
+      return "border-emerald-400/15 bg-emerald-400/10 text-emerald-300";
 
     case "Qualified":
-      return "border-amber-400/10 bg-amber-400/10 text-amber-300";
+      return "border-[#E60033]/20 bg-[#E60033]/10 text-[#FF476B]";
 
     default:
-      return "border-white/8 bg-white/5 text-white/45";
+      return "border-white/10 bg-white/5 text-white/50";
   }
 }
 
-/* -------------------------------------------------------------------------- */
-/* Component                                                                  */
-/* -------------------------------------------------------------------------- */
+interface TeamData {
+  code: ReferralCodeResponse | null;
+  members: ReferralTeamMember[];
+  summary: ReferralSummary | null;
+}
+
+async function fetchTeamData(): Promise<TeamData> {
+  const [
+    codeResponse,
+    teamResponse,
+    summaryResponse,
+  ] = await Promise.all([
+    referralApi.getCode(),
+    referralApi.getTeam(20, 0),
+    referralApi.getSummary(),
+  ]);
+
+  return {
+    code: codeResponse ?? null,
+    members: Array.isArray(teamResponse?.members)
+      ? teamResponse.members
+      : [],
+    summary: summaryResponse ?? null,
+  };
+}
+
+/* ==========================================
+   TEAM PAGE
+========================================== */
 
 export default function TeamPage() {
   const router = useRouter();
@@ -170,854 +195,992 @@ export default function TeamPage() {
   const [members, setMembers] =
     useState<ReferralTeamMember[]>([]);
 
-  const [loading, setLoading] =
-    useState(true);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const [error, setError] =
-    useState("");
+  const [error, setError] = useState("");
+  const [copied, setCopied] = useState(false);
+  const [sharing, setSharing] = useState(false);
 
-  const [copied, setCopied] =
-    useState(false);
+  const copyTimerRef = useRef<
+    ReturnType<typeof setTimeout> | null
+  >(null);
 
-  const [sharing, setSharing] =
-    useState(false);
+  const requestInFlight = useRef(false);
 
-  /* ------------------------------------------------------------------------ */
-  /* Referral link                                                            */
-  /* ------------------------------------------------------------------------ */
+  /* ==========================================
+     APPLY BACKEND DATA
+  ========================================== */
+
+  const applyTeamData = useCallback((data: TeamData) => {
+    setReferralCode(data.code);
+    setMembers(data.members);
+    setSummary(data.summary);
+  }, []);
+
+  /* ==========================================
+     INITIAL FETCH
+  ========================================== */
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchInitialTeam = async () => {
+      requestInFlight.current = true;
+
+      try {
+        const data = await fetchTeamData();
+
+        if (cancelled) return;
+
+        applyTeamData(data);
+        setError("");
+      } catch (err) {
+        if (cancelled) return;
+
+        console.error(
+          "Failed to load referral information:",
+          err
+        );
+
+        setError(
+          "Unable to load your team information. Please try again."
+        );
+      } finally {
+        if (!cancelled) {
+          requestInFlight.current = false;
+          setLoading(false);
+        }
+      }
+    };
+
+    void fetchInitialTeam();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [applyTeamData]);
+
+  /* ==========================================
+     CLEAN UP COPY TIMER
+  ========================================== */
+
+  useEffect(() => {
+    return () => {
+      if (copyTimerRef.current !== null) {
+        clearTimeout(copyTimerRef.current);
+      }
+    };
+  }, []);
+
+  /* ==========================================
+     REFRESH TEAM
+  ========================================== */
+
+  const loadTeam = useCallback(async () => {
+    if (requestInFlight.current) return;
+
+    requestInFlight.current = true;
+
+    setRefreshing(true);
+    setError("");
+
+    try {
+      const data = await fetchTeamData();
+
+      applyTeamData(data);
+    } catch (err) {
+      console.error(
+        "Failed to refresh referral information:",
+        err
+      );
+
+      setError(
+        "Unable to refresh your team information. Please try again."
+      );
+    } finally {
+      requestInFlight.current = false;
+      setRefreshing(false);
+      setLoading(false);
+    }
+  }, [applyTeamData]);
+
+  /* ==========================================
+     REFERRAL LINK
+  ========================================== */
 
   const referralLink = useMemo(() => {
-    /*
-     * The backend is the source of truth.
-     * If it provides a complete referral link, use it directly.
-     */
-    const backendLink = safeString(
-      referralCode?.link,
-    ).trim();
+    // Always prefer the link supplied by the backend.
+    const backendLink =
+      safeString(referralCode?.link).trim();
 
-    if (backendLink) {
-      return backendLink;
-    }
+    if (backendLink) return backendLink;
 
-    /*
-     * Fallback:
-     * Build the referral URL from NEXT_PUBLIC_APP_URL.
-     *
-     * No production domain is hard-coded here.
-     */
-    const code = safeString(
-      referralCode?.code,
-    ).trim();
+    const code = safeString(referralCode?.code).trim();
 
-    if (!code) {
-      return "";
-    }
+    if (!code) return "";
 
     const configuredUrl = safeString(
-      process.env.NEXT_PUBLIC_APP_URL,
+      process.env.NEXT_PUBLIC_APP_URL
     )
       .trim()
       .replace(/\/+$/, "");
 
-    /*
-     * In the browser, window.location.origin is only
-     * a secondary fallback when the environment variable
-     * has not been configured.
-     *
-     * During SSR there is no browser origin, so return
-     * an empty base URL instead of inventing a domain.
-     */
-    const baseUrl =
-      configuredUrl ||
-      (typeof window !== "undefined"
-        ? window.location.origin
-        : "");
+    // Relative paths use the current application's origin
+    // without introducing a hard-coded production domain.
+    const baseUrl = configuredUrl;
 
     if (!baseUrl) {
-      return "";
+      return `/register?ref=${encodeURIComponent(code)}`;
     }
 
     return `${baseUrl}/register?ref=${encodeURIComponent(
-      code,
+      code
     )}`;
   }, [referralCode]);
 
-  /* ------------------------------------------------------------------------ */
-  /* Load referral data                                                       */
-  /* ------------------------------------------------------------------------ */
+  /* ==========================================
+     SHAREABLE ABSOLUTE LINK
+  ========================================== */
 
-  const loadTeam = useCallback(async () => {
-    setLoading(true);
+  const getShareableLink = useCallback(() => {
+    if (!referralLink) return "";
+
+    try {
+      return new URL(
+        referralLink,
+        window.location.origin
+      ).href;
+    } catch {
+      return "";
+    }
+  }, [referralLink]);
+
+  /* ==========================================
+     COPY REFERRAL LINK
+  ========================================== */
+
+  const handleCopy = useCallback(async () => {
+    if (!referralLink || copied) return;
+
     setError("");
 
-    try {
-      const [
-        codeResponse,
-        teamResponse,
-        summaryResponse,
-      ] = await Promise.all([
-        referralApi.getCode(),
-        referralApi.getTeam(20, 0),
-        referralApi.getSummary(),
-      ]);
+    const link = getShareableLink();
 
-      setReferralCode(
-        codeResponse ?? null,
-      );
-
-      setMembers(
-        Array.isArray(teamResponse?.members)
-          ? teamResponse.members
-          : [],
-      );
-
-      setSummary(
-        summaryResponse ?? null,
-      );
-    } catch (err) {
-      console.error(
-        "Failed to load referral information:",
-        err,
-      );
-
-      setError(
-        "Unable to load your team information. Please try again.",
-      );
-    } finally {
-      setLoading(false);
+    if (!link) {
+      setError("The referral link is unavailable.");
+      return;
     }
-  }, []);
 
-  useEffect(() => {
-  const fetchInitialTeam = async () => {
     try {
-      const [codeResponse, teamResponse, summaryResponse] =
-        await Promise.all([
-          referralApi.getCode(),
-          referralApi.getTeam(20, 0),
-          referralApi.getSummary(),
-        ]);
+      if (
+        navigator.clipboard &&
+        window.isSecureContext
+      ) {
+        await navigator.clipboard.writeText(link);
+      } else {
+        const textarea =
+          document.createElement("textarea");
 
-      setReferralCode(codeResponse ?? null);
+        textarea.value = link;
+        textarea.style.position = "fixed";
+        textarea.style.left = "-9999px";
 
-      setMembers(
-        Array.isArray(teamResponse?.members)
-          ? teamResponse.members
-          : [],
-      );
+        document.body.appendChild(textarea);
 
-      setSummary(summaryResponse ?? null);
-    } catch (err) {
-      console.error("Failed to load referral information:", err);
+        textarea.focus();
+        textarea.select();
 
-      setError(
-        "Unable to load your team information. Please try again.",
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  void fetchInitialTeam();
-}, []);
-
-  /* ------------------------------------------------------------------------ */
-  /* Copy referral link                                                       */
-  /* ------------------------------------------------------------------------ */
-
-  const handleCopy = useCallback(
-    async () => {
-      if (!referralLink || copied) {
-        return;
-      }
-
-      setError("");
-
-      try {
-        if (
-          typeof navigator !== "undefined" &&
-          navigator.clipboard &&
-          typeof window !== "undefined" &&
-          window.isSecureContext
-        ) {
-          await navigator.clipboard.writeText(
-            referralLink,
-          );
-        } else {
-          const textarea =
-            document.createElement(
-              "textarea",
-            );
-
-          textarea.value = referralLink;
-          textarea.style.position = "fixed";
-          textarea.style.left = "-9999px";
-          textarea.style.top = "0";
-
-          document.body.appendChild(
-            textarea,
-          );
-
-          textarea.focus();
-          textarea.select();
-
-          const successful =
-            document.execCommand("copy");
-
-          textarea.remove();
-
-          if (!successful) {
-            throw new Error(
-              "Copy failed",
-            );
-          }
-        }
-
-        setCopied(true);
-
-        window.setTimeout(() => {
-          setCopied(false);
-        }, 2200);
-      } catch (err) {
-        console.error(
-          "Unable to copy referral link:",
-          err,
-        );
-
-        setError(
-          "Unable to copy the referral link. Please copy it manually.",
-        );
-      }
-    },
-    [copied, referralLink],
-  );
-
-  /* ------------------------------------------------------------------------ */
-  /* Native sharing                                                            */
-  /* ------------------------------------------------------------------------ */
-
-  const handleShare = useCallback(
-    async () => {
-      if (!referralLink || sharing) {
-        return;
-      }
-
-      setError("");
-      setSharing(true);
-
-      try {
-        const code = safeString(
-          referralCode?.code,
-        ).trim();
-
-        const shareTitle =
-          "Join REDIQ";
-
-        const shareText = code
-          ? `Join me on REDIQ and start investing with my referral code ${code}.`
-          : "Join me on REDIQ and start investing.";
-
-        if (
-          typeof navigator !== "undefined" &&
-          typeof navigator.share ===
-            "function"
-        ) {
-          await navigator.share({
-            title: shareTitle,
-            text: shareText,
-            url: referralLink,
-          });
-
-          return;
-        }
-
-        await handleCopy();
-      } catch (err) {
-        /*
-         * Closing the native share sheet is not an error.
-         */
-        if (
-          err instanceof DOMException &&
-          err.name === "AbortError"
-        ) {
-          return;
-        }
-
-        console.error(
-          "Unable to share referral link:",
-          err,
-        );
+        let successful = false;
 
         try {
-          await handleCopy();
-        } catch {
-          setError(
-            "Unable to share the referral link.",
-          );
+          successful = document.execCommand("copy");
+        } finally {
+          textarea.remove();
         }
-      } finally {
-        setSharing(false);
-      }
-    },
-    [
-      handleCopy,
-      referralCode,
-      referralLink,
-      sharing,
-    ],
-  );
 
-  /* ------------------------------------------------------------------------ */
-  /* Render                                                                   */
-  /* ------------------------------------------------------------------------ */
+        if (!successful) {
+          throw new Error("Copy failed");
+        }
+      }
+
+      setCopied(true);
+
+      if (copyTimerRef.current !== null) {
+        clearTimeout(copyTimerRef.current);
+      }
+
+      copyTimerRef.current = setTimeout(() => {
+        setCopied(false);
+        copyTimerRef.current = null;
+      }, 2200);
+    } catch (err) {
+      console.error(
+        "Unable to copy referral link:",
+        err
+      );
+
+      setError(
+        "Unable to copy the referral link. Please copy it manually."
+      );
+    }
+  }, [
+    referralLink,
+    copied,
+    getShareableLink,
+  ]);
+
+  /* ==========================================
+     SHARE REFERRAL LINK
+  ========================================== */
+
+  const handleShare = useCallback(async () => {
+    if (!referralLink || sharing) return;
+
+    setError("");
+    setSharing(true);
+
+    try {
+      const link = getShareableLink();
+
+      if (!link) {
+        throw new Error("Invalid referral link");
+      }
+
+      const code =
+        safeString(referralCode?.code).trim();
+
+      const shareText = code
+        ? `Join me on REDIQ using my referral code ${code}.`
+        : "Join me on REDIQ.";
+
+      if (typeof navigator.share === "function") {
+        await navigator.share({
+          title: "Join REDIQ",
+          text: shareText,
+          url: link,
+        });
+      } else {
+        await handleCopy();
+      }
+    } catch (err) {
+      if (
+        err instanceof DOMException &&
+        err.name === "AbortError"
+      ) {
+        return;
+      }
+
+      console.error(
+        "Unable to share referral link:",
+        err
+      );
+
+      setError(
+        "Unable to share your referral link. Please use Copy instead."
+      );
+    } finally {
+      setSharing(false);
+    }
+  }, [
+    referralCode,
+    referralLink,
+    sharing,
+    handleCopy,
+    getShareableLink,
+  ]);
+
+  /* ==========================================
+     RENDER
+  ========================================== */
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#050B18] pb-28 text-white">
-      {/* Ambient background */}
-      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
-        <div className="absolute -left-32 top-0 h-72 w-72 rounded-full bg-purple-500/8 blur-[110px]" />
+    <main className="relative min-h-dvh overflow-x-hidden bg-[#050B18] pb-24 text-white">
 
-        <div className="absolute -right-32 top-72 h-80 w-80 rounded-full bg-emerald-500/6 blur-[120px]" />
-
-        <div className="absolute bottom-0 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-blue-500/5 blur-[120px]" />
+      {/* AMBIENT BACKGROUND */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute -left-24 top-0 h-48 w-48 rounded-full bg-[#E60033]/8 blur-[85px]" />
+        <div className="absolute -right-24 top-60 h-48 w-48 rounded-full bg-[#E60033]/5 blur-[90px]" />
       </div>
 
-      <div className="relative z-10 mx-auto w-full max-w-3xl px-4 py-5 sm:px-6 sm:py-8">
-        {/* Header */}
-        <header className="mb-7">
+      <div className="relative mx-auto w-full max-w-4xl px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
+
+        {/* =====================================
+            PAGE HEADER
+        ====================================== */}
+
+        <header className="mb-5">
+
           <div className="flex items-center justify-between">
+
             <button
               type="button"
               onClick={() => router.back()}
               aria-label="Go back"
-              className="group flex min-h-10 items-center gap-2 rounded-xl border border-white/6 bg-white/3 px-3 text-sm font-medium text-white/55 transition hover:border-white/10 hover:bg-white/6 hover:text-white active:scale-[0.98]"
+              className="inline-flex min-h-9 items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 text-xs font-semibold text-white/65 transition hover:border-[#E60033]/25 hover:text-white"
             >
-              <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
+              <ArrowLeft size={15} />
               Back
             </button>
 
             <button
               type="button"
-              onClick={() => {
-                void loadTeam();
-              }}
-              disabled={loading}
+              onClick={() => void loadTeam()}
+              disabled={loading || refreshing}
               aria-label="Refresh team"
-              className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/8 bg-[#0B1426] text-white/45 transition hover:border-white/12 hover:bg-white/6 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-[#0B1426] text-white/55 transition hover:border-[#E60033]/25 hover:text-[#FF476B] disabled:cursor-not-allowed disabled:opacity-50"
             >
               <RefreshCw
-                className={`h-4 w-4 ${
-                  loading ? "animate-spin" : ""
-                }`}
+                size={15}
+                className={
+                  loading || refreshing
+                    ? "animate-spin"
+                    : ""
+                }
               />
             </button>
           </div>
 
-          <div className="mt-7">
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/12 bg-emerald-400/6 px-3 py-1.5">
-              <Users className="h-3.5 w-3.5 text-emerald-300" />
+          <div className="mt-5">
 
-              <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-300">
-                Referral network
-              </span>
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-[#E60033]/20 bg-[#E60033]/10 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-[#FF476B]">
+              <Users size={12} />
+              Referral network
             </div>
 
-            <h1 className="mt-4 text-3xl font-semibold tracking-[-0.03em] text-white sm:text-4xl">
+            <h1 className="mt-2.5 text-[24px] font-black tracking-tight text-white sm:text-[28px]">
               Your Team
             </h1>
 
-            <p className="mt-2 max-w-xl text-sm leading-6 text-white/45 sm:text-[15px]">
-              Invite people to REDIQ and
-              earn referral rewards when their
-              first investment becomes active.
+            <p className="mt-1.5 max-w-xl text-[11px] leading-5 text-white/50 sm:text-xs">
+              Invite people to REDIQ, manage your referral
+              network and track eligible rewards.
             </p>
           </div>
         </header>
 
-        {/* Error */}
-        {error && (
-          <div className="mb-5 rounded-2xl border border-red-400/15 bg-red-400/8 p-4 shadow-lg shadow-red-950/10">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-sm font-medium text-red-200">
-                  Something went wrong
-                </p>
+        {/* =====================================
+            NEW TEAM REFERRAL BANNER
+        ====================================== */}
 
-                <p className="mt-1 text-xs leading-5 text-red-200/65">
-                  {error}
-                </p>
+        <section
+          aria-labelledby="team-banner-title"
+          className="relative isolate mb-5 overflow-hidden rounded-2xl border border-[#E60033]/20 bg-[#101A2D] shadow-xl shadow-black/15 sm:rounded-[20px]"
+        >
+          {/* Banner image */}
+          <Image
+            src="/images/hero.png"
+            alt=""
+            fill
+            priority
+            sizes="(max-width: 768px) 100vw, 900px"
+            className="pointer-events-none -z-20 object-cover object-center opacity-45"
+          />
+
+          {/* Contrast overlays */}
+          <div className="pointer-events-none absolute inset-0 -z-10 bg-[#07101F]/55" />
+
+          <div className="pointer-events-none absolute inset-0 -z-10 bg-linear-to-r from-[#07101F]/95 via-[#0B1426]/85 to-[#0B1426]/40" />
+
+          {/* Decorative red glow */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -right-12 -top-12 h-36 w-36 rounded-full bg-[#E60033]/15 blur-[55px]"
+          />
+
+          <div className="relative flex flex-col gap-4 px-4 py-5 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:px-6 sm:py-6">
+
+            {/* Banner content */}
+            <div className="min-w-0 max-w-lg">
+
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-[#E60033]/30 bg-[#E60033]/15 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-[#FF7895]">
+                <Sparkles size={11} />
+                REDIQ Referral Program
               </div>
 
-              <button
-                type="button"
-                onClick={() => {
-                  void loadTeam();
-                }}
-                className="shrink-0 rounded-lg border border-red-300/10 bg-red-300/8 px-3 py-1.5 text-xs font-semibold text-red-200 transition hover:bg-red-300/12"
+              <h2
+                id="team-banner-title"
+                className="mt-3 text-[21px] font-black leading-[1.15] tracking-tight text-white sm:text-[25px] lg:text-[27px]"
               >
-                Retry
-              </button>
+                Build your network.
+                <span className="block text-[#FF476B]">
+                  Grow together.
+                </span>
+              </h2>
+
+              <p className="mt-2 max-w-md text-[11px] leading-[1.7] text-white/65 sm:text-xs sm:leading-5">
+                Invite eligible friends to join REDIQ and track
+                your referrals, qualification progress and
+                eligible rewards in one place.
+              </p>
+
+              {/* Banner feature labels */}
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1.5 text-[9px] font-semibold text-white/75">
+                  <Users
+                    size={11}
+                    className="text-[#FF476B]"
+                  />
+                  Invite friends
+                </span>
+
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1.5 text-[9px] font-semibold text-white/75">
+                  <Gift
+                    size={11}
+                    className="text-[#FF476B]"
+                  />
+                  Eligible rewards
+                </span>
+              </div>
             </div>
+
+            {/* Banner CTA */}
+            <div className="flex shrink-0 flex-col items-start gap-2 sm:items-end">
+
+              <a
+                href="#referral-link"
+                className="group inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#E60033] px-5 py-2.5 text-xs font-black text-white shadow-lg shadow-[#E60033]/20 transition hover:-translate-y-0.5 hover:bg-[#FF174B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF476B] sm:w-auto"
+              >
+                <Share2 size={14} />
+
+                Invite Friends
+
+                <ArrowRight
+                  size={14}
+                  className="transition-transform group-hover:translate-x-1"
+                />
+              </a>
+
+              <span className="text-[9px] font-medium text-white/45">
+                Referral terms and eligibility apply
+              </span>
+            </div>
+          </div>
+
+          {/* Bottom brand accent */}
+          <div className="h-0.5 bg-linear-to-r from-[#E60033] via-[#FF476B]/50 to-transparent" />
+        </section>
+
+        {/* =====================================
+            ERROR MESSAGE
+        ====================================== */}
+
+        {error && (
+          <div
+            role="alert"
+            className="mb-4 flex items-start justify-between gap-3 rounded-xl border border-red-400/20 bg-red-500/10 p-3"
+          >
+            <div className="min-w-0">
+
+              <p className="text-xs font-bold text-red-200">
+                Something went wrong
+              </p>
+
+              <p className="mt-1 text-[11px] leading-5 text-red-200/75">
+                {error}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              disabled={loading || refreshing}
+              onClick={() => void loadTeam()}
+              className="shrink-0 rounded-lg border border-red-300/20 px-2.5 py-1.5 text-[10px] font-bold text-red-200 transition hover:bg-red-400/10 disabled:opacity-50"
+            >
+              Retry
+            </button>
           </div>
         )}
 
-        {/* Loading */}
+        {/* =====================================
+            INITIAL LOADING
+        ====================================== */}
+
         {loading ? (
-          <div className="flex min-h-105 items-center justify-center">
-            <div className="flex flex-col items-center">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-emerald-400/10 bg-emerald-400/6">
-                <Loader2 className="h-6 w-6 animate-spin text-emerald-300" />
-              </div>
-
-              <p className="mt-4 text-sm font-medium text-white/65">
-                Loading your team...
-              </p>
-
-              <p className="mt-1 text-xs text-white/30">
-                Fetching your referral activity
-              </p>
+          <div
+            role="status"
+            className="flex min-h-65 flex-col items-center justify-center rounded-2xl border border-white/8 bg-[#0B1426]"
+          >
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#E60033]/10 text-[#FF476B]">
+              <Loader2
+                size={21}
+                className="animate-spin"
+              />
             </div>
+
+            <p className="mt-3 text-xs font-bold text-white/75">
+              Loading your team...
+            </p>
+
+            <p className="mt-1 text-[10px] text-white/40">
+              Fetching your referral information
+            </p>
           </div>
         ) : (
           <>
-            {/* Referral Hero */}
-            <section className="relative overflow-hidden rounded-[28px] border border-white/8 bg-linear-to-br from-[#101D33] via-[#0B1426] to-[#11102B] p-5 shadow-2xl shadow-black/20 sm:p-6">
-              <div className="pointer-events-none absolute -right-20 -top-24 h-56 w-56 rounded-full bg-purple-500/10 blur-[70px]" />
 
-              <div className="pointer-events-none absolute -bottom-24 left-1/3 h-48 w-48 rounded-full bg-emerald-500/8 blur-[70px]" />
+            {/* =====================================
+                REFERRAL HERO
+            ====================================== */}
+
+            <section
+              id="referral-link"
+              className="relative scroll-mt-24 overflow-hidden rounded-2xl border border-white/10 bg-linear-to-br from-[#131E32] via-[#0B1426] to-[#101625] p-4 shadow-xl shadow-black/15 sm:p-5"
+            >
+              {/* Ambient lighting */}
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-[#E60033]/10 blur-[65px]"
+              />
 
               <div className="relative">
-                <div className="flex items-start gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-amber-400/10 bg-amber-400/8 shadow-lg shadow-amber-950/10">
-                    <Gift className="h-5 w-5 text-amber-300" />
+
+                {/* Referral code */}
+                <div className="flex items-center gap-3">
+
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#E60033]/20 bg-[#E60033]/10 text-[#FF476B]">
+                    <Gift size={19} />
                   </div>
 
                   <div className="min-w-0">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/35">
+
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-white/40">
                       Your referral code
                     </p>
 
-                    <p className="mt-1.5 break-all text-2xl font-bold tracking-[0.12em] text-white sm:text-3xl">
-                      {safeString(
-                        referralCode?.code,
-                      ) || "â€”"}
+                    <p className="mt-1 break-all text-xl font-black tracking-[0.08em] text-white sm:text-2xl">
+                      {safeString(referralCode?.code) || "—"}
                     </p>
                   </div>
                 </div>
 
-                {/* Referral link */}
-                <div className="mt-6 rounded-2xl border border-white/7 bg-[#07101F]/80 p-3.5 backdrop-blur-xl sm:p-4">
-                  <div className="flex items-center gap-2">
-                    <Link2 className="h-4 w-4 shrink-0 text-purple-300" />
+                {/* INVITATION LINK PANEL */}
+                <div className="mt-4 rounded-xl border border-white/8 bg-[#07101F]/80 p-3 sm:p-3.5">
 
-                    <p className="text-xs font-semibold text-white/55">
+                  <div className="flex items-center gap-2">
+
+                    <Link2
+                      size={14}
+                      className="text-[#FF476B]"
+                    />
+
+                    <p className="text-[11px] font-bold text-white/70">
                       Your invitation link
                     </p>
                   </div>
 
-                  <div className="mt-3 rounded-xl border border-white/6 bg-black/10 px-3 py-3">
-                    <p className="break-all text-xs leading-5 text-white/65">
-                      {referralLink || "â€”"}
+                  {/* Referral URL */}
+                  <div className="mt-2 rounded-lg border border-white/8 bg-white/2.5 px-3 py-2.5">
+
+                    <p className="break-all text-[11px] leading-5 text-white/60">
+                      {referralLink || "No referral link available"}
                     </p>
                   </div>
 
-                  <div className="mt-3 grid grid-cols-2 gap-2.5">
+                  {/* ACTION BUTTONS */}
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+
+                    {/* COPY LINK */}
                     <button
                       type="button"
-                      onClick={() => {
-                        void handleCopy();
-                      }}
-                      disabled={
-                        !referralLink ||
-                        copied
-                      }
-                      className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-white/8 bg-white/5 px-3 text-sm font-semibold text-white transition hover:bg-white/9 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
+                      onClick={() => void handleCopy()}
+                      disabled={!referralLink || copied}
+                      className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 text-xs font-bold text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {copied ? (
                         <>
-                          <Check className="h-4 w-4 text-emerald-300" />
+                          <Check
+                            size={14}
+                            className="text-emerald-300"
+                          />
                           Copied
                         </>
                       ) : (
                         <>
-                          <Copy className="h-4 w-4 text-white/65" />
-                          Copy
+                          <Copy size={14} />
+                          Copy link
                         </>
                       )}
                     </button>
 
+                    {/* SHARE LINK */}
                     <button
                       type="button"
-                      onClick={() => {
-                        void handleShare();
-                      }}
-                      disabled={
-                        !referralLink ||
-                        sharing
-                      }
-                      className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-linear-to-r from-emerald-400 to-emerald-500 px-3 text-sm font-bold text-[#03120D] shadow-lg shadow-emerald-950/20 transition hover:from-emerald-300 hover:to-emerald-400 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
+                      onClick={() => void handleShare()}
+                      disabled={!referralLink || sharing}
+                      className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-[#E60033] px-3 text-xs font-black text-white transition hover:bg-[#FF174B] disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {sharing ? (
                         <>
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          Sharing
+                          <Loader2
+                            size={14}
+                            className="animate-spin"
+                          />
+                          Sharing...
                         </>
                       ) : (
                         <>
-                          <Share2 className="h-4 w-4" />
-                          Share
+                          <Share2 size={14} />
+                          Share link
                         </>
                       )}
                     </button>
                   </div>
-
-                  <p className="mt-3 text-center text-[10px] leading-4 text-white/25">
-                    Share through WhatsApp,
-                    Telegram, Messages, email and
-                    other apps.
-                  </p>
                 </div>
 
-                {/* Reward message */}
-                <div className="mt-4 flex items-center gap-2.5 rounded-xl border border-emerald-400/8 bg-emerald-400/5 px-3 py-2.5">
-                  <Sparkles className="h-4 w-4 shrink-0 text-emerald-300" />
+                {/* REWARD INFORMATION */}
+                <div className="mt-3 flex items-start gap-2 rounded-lg border border-[#E60033]/15 bg-[#E60033]/5 px-3 py-2.5">
 
-                  <p className="text-xs leading-5 text-emerald-100/65">
-                    Grow your network and earn
-                    rewards from qualified referrals.
+                  <Sparkles
+                    size={14}
+                    className="mt-0.5 shrink-0 text-[#FF476B]"
+                  />
+
+                  <p className="text-[10px] leading-4 text-white/55">
+                    Invite eligible friends and track rewards
+                    according to the REDIQ referral program rules.
                   </p>
                 </div>
               </div>
             </section>
 
-            {/* Summary */}
-            <section className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <div className="group rounded-2xl border border-white/8 bg-[#0B1426] p-4 transition hover:border-white/12 hover:bg-[#0D172B]">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-400/8">
-                  <Users className="h-4 w-4 text-purple-300" />
+            {/* =====================================
+                TEAM SUMMARY
+            ====================================== */}
+
+            <section
+              aria-label="Referral summary"
+              className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-4"
+            >
+
+              {/* TOTAL INVITED */}
+              <article className="min-w-0 rounded-xl border border-white/8 bg-[#0B1426] p-3.5">
+
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#E60033]/10 text-[#FF476B]">
+                  <Users size={15} />
                 </div>
 
-                <p className="mt-4 text-[10px] font-bold uppercase tracking-[0.12em] text-white/30">
-                  Team
+                <p className="mt-2.5 text-[10px] font-semibold text-white/45">
+                  Team members
                 </p>
 
-                <p className="mt-1 text-2xl font-semibold tracking-tight text-white">
-                  {safeNumber(
-                    summary?.totalInvited,
-                  )}
+                <p className="mt-1 text-xl font-black text-white tabular-nums">
+                  {formatCount(summary?.totalInvited)}
                 </p>
 
-                <p className="mt-1 text-[11px] text-white/30">
-                  members invited
+                <p className="mt-0.5 text-[9px] text-white/35">
+                  Total invited
                 </p>
-              </div>
+              </article>
 
-              <div className="group rounded-2xl border border-white/8 bg-[#0B1426] p-4 transition hover:border-white/12 hover:bg-[#0D172B]">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-400/8">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-300" />
+              {/* REWARDED MEMBERS */}
+              <article className="min-w-0 rounded-xl border border-white/8 bg-[#0B1426] p-3.5">
+
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-400/10 text-emerald-300">
+                  <CheckCircle2 size={15} />
                 </div>
 
-                <p className="mt-4 text-[10px] font-bold uppercase tracking-[0.12em] text-white/30">
+                <p className="mt-2.5 text-[10px] font-semibold text-white/45">
                   Rewarded
                 </p>
 
-                <p className="mt-1 text-2xl font-semibold tracking-tight text-white">
-                  {safeNumber(
-                    summary?.rewardedMembers,
-                  )}
+                <p className="mt-1 text-xl font-black text-white tabular-nums">
+                  {formatCount(summary?.rewardedMembers)}
                 </p>
 
-                <p className="mt-1 text-[11px] text-white/30">
-                  qualified members
+                <p className="mt-0.5 text-[9px] text-white/35">
+                  Rewarded members
                 </p>
-              </div>
+              </article>
 
-              <div className="group rounded-2xl border border-white/8 bg-[#0B1426] p-4 transition hover:border-white/12 hover:bg-[#0D172B]">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-sky-400/8">
-                  <Wallet className="h-4 w-4 text-sky-300" />
+              {/* ACTIVE PLANS */}
+              <article className="min-w-0 rounded-xl border border-white/8 bg-[#0B1426] p-3.5">
+
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#E60033]/10 text-[#FF476B]">
+                  <Wallet size={15} />
                 </div>
 
-                <p className="mt-4 text-[10px] font-bold uppercase tracking-[0.12em] text-white/30">
+                <p className="mt-2.5 text-[10px] font-semibold text-white/45">
                   Active plans
                 </p>
 
-                <p className="mt-1 text-2xl font-semibold tracking-tight text-white">
-                  {safeNumber(
-                    summary?.activePlans,
-                  )}
+                <p className="mt-1 text-xl font-black text-white tabular-nums">
+                  {formatCount(summary?.activePlans)}
                 </p>
 
-                <p className="mt-1 text-[11px] text-white/30">
-                  currently active
+                <p className="mt-0.5 text-[9px] text-white/35">
+                  Currently active
                 </p>
-              </div>
+              </article>
 
-              <div className="group rounded-2xl border border-white/8 bg-[#0B1426] p-4 transition hover:border-white/12 hover:bg-[#0D172B]">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-400/8">
-                  <Gift className="h-4 w-4 text-amber-300" />
+              {/* TOTAL REWARDS */}
+              <article className="min-w-0 rounded-xl border border-white/8 bg-[#0B1426] p-3.5">
+
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-400/10 text-emerald-300">
+                  <Gift size={15} />
                 </div>
 
-                <p className="mt-4 text-[10px] font-bold uppercase tracking-[0.12em] text-white/30">
-                  Earned
+                <p className="mt-2.5 text-[10px] font-semibold text-white/45">
+                  Total earned
                 </p>
 
-                <p className="mt-1 truncate text-2xl font-semibold tracking-tight text-white">
-                  {formatUSDT(
-                    summary?.totalEarned,
-                  )}
+                <p
+                  title={`${formatUSDT(summary?.totalEarned)} USDT`}
+                  className="mt-1 wrap-break-words text-lg font-black tracking-tight text-white tabular-nums sm:text-xl"
+                >
+                  {formatUSDT(summary?.totalEarned)}
                 </p>
 
-                <p className="mt-1 text-[11px] text-white/30">
+                <p className="mt-0.5 text-[9px] text-white/35">
                   USDT rewards
                 </p>
-              </div>
+              </article>
             </section>
 
-            {/* Team members */}
-            <section className="mt-7">
-              <div className="mb-4 flex items-end justify-between gap-4">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-lg font-semibold tracking-tight text-white">
-                      Invited members
-                    </h2>
+            {/* =====================================
+                TEAM MEMBERS
+            ====================================== */}
 
-                    <span className="rounded-full border border-white/8 bg-white/5 px-2 py-0.5 text-[10px] font-bold text-white/40">
-                      {members.length}
-                    </span>
-                  </div>
+            <section className="mt-6">
 
-                  <p className="mt-1 text-xs text-white/35">
-                    Your direct referral network
-                  </p>
-                </div>
+              <div className="mb-3 flex items-center gap-2">
+
+                <h2 className="text-base font-black text-white">
+                  Invited members
+                </h2>
+
+                <span className="rounded-full border border-[#E60033]/20 bg-[#E60033]/10 px-2 py-0.5 text-[10px] font-bold text-[#FF476B]">
+                  {members.length}
+                </span>
               </div>
 
+              <p className="mb-3 text-[11px] text-white/40">
+                Your direct referral network
+              </p>
+
               {members.length === 0 ? (
-                <div className="relative overflow-hidden rounded-[26px] border border-white/8 bg-[#0B1426] px-5 py-12 text-center">
-                  <div className="pointer-events-none absolute left-1/2 top-1/2 h-44 w-44 -translate-x-1/2 -translate-y-1/2 rounded-full bg-purple-500/6 blur-[70px]" />
 
-                  <div className="relative">
-                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-white/8 bg-white/4">
-                      <Users className="h-7 w-7 text-white/35" />
-                    </div>
+                /* EMPTY STATE */
+                <div className="rounded-2xl border border-white/8 bg-[#0B1426] px-4 py-8 text-center">
 
-                    <h3 className="mt-5 text-base font-semibold text-white">
-                      No team members yet
-                    </h3>
-
-                    <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-white/35">
-                      Share your referral link to
-                      invite your first team member
-                      and start building your network.
-                    </p>
-
-                    {referralLink && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          void handleShare();
-                        }}
-                        className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-xl bg-emerald-500 px-4 text-sm font-bold text-[#03120D] shadow-lg shadow-emerald-950/20 transition hover:bg-emerald-400 active:scale-[0.98]"
-                      >
-                        <Share2 className="h-4 w-4" />
-                        Invite someone
-                      </button>
-                    )}
+                  <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-[#E60033]/10 text-[#FF476B]">
+                    <Users size={21} />
                   </div>
+
+                  <h3 className="mt-3 text-sm font-bold text-white">
+                    No team members yet
+                  </h3>
+
+                  <p className="mx-auto mt-2 max-w-xs text-[11px] leading-5 text-white/45">
+                    Share your referral link to invite your
+                    first member and build your network.
+                  </p>
+
+                  {referralLink && (
+                    <button
+                      type="button"
+                      disabled={sharing}
+                      onClick={() => void handleShare()}
+                      className="mt-4 inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-[#E60033] px-4 text-xs font-black text-white transition hover:bg-[#FF174B] disabled:opacity-50"
+                    >
+                      <Share2 size={14} />
+                      Invite someone
+                    </button>
+                  )}
                 </div>
+
               ) : (
-                <div className="space-y-3">
-                  {members.map(
-                    (member, index) => {
-                      const status =
-                        getStatusLabel(
-                          member,
-                        );
 
-                      const memberName =
-                        safeString(
-                          member.userName,
-                        ).trim() ||
-                        "Team member";
+                /* MEMBER LIST */
+                <div className="space-y-2.5">
 
-                      const memberEmail =
-                        safeString(
-                          member.userEmail,
-                        ).trim() ||
-                        "No email available";
+                  {members.map((member, index) => {
+                    const status = getStatusLabel(member);
 
-                      const rewarded =
-                        safeUpper(
-                          member.referralStatus,
-                        ) === "REWARDED";
+                    const memberName =
+                      safeString(member.userName).trim() ||
+                      "Team member";
 
-                      return (
-                        <div
-                          key={
-                            safeString(
-                              member.referralId,
-                            ) ||
-                            safeString(
-                              member.userId,
-                            ) ||
-                            `member-${index}`
-                          }
-                          className="group overflow-hidden rounded-3xl border border-white/8 bg-[#0B1426] p-4 transition hover:border-white/12 hover:bg-[#0D172B] sm:p-5"
-                        >
-                          <div className="flex items-start gap-3.5">
-                            <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-purple-400/10 bg-linear-to-br from-purple-400/15 to-blue-400/8 text-sm font-bold text-purple-200">
-                              {getInitials(
-                                memberName,
-                              )}
+                    const memberEmail =
+                      safeString(member.userEmail).trim() ||
+                      "No email available";
 
-                              {rewarded && (
-                                <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-[#0B1426] bg-emerald-400">
-                                  <Check className="h-2.5 w-2.5 text-[#03120D]" />
-                                </span>
-                              )}
-                            </div>
+                    const rewarded =
+                      safeUpper(member.referralStatus) ===
+                      "REWARDED";
 
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-start justify-between gap-3">
-                                <div className="min-w-0">
-                                  <h3 className="truncate text-sm font-semibold text-white">
-                                    {memberName}
-                                  </h3>
+                    return (
+                      <article
+                        key={
+                          safeString(member.referralId) ||
+                          safeString(member.userId) ||
+                          `member-${index}`
+                        }
+                        className="group min-w-0 rounded-2xl border border-white/8 bg-[#0B1426] p-3.5 transition hover:border-[#E60033]/20 hover:bg-[#101D30] sm:p-4"
+                      >
 
-                                  <p className="mt-1 truncate text-xs text-white/35">
-                                    {memberEmail}
-                                  </p>
-                                </div>
+                        {/* MEMBER HEADER */}
+                        <div className="flex min-w-0 items-start gap-3">
 
-                                <span
-                                  className={`shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${getStatusClass(
-                                    status,
-                                  )}`}
-                                >
-                                  {status}
-                                </span>
-                              </div>
+                          {/* Avatar */}
+                          <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#E60033]/20 bg-[#E60033]/10 text-xs font-black text-[#FF476B]">
 
-                              <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-4 border-t border-white/7 pt-4 sm:grid-cols-4">
-                                <div className="min-w-0">
-                                  <p className="text-[10px] font-medium uppercase tracking-wide text-white/25">
-                                    Plan
-                                  </p>
+                            {getInitials(memberName)}
 
-                                  <p className="mt-1.5 truncate text-xs font-semibold text-white/75">
-                                    {member.hasActivePlan
-                                      ? "Active plan"
-                                      : "No active plan"}
-                                  </p>
-                                </div>
+                            {rewarded && (
+                              <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-[#0B1426] bg-emerald-400">
+                                <Check
+                                  size={9}
+                                  className="text-[#06150D]"
+                                />
+                              </span>
+                            )}
+                          </div>
 
-                                <div>
-                                  <p className="text-[10px] font-medium uppercase tracking-wide text-white/25">
-                                    Joined
-                                  </p>
+                          {/* Name and email */}
+                          <div className="min-w-0 flex-1">
 
-                                  <p className="mt-1.5 text-xs font-semibold text-white/75">
-                                    {formatDate(
-                                      member.referredAt,
-                                    )}
-                                  </p>
-                                </div>
+                            <h3 className="truncate text-xs font-bold text-white sm:text-[13px]">
+                              {memberName}
+                            </h3>
 
-                                <div>
-                                  <p className="text-[10px] font-medium uppercase tracking-wide text-white/25">
-                                    Reward
-                                  </p>
+                            <p className="mt-1 truncate text-[10px] text-white/40">
+                              {memberEmail}
+                            </p>
+                          </div>
 
-                                  <p className="mt-1.5 text-xs font-semibold text-white/75">
-                                    {formatUSDT(
-                                      member.rewardAmount,
-                                    )}{" "}
-                                    <span className="text-white/30">
-                                      USDT
-                                    </span>
-                                  </p>
-                                </div>
+                          {/* Referral status */}
+                          <span
+                            className={`shrink-0 rounded-full border px-2 py-1 text-[9px] font-bold ${getStatusClass(
+                              status
+                            )}`}
+                          >
+                            {status}
+                          </span>
+                        </div>
 
-                                <div>
-                                  <p className="text-[10px] font-medium uppercase tracking-wide text-white/25">
-                                    Status
-                                  </p>
+                        {/* MEMBER DETAILS */}
+                        <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-3 border-t border-white/8 pt-3 sm:grid-cols-4">
 
-                                  <p
-                                    className={`mt-1.5 text-xs font-semibold ${
-                                      rewarded
-                                        ? "text-emerald-300"
-                                        : "text-white/65"
-                                    }`}
-                                  >
-                                    {safeUpper(
-                                      member.referralStatus,
-                                    ) ||
-                                      "PENDING"}
-                                  </p>
-                                </div>
-                              </div>
+                          {/* Plan */}
+                          <div className="min-w-0">
 
-                              {(member.qualifiedAt ||
-                                member.rewardedAt) && (
-                                <div className="mt-4 border-t border-white/7 pt-4">
-                                  <div className="grid grid-cols-2 gap-4">
-                                    {member.qualifiedAt && (
-                                      <div>
-                                        <p className="text-[10px] font-medium uppercase tracking-wide text-white/25">
-                                          Qualified
-                                        </p>
+                            <p className="text-[9px] uppercase tracking-wide text-white/35">
+                              Plan
+                            </p>
 
-                                        <p className="mt-1.5 text-xs font-semibold text-white/65">
-                                          {formatDate(
-                                            member.qualifiedAt,
-                                          )}
-                                        </p>
-                                      </div>
-                                    )}
+                            <p className="mt-1 text-[11px] font-semibold text-white/75">
+                              {member.hasActivePlan
+                                ? "Active plan"
+                                : "No active plan"}
+                            </p>
+                          </div>
 
-                                    {member.rewardedAt && (
-                                      <div>
-                                        <p className="text-[10px] font-medium uppercase tracking-wide text-white/25">
-                                          Rewarded
-                                        </p>
+                          {/* Joined */}
+                          <div className="min-w-0">
 
-                                        <p className="mt-1.5 text-xs font-semibold text-emerald-300">
-                                          {formatDate(
-                                            member.rewardedAt,
-                                          )}
-                                        </p>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
+                            <p className="text-[9px] uppercase tracking-wide text-white/35">
+                              Joined
+                            </p>
 
-                            <ChevronRight className="mt-1 hidden h-4 w-4 shrink-0 text-white/15 transition-transform group-hover:translate-x-0.5 group-hover:text-white/35 sm:block" />
+                            <p className="mt-1 text-[11px] font-semibold text-white/75">
+                              {formatDate(member.referredAt)}
+                            </p>
+                          </div>
+
+                          {/* Reward */}
+                          <div className="min-w-0">
+
+                            <p className="text-[9px] uppercase tracking-wide text-white/35">
+                              Reward
+                            </p>
+
+                            <p className="mt-1 wrap-break-words text-[11px] font-bold text-white/80 tabular-nums">
+                              {formatUSDT(member.rewardAmount)}
+
+                              <span className="ml-1 font-medium text-white/35">
+                                USDT
+                              </span>
+                            </p>
+                          </div>
+
+                          {/* Status */}
+                          <div className="min-w-0">
+
+                            <p className="text-[9px] uppercase tracking-wide text-white/35">
+                              Status
+                            </p>
+
+                            <p
+                              className={`mt-1 text-[11px] font-bold ${
+                                rewarded
+                                  ? "text-emerald-300"
+                                  : status === "Qualified"
+                                    ? "text-[#FF476B]"
+                                    : "text-white/60"
+                              }`}
+                            >
+                              {status}
+                            </p>
                           </div>
                         </div>
-                      );
-                    },
-                  )}
+
+                        {/* OPTIONAL MILESTONE DATES */}
+                        {(member.qualifiedAt ||
+                          member.rewardedAt) && (
+                          <div className="mt-3 grid grid-cols-2 gap-3 border-t border-white/8 pt-3">
+
+                            {member.qualifiedAt && (
+                              <div>
+
+                                <p className="text-[9px] uppercase tracking-wide text-white/35">
+                                  Qualified
+                                </p>
+
+                                <p className="mt-1 text-[11px] font-semibold text-white/70">
+                                  {formatDate(member.qualifiedAt)}
+                                </p>
+                              </div>
+                            )}
+
+                            {member.rewardedAt && (
+                              <div>
+
+                                <p className="text-[9px] uppercase tracking-wide text-white/35">
+                                  Rewarded
+                                </p>
+
+                                <p className="mt-1 text-[11px] font-semibold text-emerald-300">
+                                  {formatDate(member.rewardedAt)}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </article>
+                    );
+                  })}
                 </div>
               )}
             </section>
 
-            {/* Bottom information */}
-            <div className="mt-7 rounded-2xl border border-white/6 bg-white/3 px-4 py-3.5">
-              <div className="flex items-start gap-3">
-                <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-purple-300/70" />
+            {/* =====================================
+                FOOTER NOTICE
+            ====================================== */}
 
-                <p className="text-[11px] leading-5 text-white/30">
-                  Referral rewards are applied
-                  according to REDIQ&apos;s
-                  referral program rules. Member
-                  status and reward information may
-                  update as referrals qualify.
-                </p>
-              </div>
+            <div className="mt-5 flex items-start gap-2.5 rounded-xl border border-white/8 bg-white/2.5 px-3 py-3">
+
+              <Sparkles
+                size={14}
+                className="mt-0.5 shrink-0 text-[#FF476B]"
+              />
+
+              <p className="text-[10px] leading-4 text-white/40">
+                Referral rewards are subject to REDIQ&apos;s
+                program rules. Member statuses and reward
+                information may change as referrals qualify.
+              </p>
             </div>
           </>
         )}

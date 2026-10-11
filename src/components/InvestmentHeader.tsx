@@ -1,23 +1,31 @@
 ﻿
 // src/components/InvestmentHeader.tsx
-'use client';
 
-import Image from 'next/image';
+
+"use client";
+
+import Image from "next/image";
+
+import {
+  useEffect,
+  useState,
+} from "react";
+
 import {
   Check,
-  ChevronDown,
   Globe,
   Search,
   X,
-} from 'lucide-react';
-import { useState } from 'react';
+} from "lucide-react";
 
-import NotificationBell from '@/src/components/NotificationBell';
+import NotificationBell from "@/src/components/NotificationBell";
+
 import {
   SUPPORTED_LANGUAGES,
-} from '@/src/constants/settings';
-import { useSettings } from '@/src/context/useSettings';
-import { useTranslation } from '../i18n/translations';
+} from "@/src/constants/settings";
+
+import { useSettings } from "@/src/context/useSettings";
+import { useTranslation } from "../i18n/translations";
 
 interface InvestmentHeaderProps {
   name?: string;
@@ -25,7 +33,7 @@ interface InvestmentHeaderProps {
   onSearch?: () => void;
 }
 
-const DEFAULT_MEMBER_NAME = 'Team Member';
+const DEFAULT_MEMBER_NAME = "Team Member";
 
 export default function InvestmentHeader({
   name = DEFAULT_MEMBER_NAME,
@@ -39,10 +47,8 @@ export default function InvestmentHeader({
     setLanguage,
   } = useSettings();
 
-  const [
-    showLanguageModal,
-    setShowLanguageModal,
-  ] = useState(false);
+  const [showLanguageModal, setShowLanguageModal] =
+    useState(false);
 
   const displayName =
     name.trim() || DEFAULT_MEMBER_NAME;
@@ -52,143 +58,147 @@ export default function InvestmentHeader({
 
   const selectedLanguage =
     SUPPORTED_LANGUAGES.find(
-      (item) => item.code === language,
+      (item) => item.code === language
     );
 
   const handleLanguageChange = (
-    code: typeof language,
+    code: typeof language
   ) => {
     setLanguage(code);
     setShowLanguageModal(false);
   };
 
+  /* Close dialog with Escape and lock background scroll. */
+  useEffect(() => {
+    if (!showLanguageModal) return;
+
+    const previousOverflow =
+      document.body.style.overflow;
+
+    document.body.style.overflow = "hidden";
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setShowLanguageModal(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [showLanguageModal]);
+
   return (
     <>
-      <header className="flex w-full items-center justify-between gap-3">
-        {/* ----------------------------------------------------------
-            LEFT â€” USER PROFILE
-        ----------------------------------------------------------- */}
-        <div className="flex min-w-0 items-center gap-3">
-          <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-[15px] border border-white/10 bg-[#101D33] shadow-lg shadow-black/10">
+      <header className="flex w-full min-w-0 items-center justify-between gap-2 sm:gap-3">
+
+        {/* USER PROFILE */}
+        <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
+          <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-[#101D30] shadow-lg shadow-black/10">
             {avatar ? (
               <Image
                 src={avatar}
                 alt={displayName}
                 fill
-                sizes="44px"
+                sizes="40px"
                 className="object-cover"
-                loading="lazy"
               />
             ) : (
-              <div className="flex h-full w-full items-center justify-center bg-linear-to-br from-emerald-400/20 to-purple-400/10 text-sm font-black text-emerald-200">
+              <div className="flex h-full w-full items-center justify-center bg-[#E60033]/10 text-sm font-black text-[#FF476B]">
                 {avatarInitial}
               </div>
             )}
           </div>
 
           <div className="min-w-0">
-            <p className="text-[10px] font-medium text-white/30">
-              {t('header.welcome_back')}
+            <p className="text-[10px] font-medium text-white/40">
+              {t("header.welcome_back")}
             </p>
 
-            <button
-              type="button"
-              className="flex max-w-42.5 items-center gap-1 rounded-md text-sm font-black text-white transition hover:text-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-300/30"
-              aria-label={displayName}
+            <p
+              title={displayName}
+              className="mt-0.5 max-w-30 truncate text-xs font-black text-white sm:max-w-55 sm:text-sm"
             >
-              <span className="truncate">
-                {displayName}
-              </span>
-
-              <ChevronDown
-                size={13}
-                className="shrink-0 text-white/25"
-                aria-hidden="true"
-              />
-            </button>
+              {displayName}
+            </p>
           </div>
         </div>
 
-        {/* ----------------------------------------------------------
-            RIGHT â€” HEADER ACTIONS
-        ----------------------------------------------------------- */}
-        <div className="flex shrink-0 items-center gap-2">
+        {/* HEADER ACTIONS */}
+        <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
 
-          {/* SEARCH */}
+          {/* Search */}
           <button
             type="button"
             onClick={onSearch}
-            className="flex h-10 w-10 items-center justify-center rounded-full   text-white/45 transition hover:border-emerald-300/20  hover:text-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-300/30 active:scale-95"
+            disabled={!onSearch}
             aria-label="Search"
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/8 bg-[#0B1426] text-white/55 transition hover:border-[#E60033]/25 hover:text-[#FF476B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E60033]/50 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            <Search
-              size={17}
-              aria-hidden="true"
-            />
+            <Search size={16} aria-hidden="true" />
           </button>
-          {/* LANGUAGE */}
+
+          {/* Language */}
           <button
             type="button"
-            onClick={() =>
-              setShowLanguageModal(true)
-            }
-            className="flex h-10 w-10 items-center justify-center rounded-full  text-white/45 transition hover:border-blue-400/20  hover:text-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400/30 active:scale-95"
+            onClick={() => setShowLanguageModal(true)}
             aria-label={`Language: ${
               selectedLanguage?.label ?? language
             }`}
-            title={
-              selectedLanguage?.label ??
-              language
-            }
+            title={selectedLanguage?.label ?? language}
+            aria-haspopup="dialog"
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/8 bg-[#0B1426] text-white/55 transition hover:border-[#E60033]/25 hover:text-[#FF476B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E60033]/50"
           >
-            <Globe
-              size={17}
-              aria-hidden="true"
-            />
+            <Globe size={16} aria-hidden="true" />
           </button>
 
-          {/* NOTIFICATIONS */}
-          <div className="[&>button]:border-white/8 [&>button]:bg-[#0B1426] [&>button]:text-white/45">
+          {/* Notifications */}
+          <div className="[&>button]:border-white/8 [&>button]:bg-[#0B1426] [&>button]:text-white/55">
             <NotificationBell />
           </div>
         </div>
       </header>
 
-      {/* ============================================================
+      {/* =====================================
           LANGUAGE MODAL
-      ============================================================= */}
+      ====================================== */}
+
       {showLanguageModal && (
         <div
-          className="fixed inset-0 z-100 flex items-center justify-center bg-black/70 px-4 backdrop-blur-md"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="header-language-modal-title"
-          onClick={() =>
-            setShowLanguageModal(false)
-          }
+          className="fixed inset-0 z-100 flex items-center justify-center bg-black/75 px-4 py-6 backdrop-blur-sm"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setShowLanguageModal(false);
+            }
+          }}
         >
           <div
-            className="w-full max-w-md overflow-hidden rounded-[28px] border border-white/10 bg-[#0B1426] shadow-2xl shadow-black/50"
-            onClick={(event) =>
-              event.stopPropagation()
-            }
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="header-language-modal-title"
+            className="w-full max-w-100 overflow-hidden rounded-2xl border border-white/10 bg-[#0B1426] shadow-2xl shadow-black/50"
           >
-            {/* MODAL HEADER */}
-            <div className="flex items-center justify-between border-b border-white/8 px-5 py-4">
-              <div className="flex min-w-0 items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-blue-400/10 bg-blue-400/10 text-blue-400">
-                  <Globe size={18} />
+
+            {/* Modal header */}
+            <div className="flex items-center justify-between gap-3 border-b border-white/8 px-4 py-3.5 sm:px-5">
+              <div className="flex min-w-0 items-center gap-2.5">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[#E60033]/20 bg-[#E60033]/10 text-[#FF476B]">
+                  <Globe size={17} />
                 </div>
 
                 <div className="min-w-0">
-                  <p
+                  <h2
                     id="header-language-modal-title"
-                    className="text-sm font-extrabold text-white"
+                    className="text-xs font-black text-white sm:text-sm"
                   >
-                    Choose Language
-                  </p>
+                    Choose language
+                  </h2>
 
-                  <p className="mt-0.5 text-[10px] text-white/35">
+                  <p className="mt-0.5 text-[10px] text-white/40">
                     Select your preferred platform language
                   </p>
                 </div>
@@ -196,92 +206,72 @@ export default function InvestmentHeader({
 
               <button
                 type="button"
-                onClick={() =>
-                  setShowLanguageModal(false)
-                }
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/8 bg-white/4 text-white/45 transition hover:bg-white/8 hover:text-white active:scale-95"
+                onClick={() => setShowLanguageModal(false)}
                 aria-label="Close language selector"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/55 transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E60033]/50"
               >
-                <X size={17} />
+                <X size={16} />
               </button>
             </div>
 
-            {/* LANGUAGE OPTIONS */}
-            <div className="max-h-[60vh] overflow-y-auto p-3">
-              <div className="space-y-1.5">
-                {SUPPORTED_LANGUAGES.map(
-                  (item) => {
-                    const selected =
-                      language === item.code;
+            {/* Language options */}
+            <div className="max-h-[60vh] space-y-1 overflow-y-auto p-3">
+              {SUPPORTED_LANGUAGES.map((item) => {
+                const selected = language === item.code;
 
-                    return (
-                      <button
-                        key={item.code}
-                        type="button"
-                        onClick={() =>
-                          handleLanguageChange(
-                            item.code,
-                          )
-                        }
-                        className={`flex w-full items-center justify-between rounded-2xl border px-4 py-3.5 text-left transition active:scale-[0.99] ${
+                return (
+                  <button
+                    key={item.code}
+                    type="button"
+                    onClick={() =>
+                      handleLanguageChange(item.code)
+                    }
+                    aria-pressed={selected}
+                    className={[
+                      "flex w-full items-center justify-between gap-3 rounded-xl border px-3 py-2.5 text-left transition",
+                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E60033]/50",
+                      selected
+                        ? "border-[#E60033]/25 bg-[#E60033]/10"
+                        : "border-transparent bg-white/2.5 hover:border-white/10 hover:bg-white/5",
+                    ].join(" ")}
+                  >
+                    <div className="flex min-w-0 items-center gap-2.5">
+                      <div
+                        className={[
+                          "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[10px] font-black",
                           selected
-                            ? 'border-blue-400/20 bg-blue-400/10'
-                            : 'border-transparent bg-white/3 hover:border-white/8 hover:bg-white/6'
-                        }`}
+                            ? "bg-[#E60033]/15 text-[#FF476B]"
+                            : "bg-white/5 text-white/45",
+                        ].join(" ")}
                       >
-                        <div className="flex min-w-0 items-center gap-3">
-                          {/* LANGUAGE CODE */}
-                          <div
-                            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-xs font-extrabold ${
-                              selected
-                                ? 'bg-blue-400/15 text-blue-400'
-                                : 'bg-white/5 text-white/40'
-                            }`}
-                          >
-                            {item.code
-                              .slice(0, 2)
-                              .toUpperCase()}
-                          </div>
+                        {item.code.slice(0, 2).toUpperCase()}
+                      </div>
 
-                          {/* LANGUAGE NAME */}
-                          <div className="min-w-0">
-                            <p
-                              className={`truncate text-xs font-bold ${
-                                selected
-                                  ? 'text-white'
-                                  : 'text-white/70'
-                              }`}
-                            >
-                              {item.label}
-                            </p>
+                      <div className="min-w-0">
+                        <p className="truncate text-[11px] font-bold text-white/85">
+                          {item.label}
+                        </p>
 
-                            {selected && (
-                              <p className="mt-0.5 text-[9px] font-semibold text-blue-400/70">
-                                Currently selected
-                              </p>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* SELECTED CHECK */}
                         {selected && (
-                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-400 text-[#050B18]">
-                            <Check
-                              size={15}
-                              strokeWidth={3}
-                            />
-                          </div>
+                          <p className="mt-0.5 text-[9px] font-semibold text-[#FF476B]">
+                            Currently selected
+                          </p>
                         )}
-                      </button>
-                    );
-                  },
-                )}
-              </div>
+                      </div>
+                    </div>
+
+                    {selected && (
+                      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#E60033] text-white">
+                        <Check size={13} strokeWidth={3} />
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
             </div>
 
-            {/* MODAL FOOTER */}
-            <div className="border-t border-white/8 px-5 py-3.5">
-              <p className="text-center text-[9px] text-white/25">
+            <div className="border-t border-white/8 px-4 py-3 text-center">
+              <p className="text-[9px] text-white/30">
                 REDIQ language preferences
               </p>
             </div>
@@ -291,4 +281,3 @@ export default function InvestmentHeader({
     </>
   );
 }
-

@@ -31,7 +31,12 @@ function extractBackendMessage(
 }
 
 function normalizeMessage(message: string): string {
+
   const normalized = message.toLowerCase();
+
+  if (normalized.includes("daily withdrawal limit")) {
+    return message;
+  }
 
   if (
     normalized.includes('insufficient') ||

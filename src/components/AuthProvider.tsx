@@ -78,11 +78,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         setUser(response.data);
         // Sync cookie with localStorage (ensures consistency)
         setCookie("access_token", token);
-      } catch {
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("refresh_token");
-        deleteCookie("access_token");
-        deleteCookie("refresh_token");
+      } catch (error: unknown) {
+        // Permanent authentication failures are cleared by the API interceptor.
+        // Preserve credentials on temporary network/server errors.
+        if (axios.isAxiosError(error) && error.response?.status === 401) {
+          localStorage.removeItem("access_token");
+          localStorage.removeItem("refresh_token");
+          deleteCookie("access_token");
+          deleteCookie("refresh_token");
+        } else {
+          console.error(
+            "[AUTH] Unable to restore the session due to a non-authentication error.",
+            error
+          );
+        }
       } finally {
         setLoading(false);
       }

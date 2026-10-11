@@ -1,74 +1,69 @@
-'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+"use client";
+
+import {
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
+
 import {
   ArrowDownToLine,
   ArrowUpFromLine,
   X,
-} from 'lucide-react';
+} from "lucide-react";
 
-import { useAuth } from '@/src/components/AuthProvider';
+import { useAuth } from "@/src/components/AuthProvider";
+
 import {
   activityApi,
   type TransactionActivity,
-} from '@/src/lib/api/activity';
+} from "@/src/lib/api/activity";
 
 const FETCH_INTERVAL = 60_000;
 const DISPLAY_INTERVAL = 7_000;
 const TRANSITION_DELAY = 350;
-const INITIAL_FETCH_DELAY = 0;
 
 function formatAmount(
   amount: number,
-  symbol: string,
+  symbol: string
 ): string {
-  const formatted = new Intl.NumberFormat('en-US', {
+  const formatted = new Intl.NumberFormat("en-US", {
     maximumFractionDigits: 2,
   }).format(amount);
 
   return `${formatted} ${symbol}`;
 }
 
-function formatActivityTime(
-  dateString: string,
-): string {
+function formatActivityTime(dateString: string): string {
   const date = new Date(dateString);
 
   if (Number.isNaN(date.getTime())) {
-    return '';
+    return "";
   }
 
-  const seconds = Math.floor(
-    (Date.now() - date.getTime()) / 1000,
+  const seconds = Math.max(
+    0,
+    Math.floor((Date.now() - date.getTime()) / 1000)
   );
 
-  if (seconds < 60) {
-    return 'just now';
-  }
+  if (seconds < 60) return "just now";
 
   const minutes = Math.floor(seconds / 60);
 
-  if (minutes < 60) {
-    return `${minutes}m ago`;
-  }
+  if (minutes < 60) return `${minutes}m ago`;
 
   const hours = Math.floor(minutes / 60);
 
-  if (hours < 24) {
-    return `${hours}h ago`;
-  }
+  if (hours < 24) return `${hours}h ago`;
 
-  const days = Math.floor(hours / 24);
-
-  return `${days}d ago`;
+  return `${Math.floor(hours / 24)}d ago`;
 }
 
 function formatUserName(name: string): string {
   const cleanName = name.trim();
 
-  if (!cleanName) {
-    return 'A user';
-  }
+  if (!cleanName) return "A user";
 
   const parts = cleanName.split(/\s+/);
 
@@ -79,6 +74,27 @@ function formatUserName(name: string): string {
   return `${parts[0]} ${parts[1].charAt(0).toUpperCase()}.`;
 }
 
+function activitiesEqual(
+  current: TransactionActivity[],
+  next: TransactionActivity[]
+): boolean {
+  return (
+    current.length === next.length &&
+    current.every((item, index) => {
+      const nextItem = next[index];
+
+      return (
+        Boolean(nextItem) &&
+        item.activity_at === nextItem.activity_at &&
+        item.user_name === nextItem.user_name &&
+        item.activity_type === nextItem.activity_type &&
+        item.amount === nextItem.amount &&
+        item.asset_symbol === nextItem.asset_symbol
+      );
+    })
+  );
+}
+
 export default function TransactionActivityToast() {
   const { user, loading: authLoading } = useAuth();
 
@@ -87,68 +103,69 @@ export default function TransactionActivityToast() {
   >([]);
 
   const [currentIndex, setCurrentIndex] = useState(0);
+
   const [visible, setVisible] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
+  /* ==========================================
+     FETCH TRANSACTION ACTIVITY
+  ========================================== */
+
   const loadActivities = useCallback(async () => {
-    if (!user) {
-      return;
-    }
+    if (!user) return;
 
     try {
       const data = await activityApi.list(20);
 
-      setActivities((current) => {
-        const unchanged =
-          current.length === data.length &&
-          current.every((item, index) => {
-            const next = data[index];
-
-            if (!next) {
-              return false;
-            }
-
-            return (
-              item.activity_at === next.activity_at &&
-              item.user_name === next.user_name &&
-              item.activity_type === next.activity_type &&
-              item.amount === next.amount &&
-              item.asset_symbol === next.asset_symbol
-            );
-          });
-
-        return unchanged ? current : data;
-      });
+      setActivities((current) =>
+        activitiesEqual(current, data) ? current : data
+      );
     } catch {
-      // Transaction activity is non-critical.
+      // Activity notifications are non-critical.
     }
   }, [user]);
 
+  /* ==========================================
+     INITIAL FETCH + BACKGROUND REFRESH
+  ========================================== */
+
   useEffect(() => {
-    if (authLoading || !user) {
-      return;
-    }
+    if (authLoading || !user) return;
 
     let cancelled = false;
+    let requestInFlight = false;
+
+    const fetchActivity = async () => {
+      if (cancelled || requestInFlight) return;
+
+      requestInFlight = true;
+
+      try {
+        await loadActivities();
+      } finally {
+        requestInFlight = false;
+      }
+    };
 
     const initialTimer = window.setTimeout(() => {
-      if (!cancelled) {
-        void loadActivities();
-      }
-    }, INITIAL_FETCH_DELAY);
+      void fetchActivity();
+    }, 0);
 
-    const interval = window.setInterval(() => {
-      if (!cancelled) {
-        void loadActivities();
-      }
+    const refreshInterval = window.setInterval(() => {
+      void fetchActivity();
     }, FETCH_INTERVAL);
 
     return () => {
       cancelled = true;
+
       window.clearTimeout(initialTimer);
-      window.clearInterval(interval);
+      window.clearInterval(refreshInterval);
     };
   }, [authLoading, user, loadActivities]);
+
+  /* ==========================================
+     INITIAL TOAST DISPLAY
+  ========================================== */
 
   useEffect(() => {
     if (
@@ -160,16 +177,12 @@ export default function TransactionActivityToast() {
       return;
     }
 
-    const timer = window.setTimeout(() => {
-      setCurrentIndex(
-        (current) => current % activities.length,
-      );
-
+    const initialTimer = window.setTimeout(() => {
       setVisible(true);
-    }, INITIAL_FETCH_DELAY);
+    }, 0);
 
     return () => {
-      window.clearTimeout(timer);
+      window.clearTimeout(initialTimer);
     };
   }, [
     authLoading,
@@ -178,23 +191,30 @@ export default function TransactionActivityToast() {
     dismissed,
   ]);
 
+  /* ==========================================
+     ACTIVITY ROTATION
+  ========================================== */
+
   useEffect(() => {
     if (
       authLoading ||
       !user ||
-      activities.length === 0 ||
+      activities.length <= 1 ||
       dismissed
     ) {
       return;
     }
 
-    const interval = window.setInterval(() => {
+    let transitionTimer: number | undefined;
+
+    const rotationInterval = window.setInterval(() => {
+      // Hide the current activity.
       setVisible(false);
 
-      window.setTimeout(() => {
+      // Change content after the exit transition.
+      transitionTimer = window.setTimeout(() => {
         setCurrentIndex(
-          (current) =>
-            (current + 1) % activities.length,
+          (current) => (current + 1) % activities.length
         );
 
         setVisible(true);
@@ -202,7 +222,11 @@ export default function TransactionActivityToast() {
     }, DISPLAY_INTERVAL);
 
     return () => {
-      window.clearInterval(interval);
+      window.clearInterval(rotationInterval);
+
+      if (transitionTimer !== undefined) {
+        window.clearTimeout(transitionTimer);
+      }
     };
   }, [
     authLoading,
@@ -211,14 +235,12 @@ export default function TransactionActivityToast() {
     dismissed,
   ]);
 
-  const activity = useMemo(
-    () => activities[currentIndex] ?? null,
-    [activities, currentIndex],
-  );
+  const activity =
+    activities[currentIndex % activities.length] ?? null;
 
   /*
-   * Important:
-   * This component is completely absent for logged-out visitors.
+   * Only show real API activity to authenticated users.
+   * Never render this toast for logged-out visitors.
    */
   if (
     authLoading ||
@@ -230,130 +252,188 @@ export default function TransactionActivityToast() {
   }
 
   const isDeposit =
-    activity.activity_type === 'DEPOSIT';
+    activity.activity_type === "DEPOSIT";
+
+  const activityLabel = isDeposit
+    ? "deposited"
+    : "withdrew";
+
+  const activityTime = formatActivityTime(
+    activity.activity_at
+  );
 
   return (
     <div
       className={[
-        'fixed bottom-24 left-4 z-50',
-        'w-[calc(100%-2rem)] max-w-85',
-        'transition-all duration-300 ease-out',
+        "fixed bottom-20 left-3 z-50",
+        "w-[calc(100%-1.5rem)] max-w-[320px]",
+        "sm:bottom-6 sm:left-5",
+        "transition-all duration-300 ease-out",
         visible
-          ? 'translate-y-0 opacity-100'
-          : 'pointer-events-none translate-y-2 opacity-0',
-      ].join(' ')}
+          ? "translate-y-0 opacity-100"
+          : "pointer-events-none translate-y-2 opacity-0",
+      ].join(" ")}
       role="status"
       aria-live="polite"
+      aria-atomic="true"
     >
+      {/* MAIN NOTIFICATION */}
       <div
         className={[
-          'relative overflow-hidden',
-          'rounded-[18px]',
-          'border border-white/10',
-          'bg-[#0B1426]/95',
-          'px-3 py-3 pr-9',
-          'shadow-[0_20px_60px_-20px_rgba(0,0,0,0.65)]',
-          'backdrop-blur-2xl',
+          "relative overflow-hidden",
+          "rounded-xl border border-white/10",
+          "bg-[#0B1426]/95",
+          "py-2.5 pl-3 pr-9",
+          "shadow-[0_16px_45px_-15px_rgba(0,0,0,0.75)]",
+          "backdrop-blur-xl",
           isDeposit
-            ? 'border-l-2 border-l-emerald-400'
-            : 'border-l-2 border-l-[#F7C948]',
-        ].join(' ')}
+            ? "border-l-2 border-l-emerald-400"
+            : "border-l-2 border-l-[#E60033]",
+        ].join(" ")}
       >
-        <div className="flex items-center">
+        {/* SUBTLE BACKGROUND ACCENT */}
+        <div
+          aria-hidden="true"
+          className={[
+            "pointer-events-none absolute -left-8 -top-8",
+            "h-20 w-20 rounded-full blur-[35px]",
+            isDeposit
+              ? "bg-emerald-400/5"
+              : "bg-[#E60033]/10",
+          ].join(" ")}
+        />
+
+        {/* CONTENT */}
+        <div className="relative flex min-w-0 items-center gap-2.5">
+
+          {/* ACTIVITY ICON */}
           <div
             className={[
-              'flex h-9 w-9 shrink-0 items-center justify-center',
-              'rounded-xl border',
+              "flex h-9 w-9 shrink-0 items-center justify-center",
+              "rounded-lg border",
               isDeposit
-                ? 'border-emerald-300/10 bg-emerald-300/10 text-emerald-300'
-                : 'border-[#F7C948]/10 bg-[#F7C948]/10 text-[#F7C948]',
-            ].join(' ')}
+                ? "border-emerald-400/15 bg-emerald-400/10 text-emerald-300"
+                : "border-[#E60033]/20 bg-[#E60033]/10 text-[#FF476B]",
+            ].join(" ")}
           >
             {isDeposit ? (
               <ArrowDownToLine
-                className="h-4 w-4"
-                strokeWidth={2.3}
+                size={16}
+                strokeWidth={2.2}
+                aria-hidden="true"
               />
             ) : (
               <ArrowUpFromLine
-                className="h-4 w-4"
-                strokeWidth={2.3}
+                size={16}
+                strokeWidth={2.2}
+                aria-hidden="true"
               />
             )}
           </div>
 
-          <div className="ml-3 min-w-0 flex-1">
-            <div className="flex items-center gap-1.5 truncate">
-              <span className="truncate text-[11px] font-bold leading-4 text-white">
+          {/* ACTIVITY INFORMATION */}
+          <div className="min-w-0 flex-1">
+
+            {/* User + action */}
+            <div className="flex min-w-0 items-center gap-1.5">
+
+              <span className="min-w-0 truncate text-[11px] font-bold leading-4 text-white">
                 {formatUserName(activity.user_name)}
               </span>
 
-              <span className="shrink-0 text-[10px] text-white/35">
-                {isDeposit ? 'deposited' : 'withdrew'}
+              <span className="shrink-0 text-[10px] text-white/45">
+                {activityLabel}
               </span>
             </div>
 
-            <div className="mt-0.5 flex items-center gap-2">
+            {/* Amount + time */}
+            <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5">
+
               <span
                 className={[
-                  'text-[12px] font-black leading-4',
+                  "min-w-0 text-[12px] font-black leading-4",
+                  "tabular-nums",
                   isDeposit
-                    ? 'text-emerald-300'
-                    : 'text-[#F7C948]',
-                ].join(' ')}
+                    ? "text-emerald-300"
+                    : "text-[#FF476B]",
+                ].join(" ")}
               >
                 {formatAmount(
                   activity.amount,
-                  activity.asset_symbol,
+                  activity.asset_symbol
                 )}
               </span>
 
-              <span className="text-[9px] font-medium text-white/25">
-                • {formatActivityTime(activity.activity_at)}
-              </span>
+              {activityTime && (
+                <span className="shrink-0 text-[9px] font-medium text-white/30">
+                  • {activityTime}
+                </span>
+              )}
             </div>
           </div>
         </div>
 
+        {/* DISMISS BUTTON */}
         <button
           type="button"
           onClick={() => {
-            setVisible(false);
             setDismissed(true);
+            setVisible(false);
           }}
-          className="
-            absolute right-2 top-1/2
-            flex h-6 w-6
-            -translate-y-1/2
-            items-center justify-center
-            rounded-full
-            text-white/25
-            transition
-            hover:bg-white/5
-            hover:text-white
-            focus-visible:outline-none
-            focus-visible:ring-2
-            focus-visible:ring-emerald-400
-          "
           aria-label="Dismiss transaction activity"
+          className={[
+            "absolute right-1.5 top-1/2",
+            "flex h-7 w-7 -translate-y-1/2",
+            "items-center justify-center rounded-lg",
+            "text-white/35 transition-colors",
+            "hover:bg-white/5 hover:text-white",
+            "focus-visible:outline-none",
+            "focus-visible:ring-2",
+            "focus-visible:ring-[#E60033]/60",
+          ].join(" ")}
         >
           <X
-            className="h-3.5 w-3.5"
+            size={14}
             strokeWidth={2}
+            aria-hidden="true"
           />
         </button>
 
-        <div
-          className={[
-            'absolute bottom-0 left-0 h-0.5',
-            'transition-all duration-7000 ease-linear',
-            visible ? 'w-full' : 'w-0',
-            isDeposit
-              ? 'bg-emerald-400/70'
-              : 'bg-[#F7C948]/60',
-          ].join(' ')}
-        />
+        {/* DISPLAY-TIME PROGRESS LINE */}
+        {visible && !dismissed && (
+          <div
+            key={`${currentIndex}-${activity.activity_at}`}
+            aria-hidden="true"
+            className={[
+              "absolute bottom-0 left-0 h-0.5 w-full",
+              "origin-left",
+              "animate-[transactionToastProgress_7000ms_linear_forwards]",
+              isDeposit
+                ? "bg-emerald-400/70"
+                : "bg-[#E60033]/80",
+            ].join(" ")}
+          />
+        )}
       </div>
+
+      <style jsx>{`
+        @keyframes transactionToastProgress {
+          from {
+            transform: scaleX(1);
+          }
+
+          to {
+            transform: scaleX(0);
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          div {
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.01ms !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

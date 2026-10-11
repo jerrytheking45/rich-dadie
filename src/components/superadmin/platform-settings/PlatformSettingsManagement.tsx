@@ -145,7 +145,7 @@ function formatDate(value: string): string {
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
-    return "â€”";
+    return "Ã¢â‚¬â€";
   }
 
   return date.toLocaleString();
@@ -162,7 +162,7 @@ function valuePreview(
 
   if (setting.value_type === "JSON") {
     return setting.value.length > 100
-      ? `${setting.value.slice(0, 100)}â€¦`
+      ? `${setting.value.slice(0, 100)}Ã¢â‚¬Â¦`
       : setting.value;
   }
 
@@ -455,6 +455,20 @@ export default function PlatformSettingsManagement() {
       }
     }
 
+    if (
+      key === "withdrawal.daily_limit" &&
+      (
+        form.value_type !== "INTEGER" ||
+        form.category !== "WITHDRAWALS" ||
+        !Number.isSafeInteger(Number(value)) ||
+        Number(value) < 1
+      )
+    ) {
+      setError(
+        "Daily withdrawal limit must remain an INTEGER in WITHDRAWALS and be a positive whole number (1 or greater).",
+      );
+      return;
+    }
     setSaving(true);
 
     try {
@@ -896,7 +910,7 @@ export default function PlatformSettingsManagement() {
                                     {formatDate(
                                       setting.updated_at,
                                     )}
-                                    {" Â· "}
+                                    {" Ã‚Â· "}
                                     {
                                       categoryLabels[
                                         setting

@@ -84,14 +84,6 @@ export default function WithdrawalForm({
       className="space-y-5"
       noValidate
     >
-      {error && (
-        <div className="flex items-start gap-3 rounded-2xl border border-red-400/15 bg-red-400/10 p-3.5 text-xs text-red-200">
-          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-400" />
-          <p className="leading-5">
-            {error}
-          </p>
-        </div>
-      )}
 
       {/* Withdrawal asset */}
       <div className="space-y-2">
@@ -457,6 +449,15 @@ export default function WithdrawalForm({
       </div>
 
       {/* Submit */}
+      {error && (
+      <div className="flex items-start gap-3 rounded-2xl border border-red-400/15 bg-red-400/10 p-3.5 text-xs text-red-200">
+      <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-400" />
+      <p className="leading-5">
+      {error}
+      </p>
+      </div>
+      )}
+
       <button
         type="submit"
         disabled={

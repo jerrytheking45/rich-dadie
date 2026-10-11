@@ -1,9 +1,15 @@
 ﻿
+
 "use client";
 
 import Image from "next/image";
-import { useState, type FormEvent } from "react";
 import Link from "next/link";
+
+import {
+  useState,
+  type FormEvent,
+} from "react";
+
 import {
   ArrowLeft,
   ArrowRight,
@@ -11,7 +17,10 @@ import {
   LockKeyhole,
   Mail,
   ShieldCheck,
+  Loader2,
+  KeyRound,
 } from "lucide-react";
+
 import { authApi } from "@/src/lib/api/auth";
 
 interface ApiError {
@@ -29,8 +38,14 @@ export default function ForgotPasswordPage() {
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const [submittedEmail, setSubmittedEmail] = useState("");
+
+  const handleSubmit = async (
+    event: FormEvent<HTMLFormElement>
+  ) => {
     event.preventDefault();
+
+    if (loading) return;
 
     setError("");
     setSuccess(false);
@@ -46,6 +61,8 @@ export default function ForgotPasswordPage() {
 
     try {
       await authApi.forgotPassword(trimmedEmail);
+
+      setSubmittedEmail(trimmedEmail);
       setSuccess(true);
     } catch (err: unknown) {
       const apiError = err as ApiError;
@@ -53,7 +70,7 @@ export default function ForgotPasswordPage() {
       setError(
         apiError.response?.data?.error ||
           apiError.message ||
-          "Request failed. Please try again.",
+          "Request failed. Please try again."
       );
     } finally {
       setLoading(false);
@@ -61,212 +78,343 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <main className="relative min-h-dvh overflow-hidden bg-[#070b24] text-white">
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -left-40 -top-40 h-96 w-96 rounded-full bg-cyan-500/10 blur-3xl" />
-        <div className="absolute -right-40 top-20 h-125 w-125 rounded-full bg-purple-600/15 blur-3xl" />
-        <div className="absolute -bottom-48 left-1/3 h-96 w-96 rounded-full bg-emerald-500/10 blur-3xl" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.12),transparent_32%),radial-gradient(circle_at_80%_20%,rgba(168,85,247,0.12),transparent_28%),linear-gradient(135deg,#070b24_0%,#0b1033_50%,#130d2c_100%)]" />
-      </div>
+    <main className="relative isolate min-h-dvh overflow-hidden bg-[#050B18] text-white">
 
-      <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-6xl items-center px-4 py-8 sm:px-6 lg:px-8">
-        <div className="grid w-full overflow-hidden rounded-4xl border border-white/10 bg-white/3 shadow-[0_30px_100px_rgba(0,0,0,0.45)] backdrop-blur-2xl lg:grid-cols-[1.05fr_0.95fr]">
-          <section className="relative hidden min-h-175 overflow-hidden border-r border-white/10 p-10 lg:flex lg:flex-col lg:justify-between xl:p-14">
-            <div className="absolute -right-32 -top-32 h-80 w-80 rounded-full bg-cyan-400/10 blur-3xl" />
-            <div className="absolute -bottom-40 -left-20 h-96 w-96 rounded-full bg-purple-500/10 blur-3xl" />
+      {/* CINEMATIC BACKGROUND */}
+      <Image
+        src="/images/hero.png"
+        alt=""
+        fill
+        priority
+        sizes="100vw"
+        className="pointer-events-none -z-20 object-cover object-center opacity-30"
+      />
+
+      {/* Dark background overlays */}
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-[#050B18]/75" />
+
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-linear-to-br from-[#050B18]/95 via-[#07101F]/90 to-[#101426]/85" />
+
+      {/* REDIQ ambient lighting */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -left-20 -top-20 h-48 w-48 rounded-full bg-[#E60033]/10 blur-[80px]"
+      />
+
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-20 bottom-0 h-48 w-48 rounded-full bg-[#E60033]/10 blur-[80px]"
+      />
+
+      {/* MAIN LAYOUT */}
+      <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-5xl items-center justify-center px-3 py-5 sm:px-6 sm:py-8 lg:px-8">
+
+        <div className="grid w-full max-w-215 overflow-hidden rounded-[20px] border border-white/10 bg-[#0B1426]/95 shadow-[0_25px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl sm:rounded-3xl lg:grid-cols-[0.9fr_1.1fr]">
+
+          {/* LEFT — BRANDING PANEL */}
+          <section className="relative hidden min-w-0 overflow-hidden border-r border-white/8 bg-linear-to-br from-[#131E32] via-[#101A2D] to-[#091324] p-6 lg:flex lg:flex-col lg:justify-between">
+
+            {/* Ambient accent */}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute -right-14 -top-14 h-44 w-44 rounded-full bg-[#E60033]/12 blur-[70px]"
+            />
 
             <div className="relative">
-              <div className="mb-12 flex items-center gap-3">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[14px] border border-white/15 bg-white/10 shadow-[0_8px_30px_rgba(45,212,191,0.18)]">
+
+              {/* REDIQ BRAND */}
+              <Link
+                href="/"
+                className="inline-flex items-center gap-2.5"
+              >
+                <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl bg-[#E60033] shadow-lg shadow-[#E60033]/20">
                   <Image
                     src="/images/logo.png"
                     alt="REDIQ logo"
-                    width={44}
-                    height={44}
+                    fill
                     priority
-                    className="h-full w-full object-cover"
+                    sizes="40px"
+                    className="object-cover"
                   />
                 </div>
 
-                <div>
-                  <p className="text-lg font-bold tracking-tight text-white">
+                <div className="leading-tight">
+                  <p className="text-lg font-black tracking-tight text-white">
                     REDIQ
                   </p>
-                  <p className="text-xs text-white/45">
+
+                  <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/40">
                     Investment Platform
                   </p>
                 </div>
-              </div>
+              </Link>
 
-              <div className="max-w-lg">
-                <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1.5 text-xs font-medium text-cyan-300">
-                  <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.8)]" />
-                  Account security
-                </p>
+              {/* INTRODUCTION */}
+              <div className="mt-9">
 
-                <h1 className="text-4xl font-bold leading-tight tracking-tight text-white xl:text-5xl">
-                  Regain access to your{" "}
-                  <span className="bg-linear-to-r from-emerald-300 via-cyan-300 to-blue-400 bg-clip-text text-transparent">
-                    financial dashboard.
+                <div className="inline-flex items-center gap-1.5 rounded-full border border-[#E60033]/20 bg-[#E60033]/10 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-[#FF476B]">
+                  <KeyRound size={12} />
+                  Account recovery
+                </div>
+
+                <h1 className="mt-4 text-[28px] font-black leading-[1.13] tracking-tight text-white">
+                  Regain access to
+                  <span className="block text-[#FF476B]">
+                    your REDIQ account.
                   </span>
                 </h1>
 
-                <p className="mt-6 max-w-md text-base leading-7 text-white/55">
-                  Enter the email address connected to your account and weâ€™ll
-                  help you reset your password securely.
+                <p className="mt-3 max-w-xs text-xs leading-5 text-white/50">
+                  Forgotten your password? Request a reset
+                  link using the email address associated
+                  with your REDIQ account.
                 </p>
               </div>
 
-              <div className="mt-10 max-w-lg space-y-3">
-                <div className="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/4.5 p-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-400/10">
-                    <ShieldCheck
-                      className="h-5 w-5 text-emerald-300"
-                      aria-hidden="true"
-                    />
+              {/* INFORMATION CARDS */}
+              <div className="mt-6 space-y-2.5">
+
+                {/* Recovery card */}
+                <div className="flex items-start gap-2.5 rounded-xl border border-white/8 bg-white/[0.035] p-3">
+
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#E60033]/10 text-[#FF476B]">
+                    <Mail size={15} />
                   </div>
 
-                  <div>
-                    <p className="text-sm font-semibold text-white">
-                      Secure password recovery
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-bold text-white">
+                      Email recovery
                     </p>
-                    <p className="mt-1 text-xs text-white/40">
-                      Follow the reset instructions sent to your email.
+
+                    <p className="mt-1 text-[10px] leading-4 text-white/40">
+                      Request instructions through your
+                      registered email address.
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/4.5 p-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-400/10">
-                    <LockKeyhole
-                      className="h-5 w-5 text-cyan-300"
-                      aria-hidden="true"
-                    />
+                {/* Security card */}
+                <div className="flex items-start gap-2.5 rounded-xl border border-white/8 bg-white/[0.035] p-3">
+
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#E60033]/10 text-[#FF476B]">
+                    <LockKeyhole size={15} />
                   </div>
 
-                  <div>
-                    <p className="text-sm font-semibold text-white">
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-bold text-white">
                       Protect your account
                     </p>
-                    <p className="mt-1 text-xs text-white/40">
-                      Never share your password or reset link with anyone.
+
+                    <p className="mt-1 text-[10px] leading-4 text-white/40">
+                      Never share your password or
+                      password reset link with anyone.
                     </p>
                   </div>
                 </div>
               </div>
             </div>
 
-            <p className="relative text-xs text-white/30">
-              Your account security is important to us.
-            </p>
+            {/* BRAND FOOTER */}
+            <div className="relative mt-8 flex items-center gap-2 border-t border-white/8 pt-4">
+
+              <ShieldCheck
+                size={13}
+                className="shrink-0 text-[#FF476B]"
+              />
+
+              <p className="text-[10px] leading-4 text-white/40">
+                Keep your account credentials private.
+              </p>
+            </div>
           </section>
 
-          <section className="flex items-center p-5 sm:p-8 lg:p-10 xl:p-14">
-            <div className="mx-auto w-full max-w-md">
-              <div className="mb-8 flex items-center gap-3 lg:hidden">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[14px] border border-white/15 bg-white/10 shadow-[0_8px_30px_rgba(45,212,191,0.18)]">
-                  <Image
-                    src="/images/logo.png"
-                    alt="REDIQ logo"
-                    width={44}
-                    height={44}
-                    priority
-                    className="h-full w-full object-cover"
-                  />
-                </div>
+          {/* RIGHT — PASSWORD RECOVERY PANEL */}
+          <section className="flex min-w-0 items-center px-4 py-6 sm:px-7 sm:py-8 lg:px-8 lg:py-9">
 
-                <div>
-                  <p className="text-lg font-bold tracking-tight text-white">
-                    REDIQ
-                  </p>
-                  <p className="text-xs text-white/45">
-                    Investment Platform
-                  </p>
-                </div>
+            <div className="mx-auto w-full max-w-87.5">
+
+              {/* MOBILE BRAND */}
+              <div className="mb-6 flex items-center justify-between gap-3 lg:hidden">
+
+                <Link
+                  href="/"
+                  className="inline-flex items-center gap-2.5"
+                >
+                  <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-lg bg-[#E60033]">
+                    <Image
+                      src="/images/logo.png"
+                      alt="REDIQ logo"
+                      fill
+                      priority
+                      sizes="36px"
+                      className="object-cover"
+                    />
+                  </div>
+
+                  <div className="leading-tight">
+                    <p className="text-base font-black text-white">
+                      REDIQ
+                    </p>
+
+                    <p className="text-[9px] text-white/40">
+                      Investment Platform
+                    </p>
+                  </div>
+                </Link>
+
+                <Link
+                  href="/"
+                  aria-label="Back to homepage"
+                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/60 transition hover:text-white"
+                >
+                  <ArrowLeft size={15} />
+                </Link>
               </div>
 
               {success ? (
-                <div className="text-center">
-                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-emerald-400/20 bg-emerald-400/10">
+
+                /* =====================================
+                   SUCCESS STATE
+                ====================================== */
+                <div
+                  aria-live="polite"
+                  className="text-center"
+                >
+
+                  {/* Success icon */}
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-emerald-400/20 bg-emerald-400/10">
                     <CheckCircle2
-                      className="h-8 w-8 text-emerald-300"
+                      size={24}
+                      className="text-emerald-300"
                       aria-hidden="true"
                     />
                   </div>
 
-                  <p className="mt-7 text-sm font-medium text-emerald-300">
+                  <p className="mt-4 text-[10px] font-bold uppercase tracking-[0.12em] text-emerald-300">
                     Request received
                   </p>
 
-                  <h2 className="mt-3 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+                  <h2 className="mt-2 text-[24px] font-black leading-tight tracking-tight text-white sm:text-[28px]">
                     Check your email
                   </h2>
 
-                  <p className="mt-4 text-sm leading-6 text-white/50">
+                  <p className="mt-3 text-[11px] leading-5 text-white/55 sm:text-xs">
                     If an account exists for{" "}
-                    <strong className="break-all font-semibold text-white/80">
-                      {email.trim()}
+                    <strong className="break-all font-semibold text-white/85">
+                      {submittedEmail}
                     </strong>
-                    , a password reset link has been sent.
+                    , password reset instructions will be sent
+                    to that address.
                   </p>
 
-                  <p className="mt-3 text-xs leading-5 text-white/30">
-                    If you do not see the email shortly, check your spam or
-                    junk folder.
-                  </p>
+                  {/* Additional information */}
+                  <div className="mt-4 rounded-xl border border-white/8 bg-white/[0.035] px-3 py-3">
 
+                    <div className="flex items-start gap-2.5 text-left">
+
+                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#E60033]/10 text-[#FF476B]">
+                        <Mail size={14} />
+                      </div>
+
+                      <div>
+                        <p className="text-[11px] font-bold text-white">
+                          Cannot find the email?
+                        </p>
+
+                        <p className="mt-1 text-[10px] leading-4 text-white/45">
+                          Check your spam or junk folder.
+                          Delivery times may vary.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Back to login */}
                   <Link
                     href="/login"
-                    className="mt-8 inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-5 text-sm font-semibold text-white/80 transition-colors hover:border-white/20 hover:bg-white/10 hover:text-white focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-400/20"
+                    className="group mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#E60033] px-4 py-2.5 text-xs font-black text-white shadow-lg shadow-[#E60033]/15 transition hover:bg-[#FF174B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF476B]"
                   >
-                    <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+                    <ArrowLeft
+                      size={14}
+                      className="transition-transform group-hover:-translate-x-0.5"
+                    />
+
                     Back to login
                   </Link>
-                </div>
-              ) : (
-                <>
-                  <div>
-                    <p className="mb-3 text-sm font-medium text-emerald-300">
-                      Password recovery
-                    </p>
 
-                    <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+                  {/* Another request */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSuccess(false);
+                      setError("");
+                    }}
+                    className="mt-3 text-[11px] font-semibold text-[#FF476B] transition hover:text-[#FF7895]"
+                  >
+                    Try another email address
+                  </button>
+                </div>
+
+              ) : (
+
+                /* =====================================
+                   REQUEST FORM
+                ====================================== */
+                <>
+
+                  {/* HEADING */}
+                  <div>
+
+                    <div className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-[#FF476B]">
+                      <LockKeyhole size={12} />
+                      Password recovery
+                    </div>
+
+                    <h2 className="mt-2 text-[23px] font-black leading-tight tracking-tight text-white sm:text-[27px]">
                       Forgot your password?
                     </h2>
 
-                    <p className="mt-3 text-sm leading-6 text-white/45">
-                      Enter your email address and weâ€™ll send you a secure
-                      password reset link.
+                    <p className="mt-2 text-[11px] leading-5 text-white/45 sm:text-xs">
+                      Enter your email address to request
+                      a password reset link.
                     </p>
                   </div>
 
+                  {/* ERROR MESSAGE */}
                   {error && (
                     <div
                       role="alert"
-                      className="mt-6 rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3.5"
+                      aria-live="polite"
+                      className="mt-4 rounded-xl border border-red-400/20 bg-red-500/10 px-3 py-2.5"
                     >
-                      <p className="text-sm leading-5 text-red-300">
+                      <p className="text-[11px] leading-5 text-red-300">
                         {error}
                       </p>
                     </div>
                   )}
 
+                  {/* FORM */}
                   <form
-                    className="mt-8 space-y-6"
                     onSubmit={handleSubmit}
+                    className="mt-5 space-y-3.5"
                   >
+
+                    {/* EMAIL */}
                     <div>
+
                       <label
                         htmlFor="email"
-                        className="mb-2 block text-sm font-medium text-white/75"
+                        className="mb-1.5 block text-[11px] font-semibold text-white/75"
                       >
                         Email address
                       </label>
 
                       <div className="group relative">
+
                         <Mail
-                          className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/30 transition-colors group-focus-within:text-emerald-300"
+                          size={15}
                           aria-hidden="true"
+                          className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-white/35 transition-colors group-focus-within:text-[#FF476B]"
                         />
 
                         <input
@@ -274,51 +422,85 @@ export default function ForgotPasswordPage() {
                           name="email"
                           type="email"
                           autoComplete="email"
+                          autoCapitalize="none"
+                          spellCheck={false}
                           required
+                          disabled={loading}
                           value={email}
-                          onChange={(event) => setEmail(event.target.value)}
-                          placeholder="Enter your email"
-                          className="h-14 w-full rounded-2xl border border-white/10 bg-white/5 pl-12 pr-4 text-sm text-white outline-none transition-all placeholder:text-white/25 hover:border-white/15 focus:border-emerald-400/50 focus:bg-white/8 focus:ring-4 focus:ring-emerald-400/10"
+                          onChange={(event) =>
+                            setEmail(event.target.value)
+                          }
+                          placeholder="Enter your email address"
+                          className="h-10 w-full rounded-xl border border-white/10 bg-[#07101F] pl-9 pr-3 text-xs text-white outline-none transition placeholder:text-white/25 hover:border-white/15 focus:border-[#E60033]/50 focus:ring-2 focus:ring-[#E60033]/10 disabled:cursor-not-allowed disabled:opacity-60"
                         />
                       </div>
                     </div>
 
+                    {/* INFORMATION STRIP */}
+                    <div className="flex items-center gap-2.5 rounded-xl border border-white/8 bg-white/2.5 px-3 py-2.5">
+
+                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#E60033]/10 text-[#FF476B]">
+                        <ShieldCheck size={14} />
+                      </div>
+
+                      <p className="text-[10px] leading-4 text-white/45">
+                        We do not confirm whether an email
+                        address is registered with REDIQ.
+                      </p>
+                    </div>
+
+                    {/* SUBMIT BUTTON */}
                     <button
                       type="submit"
                       disabled={loading}
-                      className="group flex h-14 w-full items-center justify-center gap-2 overflow-hidden rounded-2xl bg-linear-to-r from-emerald-400 via-teal-400 to-cyan-400 px-5 text-sm font-bold text-[#06121a] shadow-[0_12px_35px_rgba(45,212,191,0.18)] transition-all hover:shadow-[0_16px_45px_rgba(45,212,191,0.28)] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-400/25 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
+                      className="group flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#E60033] px-4 py-2.5 text-xs font-black text-white shadow-lg shadow-[#E60033]/15 transition-all duration-300 hover:bg-[#FF174B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF476B] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B1426] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {loading ? (
                         <>
-                          <span className="h-5 w-5 animate-spin rounded-full border-2 border-[#06121a]/25 border-t-[#06121a]" />
-                          <span>Sending...</span>
+                          <Loader2
+                            size={16}
+                            className="animate-spin"
+                            aria-hidden="true"
+                          />
+
+                          Sending request...
                         </>
                       ) : (
                         <>
-                          <span>Send reset link</span>
+                          Send reset link
+
                           <ArrowRight
-                            className="h-4 w-4 transition-transform group-hover:translate-x-1"
+                            size={15}
                             aria-hidden="true"
+                            className="transition-transform group-hover:translate-x-1"
                           />
                         </>
                       )}
                     </button>
                   </form>
 
-                  <div className="mt-8 text-center">
+                  {/* BACK TO LOGIN */}
+                  <div className="mt-5 text-center">
+
                     <Link
                       href="/login"
-                      className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-300 transition-colors hover:text-emerald-200"
+                      className="group inline-flex items-center gap-1.5 text-[11px] font-bold text-[#FF476B] transition hover:text-[#FF7895]"
                     >
-                      <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+                      <ArrowLeft
+                        size={13}
+                        className="transition-transform group-hover:-translate-x-0.5"
+                      />
+
                       Back to login
                     </Link>
                   </div>
 
-                  <div className="mt-8 border-t border-white/8 pt-5 text-center">
-                    <p className="text-[11px] leading-5 text-white/25">
-                      For your security, we do not reveal whether an email
-                      address is registered on the platform.
+                  {/* FOOTER NOTICE */}
+                  <div className="mt-5 border-t border-white/8 pt-3.5 text-center">
+
+                    <p className="text-[10px] leading-4 text-white/35">
+                      For your security, never share your
+                      password or reset link with anyone.
                     </p>
                   </div>
                 </>
@@ -330,5 +512,3 @@ export default function ForgotPasswordPage() {
     </main>
   );
 }
-
-

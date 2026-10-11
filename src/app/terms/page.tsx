@@ -1,17 +1,29 @@
-﻿import Link from "next/link";
+﻿
+import Link from "next/link";
 import TermsBackButton from "./TermsBackButton";
+
 import {
   ArrowUpRight,
   CheckCircle2,
+  ChevronDown,
   FileText,
   ShieldCheck,
+  ScrollText,
 } from "lucide-react";
+
+/* ==========================================
+   PAGE METADATA
+========================================== */
 
 export const metadata = {
   title: "Terms & Conditions | REDIQ",
   description:
     "Terms and conditions governing the use of the REDIQ investment platform.",
 };
+
+/* ==========================================
+   TERMS CONTENT
+========================================== */
 
 const sections = [
   {
@@ -141,106 +153,308 @@ const sections = [
   },
 ];
 
+/* ==========================================
+   TERMS PAGE
+========================================== */
+
 export default function TermsPage() {
   return (
-    <main className="min-h-screen bg-[#050B18] text-white">
-      <div className="mx-auto max-w-5xl px-5 py-6 sm:px-8 sm:py-10">
-        <header className="flex items-center justify-between border-b border-white/7 pb-6">
+    <main className="relative isolate min-h-screen overflow-hidden bg-[#050B18] text-white">
+
+      {/* BACKGROUND DETAILS */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
+      >
+        <div className="absolute -right-32 top-20 h-72 w-72 rounded-full bg-[#E60033]/6 blur-[100px]" />
+
+        <div className="absolute -left-32 top-[45%] h-72 w-72 rounded-full bg-[#E60033]/5 blur-[100px]" />
+      </div>
+
+      <div className="mx-auto w-full max-w-5xl px-4 py-5 sm:px-6 sm:py-8 lg:px-8">
+
+        {/* =====================================
+            TOP NAVIGATION
+        ====================================== */}
+
+        <header className="flex items-center justify-between gap-3 border-b border-white/10 pb-5">
           <TermsBackButton />
 
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/8 bg-white/3 px-3 py-2">
-            <ShieldCheck size={13} className="text-emerald-300" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/40">
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-[#E60033]/20 bg-[#E60033]/10 px-3 py-1.5">
+            <ShieldCheck
+              size={13}
+              className="text-[#FF476B]"
+              aria-hidden="true"
+            />
+
+            <span className="text-[9px] font-bold uppercase tracking-[0.12em] text-[#FF7895]">
               Legal
             </span>
           </div>
         </header>
 
-        <section className="py-14 sm:py-20">
+        {/* =====================================
+            HERO
+        ====================================== */}
+
+        <section className="relative py-10 sm:py-14 lg:py-16">
           <div className="max-w-3xl">
-            <div className="mb-5 inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-[#F7C948]">
-              <FileText size={14} />
+
+            <div className="inline-flex items-center gap-2 rounded-full border border-[#E60033]/20 bg-[#E60033]/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.15em] text-[#FF476B]">
+              <FileText size={13} aria-hidden="true" />
               Platform Terms
             </div>
 
-            <h1 className="text-4xl font-black tracking-tight sm:text-6xl">
-              Terms & Conditions
+            <h1 className="mt-5 text-[30px] font-black leading-[1.1] tracking-tight text-white sm:text-[43px] lg:text-[50px]">
+              Terms <span className="text-[#FF476B]">&</span>
+              <span className="block">Conditions</span>
             </h1>
 
-            <p className="mt-6 max-w-2xl text-sm leading-7 text-white/45 sm:text-base">
+            <p className="mt-4 max-w-2xl text-xs leading-6 text-white/55 sm:text-sm sm:leading-7">
               These Terms & Conditions explain the rules and responsibilities
               that apply when you access or use the REDIQ investment platform.
             </p>
 
-            <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-2 text-[11px] text-white/25">
-              <span>Last updated: September 29, 2026</span>
-              <span className="hidden sm:inline">•</span>
+            <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2 text-[10px] text-white/45">
+              <span className="inline-flex items-center gap-1.5">
+                <ScrollText
+                  size={13}
+                  className="text-[#FF476B]"
+                  aria-hidden="true"
+                />
+                Last updated: September 29, 2026
+              </span>
+
+              <span
+                aria-hidden="true"
+                className="hidden h-1 w-1 rounded-full bg-white/25 sm:block"
+              />
+
               <span>Please read before using the platform</span>
             </div>
           </div>
         </section>
 
-        <section className="border-t border-white/7">
-          <div className="divide-y divide-white/7">
-            {sections.map((section) => (
-              <article
-                key={section.number}
-                className="grid gap-5 py-9 sm:grid-cols-[90px_1fr] sm:py-11"
-              >
-                <div className="text-xs font-black tracking-[0.14em] text-[#F7C948]/70">
-                  {section.number}
-                </div>
+        {/* =====================================
+            DOCUMENT INFORMATION BAR
+        ====================================== */}
 
-                <div className="max-w-3xl">
-                  <h2 className="text-xl font-bold tracking-tight sm:text-2xl">
-                    {section.title}
-                  </h2>
-
-                  <div className="mt-4 space-y-4">
-                    {section.paragraphs.map((paragraph) => (
-                      <p
-                        key={paragraph}
-                        className="text-sm leading-7 text-white/45"
-                      >
-                        {paragraph}
-                      </p>
-                    ))}
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section className="border-t border-white/7 py-10">
-          <div className="flex flex-col gap-5 rounded-3xl border border-white/7 bg-white/2.5 p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
-            <div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 size={16} className="text-emerald-300" />
-                <h2 className="text-sm font-bold">Questions or support?</h2>
-              </div>
-              <p className="mt-2 max-w-xl text-xs leading-6 text-white/35">
-                If you need assistance with your REDIQ account or platform
-                activity, use the support options available through the
-                platform.
-              </p>
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-[#0B1426] px-4 py-3">
+          <div className="flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#E60033]/10 text-[#FF476B]">
+              <FileText size={14} aria-hidden="true" />
             </div>
 
-            <Link
-              href="/login"
-              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-white/10 px-4 py-3 text-xs font-bold text-white/60 transition hover:border-white/20 hover:text-white"
-            >
-              Go to account
-              <ArrowUpRight size={13} />
-            </Link>
+            <span className="text-[11px] font-bold text-white/80">
+              Terms of Service
+            </span>
+          </div>
+
+          <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[9px] font-semibold text-white/50">
+            {sections.length} Sections
+          </span>
+        </div>
+
+        {/* ACCORDION INSTRUCTIONS */}
+        <p className="mb-4 px-1 text-[10px] leading-5 text-white/40 sm:text-[11px]">
+          Select a section below to read its contents. You can expand
+          multiple sections at the same time.
+        </p>
+
+        {/* =====================================
+            EXPANDABLE TERMS DOCUMENT
+        ====================================== */}
+
+        <section
+          aria-label="REDIQ Terms and Conditions"
+          className="overflow-hidden rounded-2xl border border-white/10 bg-[#0B1426]/80"
+        >
+          {/* Document accent */}
+          <div
+            aria-hidden="true"
+            className="h-0.5 bg-linear-to-r from-[#E60033] via-[#FF476B]/50 to-transparent"
+          />
+
+          <div className="divide-y divide-white/8">
+
+            {sections.map((section) => (
+              <details
+                key={section.number}
+                id={`terms-${section.number}`}
+                className="group min-w-0 open:bg-[#101A2D] transition-colors duration-200"
+              >
+
+                {/* =====================================
+                    CLICKABLE DROPDOWN HEADING
+                ====================================== */}
+
+                <summary
+                  className={[
+                    "flex min-w-0 cursor-pointer list-none",
+                    "items-center justify-between gap-3",
+                    "px-4 py-4 sm:px-6 sm:py-5 lg:px-8",
+                    "transition-colors duration-200",
+                    "hover:bg-white/2.5",
+                    "focus-visible:outline-none",
+                    "focus-visible:bg-[#E60033]/5",
+                    "focus-visible:ring-2",
+                    "focus-visible:ring-inset",
+                    "focus-visible:ring-[#E60033]/40",
+                    "[&::-webkit-details-marker]:hidden",
+                  ].join(" ")}
+                >
+                  {/* Section number and title */}
+                  <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+
+                    {/* Number */}
+                    <span
+                      className={[
+                        "flex h-8 min-w-8 shrink-0",
+                        "items-center justify-center rounded-lg",
+                        "border border-[#E60033]/20",
+                        "bg-[#E60033]/10 px-2",
+                        "text-[10px] font-black tabular-nums",
+                        "text-[#FF476B]",
+                        "transition-colors duration-200",
+                        "group-open:border-[#E60033]/40",
+                        "group-open:bg-[#E60033]",
+                        "group-open:text-white",
+                      ].join(" ")}
+                    >
+                      {section.number}
+                    </span>
+
+                    {/* Title */}
+                    <h2
+                      className={[
+                        "min-w-0 text-[12px] font-bold",
+                        "leading-5 tracking-tight text-white/80",
+                        "transition-colors duration-200",
+                        "group-open:text-white",
+                        "sm:text-[15px]",
+                      ].join(" ")}
+                    >
+                      {section.title}
+                    </h2>
+                  </div>
+
+                  {/* Dropdown icon */}
+                  <span
+                    aria-hidden="true"
+                    className={[
+                      "flex h-8 w-8 shrink-0",
+                      "items-center justify-center rounded-lg",
+                      "border border-white/10 bg-white/[0.035]",
+                      "text-white/40 transition-all duration-200",
+                      "group-hover:border-[#E60033]/25",
+                      "group-hover:text-[#FF476B]",
+                      "group-open:border-[#E60033]/25",
+                      "group-open:bg-[#E60033]/10",
+                      "group-open:text-[#FF476B]",
+                    ].join(" ")}
+                  >
+                    <ChevronDown
+                      size={16}
+                      strokeWidth={2.2}
+                      className="transition-transform duration-200 group-open:rotate-180"
+                    />
+                  </span>
+                </summary>
+
+                {/* =====================================
+                    EXPANDABLE SECTION CONTENT
+                ====================================== */}
+
+                <div className="px-4 pb-5 sm:px-6 sm:pb-6 lg:px-8">
+
+                  <div className="border-t border-white/8 pt-4 sm:ml-12 sm:pt-5">
+
+                    {/* Left accent line */}
+                    <div className="border-l-2 border-[#E60033]/35 pl-3.5 sm:pl-4">
+
+                      <div className="max-w-3xl space-y-3.5">
+
+                        {section.paragraphs.map(
+                          (paragraph, index) => (
+                            <p
+                              key={`${section.number}-${index}`}
+                              className="text-[11px] leading-[1.9] text-white/60 sm:text-[13px] sm:leading-7"
+                            >
+                              {paragraph}
+                            </p>
+                          )
+                        )}
+
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </details>
+            ))}
+
           </div>
         </section>
 
-        <footer className="border-t border-white/7 py-7 text-center">
-          <p className="text-[10px] leading-5 text-white/20">
-            © {new Date().getFullYear()} REDIQ Investment. All rights reserved.
+        {/* =====================================
+            QUESTIONS / SUPPORT
+        ====================================== */}
+
+        <section className="py-7 sm:py-9">
+
+          <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#0B1426] p-4 sm:p-6">
+
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-[#E60033]/10 blur-[60px]"
+            />
+
+            <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+
+              <div className="min-w-0">
+
+                <div className="flex items-center gap-2">
+
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#E60033]/10 text-[#FF476B]">
+                    <CheckCircle2
+                      size={16}
+                      aria-hidden="true"
+                    />
+                  </div>
+
+                  <h2 className="text-[13px] font-black text-white sm:text-sm">
+                    Questions or support?
+                  </h2>
+                </div>
+
+                <p className="mt-2 max-w-xl text-[11px] leading-5 text-white/50 sm:text-xs sm:leading-6">
+                  If you need assistance with your REDIQ account or platform
+                  activity, use the support options available through the
+                  platform.
+                </p>
+              </div>
+
+              <Link
+                href="/login"
+                className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 self-start rounded-xl bg-[#E60033] px-4 text-[11px] font-black text-white transition hover:bg-[#FF174B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF476B] sm:self-auto"
+              >
+                Go to account
+                <ArrowUpRight size={14} aria-hidden="true" />
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* =====================================
+            FOOTER
+        ====================================== */}
+
+        <footer className="border-t border-white/10 py-6 text-center">
+          <p className="text-[10px] leading-5 text-white/35">
+            © {new Date().getFullYear()} REDIQ Investment.
+            All rights reserved.
           </p>
         </footer>
+
       </div>
     </main>
   );

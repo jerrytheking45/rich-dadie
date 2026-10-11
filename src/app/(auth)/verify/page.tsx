@@ -1,20 +1,36 @@
 ﻿
 //src/app/(auth)/verify/page.tsx
 
-'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
+
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
+
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ClipboardEvent,
+  type FormEvent,
+  type KeyboardEvent,
+} from "react";
+
+import { useRouter } from "next/navigation";
+
 import {
   ArrowLeft,
+  ArrowRight,
   CheckCircle2,
+  KeyRound,
+  Loader2,
   MailCheck,
   RefreshCw,
   ShieldCheck,
-} from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/src/components/AuthProvider';
+} from "lucide-react";
+
+import { useAuth } from "@/src/components/AuthProvider";
 
 interface ApiError {
   response?: {
@@ -27,10 +43,15 @@ interface ApiError {
 
 const CODE_LENGTH = 6;
 
+const createEmptyCode = (): string[] =>
+  Array<string>(CODE_LENGTH).fill("");
+
 export default function VerifyPage() {
-  const [code, setCode] = useState<string[]>(Array(CODE_LENGTH).fill(''));
-  const [error, setError] = useState('');
-  const [resendMessage, setResendMessage] = useState('');
+  const [code, setCode] = useState<string[]>(createEmptyCode);
+
+  const [error, setError] = useState("");
+  const [resendMessage, setResendMessage] = useState("");
+
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
@@ -38,70 +59,126 @@ export default function VerifyPage() {
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
 
   const router = useRouter();
+
   const { verify, resendVerification } = useAuth();
 
-  useEffect(() => {
-    const email = localStorage.getItem('registration_email');
+  const isComplete = code.every((digit) => /^\d$/.test(digit));
 
-    if (!email) {
-      router.push('/login');
+  /* ==========================================
+     INITIALIZE VERIFICATION SESSION
+  ========================================== */
+
+  useEffect(() => {
+    const storedEmail =
+      localStorage.getItem("registration_email")?.trim() || "";
+
+    if (!storedEmail) {
+      router.replace("/login");
       return;
     }
 
+    // Focus is a DOM interaction, not a React state update.
     inputRefs.current[0]?.focus();
   }, [router]);
 
+  /* ==========================================
+     INPUT FOCUS
+  ========================================== */
+
   const focusInput = (index: number) => {
-    if (index >= 0 && index < CODE_LENGTH) {
-      inputRefs.current[index]?.focus();
-      inputRefs.current[index]?.select();
-    }
+    if (index < 0 || index >= CODE_LENGTH) return;
+
+    const input = inputRefs.current[index];
+
+    input?.focus();
+    input?.select();
   };
 
-  const handleChange = (index: number, value: string) => {
-    const digit = value.replace(/\D/g, '').slice(-1);
+  /* ==========================================
+     INSERT ONE OR MORE DIGITS
+  ========================================== */
 
-    setError('');
-    setResendMessage('');
+  const insertDigits = (index: number, value: string) => {
+    const digits = value.replace(/\D/g, "").slice(0, CODE_LENGTH);
 
-    if (!digit) {
+    setError("");
+    setResendMessage("");
+
+    if (!digits) {
       setCode((previous) => {
         const next = [...previous];
-        next[index] = '';
+        next[index] = "";
         return next;
       });
+
+      return;
+    }
+
+    // Supports mobile OTP autofill containing all six digits.
+    if (digits.length === CODE_LENGTH) {
+      setCode(digits.split(""));
+      focusInput(CODE_LENGTH - 1);
       return;
     }
 
     setCode((previous) => {
       const next = [...previous];
-      next[index] = digit;
+
+      digits.split("").forEach((digit, offset) => {
+        const targetIndex = index + offset;
+
+        if (targetIndex < CODE_LENGTH) {
+          next[targetIndex] = digit;
+        }
+      });
+
       return next;
     });
 
-    if (index < CODE_LENGTH - 1) {
-      focusInput(index + 1);
-    }
+    const nextIndex = Math.min(
+      index + digits.length,
+      CODE_LENGTH - 1
+    );
+
+    focusInput(nextIndex);
   };
+
+  /* ==========================================
+     INPUT CHANGE
+  ========================================== */
+
+  const handleChange = (index: number, value: string) => {
+    insertDigits(index, value);
+  };
+
+  /* ==========================================
+     KEYBOARD NAVIGATION
+  ========================================== */
 
   const handleKeyDown = (
     index: number,
-    event: React.KeyboardEvent<HTMLInputElement>,
+    event: KeyboardEvent<HTMLInputElement>
   ) => {
-    if (event.key === 'Backspace') {
+    if (event.key === "Backspace") {
+      event.preventDefault();
+
+      setError("");
+      setResendMessage("");
+
       if (code[index]) {
         setCode((previous) => {
           const next = [...previous];
-          next[index] = '';
+          next[index] = "";
           return next;
         });
+
         return;
       }
 
       if (index > 0) {
         setCode((previous) => {
           const next = [...previous];
-          next[index - 1] = '';
+          next[index - 1] = "";
           return next;
         });
 
@@ -111,349 +188,532 @@ export default function VerifyPage() {
       return;
     }
 
-    if (event.key === 'ArrowLeft' && index > 0) {
+    if (event.key === "ArrowLeft") {
       event.preventDefault();
       focusInput(index - 1);
+      return;
     }
 
-    if (event.key === 'ArrowRight' && index < CODE_LENGTH - 1) {
+    if (event.key === "ArrowRight") {
       event.preventDefault();
       focusInput(index + 1);
     }
   };
 
+  /* ==========================================
+     PASTE VERIFICATION CODE
+  ========================================== */
+
   const handlePaste = (
     index: number,
-    event: React.ClipboardEvent<HTMLInputElement>,
+    event: ClipboardEvent<HTMLInputElement>
   ) => {
     event.preventDefault();
 
-    const pastedValue = event.clipboardData
-      .getData('text')
-      .replace(/\D/g, '')
+    const pastedDigits = event.clipboardData
+      .getData("text")
+      .replace(/\D/g, "")
       .slice(0, CODE_LENGTH);
 
-    if (!pastedValue) {
+    if (!pastedDigits) return;
+
+    setError("");
+    setResendMessage("");
+
+    // Allow a complete OTP to be pasted into any input.
+    if (pastedDigits.length === CODE_LENGTH) {
+      setCode(pastedDigits.split(""));
+      focusInput(CODE_LENGTH - 1);
       return;
     }
 
-    setError('');
-    setResendMessage('');
-
-    setCode((previous) => {
-      const next = [...previous];
-
-      for (let i = 0; i < pastedValue.length; i += 1) {
-        const targetIndex = index + i;
-
-        if (targetIndex < CODE_LENGTH) {
-          next[targetIndex] = pastedValue[i];
-        }
-      }
-
-      return next;
-    });
-
-    const nextFocusIndex = Math.min(
-      index + pastedValue.length,
-      CODE_LENGTH - 1,
-    );
-
-    focusInput(nextFocusIndex);
+    insertDigits(index, pastedDigits);
   };
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  /* ==========================================
+     VERIFY EMAIL
+  ========================================== */
+
+  const handleSubmit = async (
+    event: FormEvent<HTMLFormElement>
+  ) => {
     event.preventDefault();
 
-    setError('');
-    setResendMessage('');
+    if (loading || resending || success) return;
 
-    const verificationCode = code.join('');
+    setError("");
+    setResendMessage("");
 
-    if (verificationCode.length !== CODE_LENGTH) {
-      setError('Please enter the complete 6-digit verification code.');
-      focusInput(verificationCode.length);
+    if (!isComplete) {
+      setError(
+        "Please enter the complete 6-digit verification code."
+      );
+
+      const firstEmpty = code.findIndex((digit) => !digit);
+
+      focusInput(firstEmpty >= 0 ? firstEmpty : 0);
+      return;
+    }
+
+    // Confirm that the registration session still exists.
+    const storedEmail =
+      localStorage.getItem("registration_email")?.trim() || "";
+
+    if (!storedEmail) {
+      setError(
+        "Your registration session has expired. Please register again."
+      );
+
+      router.replace("/register");
       return;
     }
 
     setLoading(true);
 
     try {
-      await verify(verificationCode);
+      await verify(code.join(""));
 
+      localStorage.removeItem("registration_email");
+
+      // Clear the verification code after success.
+      setCode(createEmptyCode());
       setSuccess(true);
-      localStorage.removeItem('registration_email');
-    } catch (err) {
+    } catch (err: unknown) {
       const apiError = err as ApiError;
 
       setError(
         apiError.response?.data?.error ||
           apiError.message ||
-          'Verification failed. Please try again.',
+          "Verification failed. Please try again."
       );
     } finally {
       setLoading(false);
     }
   };
 
+  /* ==========================================
+     RESEND VERIFICATION CODE
+  ========================================== */
+
   const handleResend = async () => {
-    setError('');
-    setResendMessage('');
+    if (resending || loading || success) return;
 
-    const email = localStorage.getItem('registration_email');
+    setError("");
+    setResendMessage("");
 
-    if (!email) {
-      setError('Your registration session has expired. Please register again.');
-      router.push('/register');
+    const storedEmail =
+      localStorage.getItem("registration_email")?.trim() || "";
+
+    if (!storedEmail) {
+      setError(
+        "Your registration session has expired. Please register again."
+      );
+
+      router.replace("/register");
       return;
     }
 
     setResending(true);
 
     try {
-      await resendVerification(email);
+      await resendVerification(storedEmail);
 
-      setCode(Array(CODE_LENGTH).fill(''));
+      // Reset previous OTP after requesting a new code.
+      setCode(createEmptyCode());
+
       setResendMessage(
-        'A new verification code has been sent to your email.',
+        "If the address is eligible, a new verification code will be sent."
       );
 
       focusInput(0);
-    } catch (err) {
+    } catch (err: unknown) {
       const apiError = err as ApiError;
 
       setError(
         apiError.response?.data?.error ||
           apiError.message ||
-          'Failed to resend the verification code.',
+          "Failed to resend the verification code."
       );
     } finally {
       setResending(false);
     }
   };
 
-  if (success) {
-    return (
-      <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#050B18] px-4 py-10 text-white sm:px-6">
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute left-1/2 top-45 h-96 w-96 -translate-x-1/2 rounded-full bg-emerald-400/10 blur-3xl" />
-          <div className="absolute bottom-40 right-30 h-96 w-96 rounded-full bg-[#F7C948]/8 blur-3xl" />
-        </div>
-
-        <div className="relative z-10 w-full max-w-md">
-          <div className="rounded-[30px] border border-white/10 bg-[#0B1426]/90 p-7 text-center shadow-2xl shadow-black/30 backdrop-blur-2xl sm:p-9">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-[20px] border border-emerald-300/20 bg-emerald-400/10">
-              <CheckCircle2
-                size={32}
-                className="text-emerald-300"
-                aria-hidden="true"
-              />
-            </div>
-
-            <h1 className="mt-6 text-2xl font-black tracking-tight sm:text-3xl">
-              Email verified
-            </h1>
-
-            <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-white/45">
-              Your email address has been successfully verified. Your account is
-              now ready for you to sign in.
-            </p>
-
-            <Link
-              href="/login"
-              className="mt-7 inline-flex w-full items-center justify-center rounded-2xl bg-[#F7C948] px-5 py-3.5 text-sm font-black text-[#050B18] shadow-lg shadow-[#F7C948]/10 transition hover:-translate-y-0.5 hover:bg-[#FFD96A]"
-            >
-              Continue to login
-            </Link>
-
-            <div className="mt-6 flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-white/25">
-              <ShieldCheck size={13} className="text-emerald-300" />
-              REDIQ Investment
-            </div>
-          </div>
-        </div>
-      </main>
-    );
-  }
-
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#050B18] px-4 py-8 text-white sm:px-6">
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute left-1/2 top-55 h-120 w-120 -translate-x-1/2 rounded-full bg-emerald-400/8 blur-3xl" />
-        <div className="absolute bottom-60 left-40 h-110 w-110 rounded-full bg-[#F7C948]/7 blur-3xl" />
-        <div className="absolute right-40 top-1/3 h-100 w-100 rounded-full bg-purple-500/6 blur-3xl" />
-      </div>
+    <main className="relative isolate flex min-h-dvh items-center justify-center overflow-hidden bg-[#050B18] px-3 py-6 text-white sm:px-6 sm:py-8">
 
-      <div className="relative z-10 w-full max-w-md">
-        {/* Logo */}
-        <div className="mb-7 flex justify-center">
-          <Link
-            href="/"
-            aria-label="REDIQ home"
-            className="group flex items-center gap-3"
-          >
-            <div className="relative h-12 w-12 overflow-hidden rounded-[15px] bg-white/95 shadow-xl shadow-black/20">
-              <Image
-                src="/images/logo.png"
-                alt="REDIQ"
-                fill
-                sizes="48px"
-                className="object-contain p-1.5"
-                priority
-              />
+      {/* CINEMATIC BACKGROUND */}
+      <Image
+        src="/images/hero.png"
+        alt=""
+        fill
+        priority
+        sizes="100vw"
+        className="pointer-events-none -z-20 object-cover object-center opacity-30"
+      />
 
-              <div className="absolute inset-0 bg-white/10 opacity-0 transition group-hover:opacity-100" />
-            </div>
+      {/* Dark overlays */}
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-[#050B18]/75" />
 
-            <div className="leading-tight">
-              <p className="text-base font-black tracking-tight text-white">
-                REDIQ
-              </p>
-              <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/30">
-                Investment
-              </p>
-            </div>
-          </Link>
-        </div>
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-linear-to-br from-[#050B18]/95 via-[#07101F]/90 to-[#101426]/85" />
 
-        {/* Verification card */}
-        <div className="rounded-[30px] border border-white/10 bg-[#0B1426]/90 p-6 shadow-2xl shadow-black/30 backdrop-blur-2xl sm:p-8">
-          <div className="flex justify-center">
-            <div className="flex h-14 w-14 items-center justify-center rounded-[18px] border border-emerald-300/15 bg-emerald-400/10">
-              <MailCheck
-                size={27}
-                className="text-emerald-300"
-                aria-hidden="true"
-              />
-            </div>
-          </div>
+      {/* Ambient lighting */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -left-20 -top-20 h-48 w-48 rounded-full bg-[#E60033]/10 blur-[80px]"
+      />
 
-          <div className="mt-6 text-center">
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-emerald-300/70">
-              Account verification
-            </p>
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-20 bottom-0 h-48 w-48 rounded-full bg-[#E60033]/10 blur-[80px]"
+      />
 
-            <h1 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">
-              Verify your email
-            </h1>
+      {/* MAIN CARD */}
+      <div className="relative z-10 w-full max-w-105">
 
-            <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-white/40">
-              Enter the 6-digit verification code we sent to your email address.
-            </p>
-          </div>
+        <div className="overflow-hidden rounded-[20px] border border-white/10 bg-[#0B1426]/95 shadow-[0_25px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl sm:rounded-3xl">
 
-          {error && (
-            <div
-              id="verification-error"
-              role="alert"
-              className="mt-6 rounded-2xl border border-red-400/15 bg-red-400/8 px-4 py-3"
-            >
-              <p className="text-xs font-medium leading-5 text-red-200">
-                {error}
-              </p>
-            </div>
-          )}
+          {/* TOP BRAND */}
+          <div className="flex items-center justify-between gap-3 border-b border-white/8 px-4 py-3.5 sm:px-6">
 
-          {resendMessage && (
-            <div
-              role="status"
-              className="mt-6 rounded-2xl border border-emerald-400/15 bg-emerald-400/8 px-4 py-3"
-            >
-              <p className="text-xs font-medium leading-5 text-emerald-200">
-                {resendMessage}
-              </p>
-            </div>
-          )}
-
-          <form className="mt-7" onSubmit={handleSubmit}>
-            <div className="flex justify-center gap-2.5 sm:gap-3">
-              {code.map((digit, index) => (
-                <input
-                  key={index}
-                  ref={(element) => {
-                    inputRefs.current[index] = element;
-                  }}
-                  type="text"
-                  inputMode="numeric"
-                  autoComplete={index === 0 ? 'one-time-code' : 'off'}
-                  value={digit}
-                  maxLength={1}
-                  aria-label={`Verification digit ${index + 1}`}
-                  aria-invalid={Boolean(error)}
-                  onChange={(event) =>
-                    handleChange(index, event.target.value)
-                  }
-                  onKeyDown={(event) => handleKeyDown(index, event)}
-                  onPaste={(event) => handlePaste(index, event)}
-                  disabled={loading}
-                  className={[
-                    'h-14 w-11 rounded-2xl border text-center text-xl font-black',
-                    'outline-none transition-all duration-200',
-                    'sm:h-16 sm:w-13 sm:text-2xl',
-                    digit
-                      ? 'border-emerald-300/40 bg-emerald-300/8 text-white shadow-lg shadow-emerald-400/5'
-                      : 'border-white/10 bg-[#07101F] text-white',
-                    'placeholder:text-white/10',
-                    'focus:border-emerald-300/60 focus:bg-[#091426] focus:ring-4 focus:ring-emerald-300/5',
-                    'disabled:cursor-not-allowed disabled:opacity-50',
-                  ].join(' ')}
-                />
-              ))}
-            </div>
-
-            <p className="mt-3 text-center text-[10px] font-medium text-white/20">
-              Enter verfication code here!
-            </p>
-
-            <button
-              type="submit"
-              disabled={loading || code.some((digit) => !digit)}
-              className="mt-5 flex h-13 w-full items-center justify-center gap-2 rounded-2xl bg-[#F7C948] px-5 text-sm font-black text-[#050B18] shadow-lg shadow-[#F7C948]/10 transition hover:-translate-y-0.5 hover:bg-[#FFD96A] disabled:cursor-not-allowed disabled:translate-y-0 disabled:opacity-40"
-            >
-              {loading ? (
-                <>
-                  <RefreshCw size={16} className="animate-spin" />
-                  Verifying...
-                </>
-              ) : (
-                'Verify email'
-              )}
-            </button>
-          </form>
-
-          <div className="mt-6 border-t border-white/8 pt-6 text-center">
-            <p className="text-xs text-white/30">
-              Didn&apos;t receive the code?
-            </p>
-
-            <button
-              type="button"
-              onClick={handleResend}
-              disabled={resending}
-              className="mt-2 inline-flex items-center gap-1.5 text-xs font-bold text-emerald-300 transition hover:text-emerald-200 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {resending && (
-                <RefreshCw size={13} className="animate-spin" />
-              )}
-
-              {resending ? 'Sending code...' : 'Resend verification code'}
-            </button>
-          </div>
-
-          <div className="mt-5 text-center">
             <Link
-              href="/register"
-              className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-white/30 transition hover:text-white/70"
+              href="/"
+              className="inline-flex items-center gap-2.5"
             >
-              <ArrowLeft size={13} />
-              Back to registration
+              <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-lg bg-[#E60033] shadow-lg shadow-[#E60033]/15">
+
+                <Image
+                  src="/images/logo.png"
+                  alt="REDIQ logo"
+                  fill
+                  priority
+                  sizes="36px"
+                  className="object-cover"
+                />
+              </div>
+
+              <div className="leading-tight">
+                <p className="text-base font-black tracking-tight text-white">
+                  REDIQ
+                </p>
+
+                <p className="text-[9px] text-white/40">
+                  Investment Platform
+                </p>
+              </div>
+            </Link>
+
+            <Link
+              href="/"
+              aria-label="Back to homepage"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/50 transition hover:text-white"
+            >
+              <ArrowLeft size={15} />
             </Link>
           </div>
+
+          {/* MAIN CONTENT */}
+          <div className="px-4 py-5 sm:px-6 sm:py-6">
+
+            {success ? (
+
+              /* =====================================
+                 SUCCESS STATE
+              ====================================== */
+
+              <div aria-live="polite" className="text-center">
+
+                {/* Success icon */}
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-emerald-400/20 bg-emerald-400/10">
+                  <CheckCircle2
+                    size={25}
+                    className="text-emerald-300"
+                    aria-hidden="true"
+                  />
+                </div>
+
+                <p className="mt-4 text-[10px] font-bold uppercase tracking-[0.12em] text-emerald-300">
+                  Verification complete
+                </p>
+
+                <h1 className="mt-2 text-[24px] font-black leading-tight tracking-tight text-white sm:text-[28px]">
+                  Email verified
+                </h1>
+
+                <p className="mx-auto mt-3 max-w-xs text-[11px] leading-5 text-white/50 sm:text-xs">
+                  Your email address has been successfully
+                  verified. You can now sign in to your
+                  REDIQ account.
+                </p>
+
+                {/* Success information */}
+                <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-white/8 bg-white/[0.035] p-3 text-left">
+
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-400/10 text-emerald-300">
+                    <CheckCircle2 size={14} />
+                  </div>
+
+                  <div>
+                    <p className="text-[11px] font-bold text-white">
+                      Ready to continue
+                    </p>
+
+                    <p className="mt-1 text-[10px] leading-4 text-white/45">
+                      Use your registered email and password
+                      to access the REDIQ dashboard.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Login button */}
+                <Link
+                  href="/login"
+                  className="group mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#E60033] px-4 py-2.5 text-xs font-black text-white shadow-lg shadow-[#E60033]/15 transition hover:bg-[#FF174B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF476B]"
+                >
+                  Continue to login
+
+                  <ArrowRight
+                    size={15}
+                    aria-hidden="true"
+                    className="transition-transform group-hover:translate-x-1"
+                  />
+                </Link>
+              </div>
+
+            ) : (
+
+              /* =====================================
+                 VERIFICATION FORM
+              ====================================== */
+
+              <>
+
+                {/* HEADER */}
+                <div className="text-center">
+
+                  <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl border border-[#E60033]/20 bg-[#E60033]/10 text-[#FF476B]">
+                    <MailCheck
+                      size={21}
+                      aria-hidden="true"
+                    />
+                  </div>
+
+                  <p className="mt-3 text-[10px] font-bold uppercase tracking-[0.12em] text-[#FF476B]">
+                    Account verification
+                  </p>
+
+                  <h1 className="mt-1.5 text-[23px] font-black leading-tight tracking-tight text-white sm:text-[27px]">
+                    Verify your email
+                  </h1>
+
+                  <p className="mx-auto mt-2 max-w-xs text-[11px] leading-5 text-white/45 sm:text-xs">
+                    Enter the six-digit verification code
+                    sent to your email address.
+                  </p>
+                </div>
+
+                {/* ERROR MESSAGE */}
+                {error && (
+                  <div
+                    id="verification-error"
+                    role="alert"
+                    aria-live="polite"
+                    className="mt-4 rounded-xl border border-red-400/20 bg-red-500/10 px-3 py-2.5"
+                  >
+                    <p className="text-[11px] leading-5 text-red-300">
+                      {error}
+                    </p>
+                  </div>
+                )}
+
+                {/* RESEND STATUS */}
+                {resendMessage && (
+                  <div
+                    role="status"
+                    className="mt-4 rounded-xl border border-emerald-400/15 bg-emerald-400/5 px-3 py-2.5"
+                  >
+                    <p className="text-[11px] leading-5 text-emerald-300">
+                      {resendMessage}
+                    </p>
+                  </div>
+                )}
+
+                {/* OTP FORM */}
+                <form
+                  className="mt-5"
+                  onSubmit={handleSubmit}
+                >
+
+                  {/* SIX-DIGIT INPUTS */}
+                  <div
+                    role="group"
+                    aria-label="Six-digit email verification code"
+                    className="flex w-full justify-center gap-1.5 min-[380px]:gap-2 sm:gap-2.5"
+                  >
+                    {code.map((digit, index) => (
+                      <input
+                        key={index}
+                        ref={(element) => {
+                          inputRefs.current[index] = element;
+                        }}
+                        type="text"
+                        inputMode="numeric"
+                        autoComplete={
+                          index === 0
+                            ? "one-time-code"
+                            : "off"
+                        }
+                        enterKeyHint={
+                          index === CODE_LENGTH - 1
+                            ? "done"
+                            : "next"
+                        }
+                        value={digit}
+                        maxLength={CODE_LENGTH}
+                        aria-label={`Verification digit ${index + 1}`}
+                        aria-invalid={Boolean(error)}
+                        aria-describedby={
+                          error
+                            ? "verification-error"
+                            : undefined
+                        }
+                        onChange={(event) =>
+                          handleChange(
+                            index,
+                            event.target.value
+                          )
+                        }
+                        onKeyDown={(event) =>
+                          handleKeyDown(index, event)
+                        }
+                        onPaste={(event) =>
+                          handlePaste(index, event)
+                        }
+                        disabled={loading || resending}
+                        className={[
+                          "h-11 min-w-0 flex-1 rounded-lg border text-center text-base font-black",
+                          "outline-none transition-all duration-200",
+                          "sm:h-12 sm:rounded-xl sm:text-lg",
+                          digit
+                            ? "border-[#E60033]/35 bg-[#E60033]/10 text-white"
+                            : "border-white/10 bg-[#07101F] text-white",
+                          "focus:border-[#E60033]/60 focus:bg-[#101D30] focus:ring-2 focus:ring-[#E60033]/10",
+                          "disabled:cursor-not-allowed disabled:opacity-50",
+                        ].join(" ")}
+                      />
+                    ))}
+                  </div>
+
+                  <p className="mt-2.5 text-center text-[10px] text-white/35">
+                    Enter or paste your verification code
+                  </p>
+
+                  {/* VERIFY BUTTON */}
+                  <button
+                    type="submit"
+                    disabled={
+                      loading ||
+                      resending ||
+                      !isComplete
+                    }
+                    className="group mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#E60033] px-4 py-2.5 text-xs font-black text-white shadow-lg shadow-[#E60033]/15 transition-all duration-300 hover:bg-[#FF174B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF476B] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-[#E60033]"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2
+                          size={15}
+                          className="animate-spin"
+                          aria-hidden="true"
+                        />
+
+                        Verifying...
+                      </>
+                    ) : (
+                      <>
+                        Verify email
+
+                        <ArrowRight
+                          size={14}
+                          aria-hidden="true"
+                          className="transition-transform group-hover:translate-x-1"
+                        />
+                      </>
+                    )}
+                  </button>
+                </form>
+
+                {/* RESEND VERIFICATION */}
+                <div className="mt-5 border-t border-white/8 pt-4 text-center">
+
+                  <p className="text-[11px] text-white/40">
+                    Didn&apos;t receive the code?
+                  </p>
+
+                  <button
+                    type="button"
+                    onClick={handleResend}
+                    disabled={resending || loading}
+                    className="mt-2 inline-flex min-h-8 items-center justify-center gap-1.5 text-[11px] font-bold text-[#FF476B] transition hover:text-[#FF7895] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF476B] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <RefreshCw
+                      size={13}
+                      className={
+                        resending ? "animate-spin" : ""
+                      }
+                      aria-hidden="true"
+                    />
+
+                    {resending
+                      ? "Sending code..."
+                      : "Resend verification code"}
+                  </button>
+                </div>
+
+                {/* BACK TO REGISTRATION */}
+                <div className="mt-3 text-center">
+
+                  <Link
+                    href="/register"
+                    className="group inline-flex items-center gap-1.5 text-[10px] font-semibold text-white/40 transition hover:text-white"
+                  >
+                    <ArrowLeft
+                      size={12}
+                      className="transition-transform group-hover:-translate-x-0.5"
+                    />
+
+                    Back to registration
+                  </Link>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* CARD FOOTER */}
+          <div className="flex items-center justify-center gap-2 border-t border-white/8 bg-white/2.5 px-4 py-3">
+
+            <ShieldCheck
+              size={13}
+              className="shrink-0 text-[#FF476B]"
+            />
+
+            <p className="text-center text-[10px] leading-4 text-white/40">
+              Keep your verification code private.
+              Never share it with anyone.
+            </p>
+          </div>
         </div>
 
-        <div className="mt-5 flex items-center justify-center gap-2 text-[10px] font-semibold text-white/20">
-          <ShieldCheck size={13} className="text-emerald-300/60" />
-          Your verification code is private and should not be shared.
+        {/* BOTTOM BRAND LINE */}
+        <div className="mt-4 flex items-center justify-center gap-1.5">
+
+          <KeyRound
+            size={12}
+            className="text-[#FF476B]/70"
+          />
+
+          <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-white/25">
+            REDIQ Investment
+          </p>
         </div>
       </div>
     </main>

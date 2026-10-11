@@ -1,13 +1,23 @@
 
+"use client";
+
 import {
   ArrowDownLeft,
   ArrowUpRight,
   CircleDollarSign,
+  Clock3,
+  XCircle,
+  CheckCircle2,
 } from "lucide-react";
 
 import { useSettings } from "../context/useSettings";
 import { useTranslation } from "../i18n/translations";
+
 import type { CurrencyCode } from "../constants/settings";
+
+/* ==========================================
+   TYPES
+========================================== */
 
 export type InvestmentTransactionType =
   | "INVESTMENT"
@@ -33,183 +43,36 @@ interface InvestmentTransactionListProps {
   transactions: InvestmentTransaction[];
 }
 
-export default function InvestmentTransactionList({
-  transactions,
-}: InvestmentTransactionListProps) {
-  const { language } = useSettings();
-  const { t } = useTranslation();
-
-  return (
-    <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-[16px] font-extrabold text-slate-900">
-            {t("details.transaction_history")}
-          </h2>
-
-          <p className="mt-0.5 text-[10px] text-slate-400">
-            {t("details.activity")}
-          </p>
-        </div>
-
-        <CircleDollarSign
-          size={20}
-          className="text-emerald-500"
-          aria-hidden="true"
-        />
-      </div>
-
-      {/* Transactions */}
-      <div className="mt-4 divide-y divide-slate-100">
-        {transactions.length === 0 ? (
-          <div className="py-8 text-center">
-            <CircleDollarSign
-              size={28}
-              className="mx-auto text-slate-300"
-              aria-hidden="true"
-            />
-
-            <p className="mt-2 text-xs font-semibold text-slate-500">
-              {t("details.no_transactions")}
-            </p>
-          </div>
-        ) : (
-          transactions.map((transaction) => (
-            <TransactionRow
-              key={transaction.id}
-              transaction={transaction}
-              language={language}
-            />
-          ))
-        )}
-      </div>
-    </section>
-  );
-}
-
-interface TransactionRowProps {
-  transaction: InvestmentTransaction;
-  language: string;
-}
-
-function TransactionRow({
-  transaction,
-  language,
-}: TransactionRowProps) {
-  const { t } = useTranslation();
-
-  const isIncoming = transaction.type === "EARNING";
-
-  const icon =
-    transaction.type === "EARNING" ? (
-      <ArrowDownLeft size={16} />
-    ) : (
-      <ArrowUpRight size={16} />
-    );
-
-  const iconClass = isIncoming
-    ? "bg-emerald-50 text-emerald-600"
-    : "bg-slate-100 text-slate-500";
-
-  return (
-    <div className="flex items-center gap-3 py-3">
-      {/* Transaction icon */}
-      <div
-        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${iconClass}`}
-        aria-hidden="true"
-      >
-        {icon}
-      </div>
-
-      {/* Description */}
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-xs font-bold text-slate-800">
-          {transaction.description}
-        </p>
-
-        <p className="mt-0.5 text-[9px] text-slate-400">
-          {formatDate(transaction.date, language)}
-        </p>
-      </div>
-
-      {/* Amount + status */}
-      <div className="text-right">
-        <p
-          className={`text-xs font-extrabold ${
-            isIncoming
-              ? "text-emerald-600"
-              : "text-slate-800"
-          }`}
-        >
-          {isIncoming ? "+" : "-"}{" "}
-          {formatCurrency(
-            transaction.amount,
-            getCurrentCurrency(),
-            language,
-          )}
-        </p>
-
-        <span
-          className={`
-            text-[8px]
-            font-semibold
-            ${
-              transaction.status === "COMPLETED"
-                ? "text-emerald-500"
-                : transaction.status === "PENDING"
-                  ? "text-amber-500"
-                  : "text-red-500"
-            }
-          `}
-        >
-          {getTransactionStatusLabel(
-            transaction.status,
-            t,
-          )}
-        </span>
-      </div>
-    </div>
-  );
-}
-
-/**
- * Currency is retrieved from SettingsContext through this helper.
- *
- * This function exists only to keep the formatting API simple inside
- * TransactionRow. The actual selected currency comes from the user's
- * platform settings.
- */
-function getCurrentCurrency(): CurrencyCode {
-  /**
-   * This fallback should only be reached if this helper is used outside
-   * the SettingsContext-aware component.
-   *
-   * InvestmentTransactionList itself obtains the selected settings.
-   */
-  return "USDT";
-}
+/* ==========================================
+   FORMATTERS
+========================================== */
 
 function formatCurrency(
   amount: number,
   currency: CurrencyCode,
-  language: string,
+  language: string
 ): string {
+  const safeAmount = Number.isFinite(amount)
+    ? Math.abs(amount)
+    : 0;
+
   try {
     return new Intl.NumberFormat(language, {
       style: "currency",
       currency,
       currencyDisplay: "symbol",
       maximumFractionDigits: 2,
-    }).format(amount);
+    }).format(safeAmount);
   } catch {
-    return `${currency} ${amount.toLocaleString(language)}`;
+    return `${currency} ${safeAmount.toLocaleString("en-US", {
+      maximumFractionDigits: 2,
+    })}`;
   }
 }
 
 function formatDate(
   value: string,
-  language: string,
+  language: string
 ): string {
   const date = new Date(value);
 
@@ -224,13 +87,255 @@ function formatDate(
       year: "numeric",
     }).format(date);
   } catch {
-    return date.toLocaleDateString();
+    return new Intl.DateTimeFormat("en-US", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    }).format(date);
+  }
+}
+
+/* ==========================================
+   TRANSACTION LIST
+========================================== */
+
+export default function InvestmentTransactionList({
+  transactions,
+}: InvestmentTransactionListProps) {
+  const { language, currency } = useSettings();
+  const { t } = useTranslation();
+
+  return (
+    <section
+      aria-labelledby="investment-transactions-title"
+      className="relative min-w-0 overflow-hidden rounded-2xl border border-white/10 bg-[#0B1426] shadow-lg shadow-black/10"
+    >
+      {/* REDIQ HEADER ACCENT */}
+      <div
+        aria-hidden="true"
+        className="h-0.5 bg-linear-to-r from-[#E60033] via-[#FF476B]/50 to-transparent"
+      />
+
+      {/* HEADER */}
+      <div className="flex items-center justify-between gap-3 border-b border-white/8 px-4 py-3.5 sm:px-5 sm:py-4">
+        <div className="min-w-0">
+          <h2
+            id="investment-transactions-title"
+            className="text-sm font-black tracking-tight text-white sm:text-[15px]"
+          >
+            {t("details.transaction_history")}
+          </h2>
+
+          <p className="mt-1 text-[10px] text-white/40">
+            {t("details.activity")}
+          </p>
+        </div>
+
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#E60033]/20 bg-[#E60033]/10 text-[#FF476B]">
+          <CircleDollarSign
+            size={18}
+            aria-hidden="true"
+          />
+        </div>
+      </div>
+
+      {/* TRANSACTION CONTENT */}
+      <div className="px-3 sm:px-4">
+        {transactions.length === 0 ? (
+          <div className="flex min-h-37.5 flex-col items-center justify-center px-3 py-7 text-center">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/8 bg-white/[0.035]">
+              <CircleDollarSign
+                size={22}
+                className="text-white/30"
+                aria-hidden="true"
+              />
+            </div>
+
+            <p className="mt-3 text-xs font-semibold text-white/55">
+              {t("details.no_transactions")}
+            </p>
+          </div>
+        ) : (
+          <div className="divide-y divide-white/8">
+            {transactions.map((transaction) => (
+              <TransactionRow
+                key={transaction.id}
+                transaction={transaction}
+                language={language}
+                currency={currency}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* FOOTER */}
+      {transactions.length > 0 && (
+        <div className="border-t border-white/8 bg-[#07101F]/40 px-4 py-2.5 sm:px-5">
+          <p className="text-center text-[9px] text-white/35">
+            {transactions.length.toLocaleString(language)}{" "}
+            {transactions.length === 1
+              ? "transaction"
+              : "transactions"}
+          </p>
+        </div>
+      )}
+    </section>
+  );
+}
+
+/* ==========================================
+   TRANSACTION ROW
+========================================== */
+
+interface TransactionRowProps {
+  transaction: InvestmentTransaction;
+  language: string;
+  currency: CurrencyCode;
+}
+
+function TransactionRow({
+  transaction,
+  language,
+  currency,
+}: TransactionRowProps) {
+  const { t } = useTranslation();
+
+  const isIncoming = transaction.type === "EARNING";
+
+  const statusLabel = getTransactionStatusLabel(
+    transaction.status,
+    t
+  );
+
+  const statusClass = getStatusClass(transaction.status);
+
+  return (
+    <div className="group flex min-w-0 items-center gap-2.5 py-3 transition-colors duration-200 hover:bg-white/1.5 sm:gap-3 sm:py-3.5">
+
+      {/* TRANSACTION ICON */}
+      <div
+        aria-hidden="true"
+        className={[
+          "flex h-9 w-9 shrink-0 items-center justify-center",
+          "rounded-xl border transition-colors",
+          isIncoming
+            ? "border-emerald-400/15 bg-emerald-400/10 text-emerald-300"
+            : "border-[#E60033]/20 bg-[#E60033]/10 text-[#FF476B]",
+        ].join(" ")}
+      >
+        {isIncoming ? (
+          <ArrowDownLeft
+            size={16}
+            strokeWidth={2.2}
+          />
+        ) : (
+          <ArrowUpRight
+            size={16}
+            strokeWidth={2.2}
+          />
+        )}
+      </div>
+
+      {/* TRANSACTION INFORMATION */}
+      <div className="min-w-0 flex-1">
+        <p
+          title={transaction.description}
+          className="truncate text-[11px] font-bold text-white/90 sm:text-xs"
+        >
+          {transaction.description}
+        </p>
+
+        <p className="mt-1 text-[9px] text-white/40 sm:text-[10px]">
+          {formatDate(transaction.date, language)}
+        </p>
+      </div>
+
+      {/* AMOUNT AND STATUS */}
+      <div className="min-w-0 max-w-[46%] shrink-0 text-right sm:max-w-[50%]">
+
+        <p
+          title={`${
+            isIncoming ? "+" : "-"
+          } ${formatCurrency(
+            transaction.amount,
+            currency,
+            language
+          )}`}
+          className={[
+            "min-w-0 wrap-break-words text-[11px] font-black leading-4 tabular-nums sm:text-xs",
+            isIncoming
+              ? "text-emerald-300"
+              : "text-white/90",
+          ].join(" ")}
+        >
+          {isIncoming ? "+" : "−"}{" "}
+          {formatCurrency(
+            transaction.amount,
+            currency,
+            language
+          )}
+        </p>
+
+        {/* STATUS */}
+        <div className="mt-1 flex justify-end">
+          <span
+            className={[
+              "inline-flex items-center gap-1 rounded-full border",
+              "px-1.5 py-0.5 text-[8px] font-bold sm:px-2 sm:text-[9px]",
+              statusClass,
+            ].join(" ")}
+          >
+            {transaction.status === "COMPLETED" ? (
+              <CheckCircle2
+                size={10}
+                aria-hidden="true"
+              />
+            ) : transaction.status === "PENDING" ? (
+              <Clock3
+                size={10}
+                aria-hidden="true"
+              />
+            ) : (
+              <XCircle
+                size={10}
+                aria-hidden="true"
+              />
+            )}
+
+            {statusLabel}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ==========================================
+   STATUS HELPERS
+========================================== */
+
+function getStatusClass(
+  status: InvestmentTransactionStatus
+): string {
+  switch (status) {
+    case "COMPLETED":
+      return "border-emerald-400/15 bg-emerald-400/10 text-emerald-300";
+
+    case "PENDING":
+      return "border-white/10 bg-white/5 text-white/55";
+
+    case "FAILED":
+      return "border-red-400/20 bg-red-500/10 text-red-300";
+
+    default:
+      return "border-white/10 bg-white/5 text-white/50";
   }
 }
 
 function getTransactionStatusLabel(
   status: InvestmentTransactionStatus,
-  t: ReturnType<typeof useTranslation>["t"],
+  t: ReturnType<typeof useTranslation>["t"]
 ): string {
   switch (status) {
     case "COMPLETED":

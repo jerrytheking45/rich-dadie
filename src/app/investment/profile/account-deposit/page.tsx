@@ -773,34 +773,6 @@ export default function AccountDepositPage() {
         </section>
 
         {/* ================================================================= */}
-        {/* ERROR */}
-        {/* ================================================================= */}
-
-        {error && (
-          <section
-            role="alert"
-            className="mt-4 rounded-2xl border border-red-400/20 bg-red-400/[0.07] p-4"
-          >
-            <div className="flex items-start gap-3">
-              <XCircle
-                size={17}
-                className="mt-0.5 shrink-0 text-red-400"
-              />
-
-              <div>
-                <p className="text-xs font-bold text-red-300">
-                  Deposit request needs attention
-                </p>
-
-                <p className="mt-1 text-[10px] leading-4 text-red-300/80">
-                  {error}
-                </p>
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* ================================================================= */}
         {/* DEPOSIT ADDRESS */}
         {/* ================================================================= */}
 
@@ -1104,6 +1076,34 @@ export default function AccountDepositPage() {
                   </>
                 )}
               </button>
+            </div>
+          </section>
+        )}
+
+        {/* ================================================================= */}
+        {/* ERROR */}
+        {/* ================================================================= */}
+
+        {error && (
+          <section
+            role="alert"
+            className="mt-4 rounded-2xl border border-red-400/20 bg-red-400/[0.07] p-4"
+          >
+            <div className="flex items-start gap-3">
+              <XCircle
+                size={17}
+                className="mt-0.5 shrink-0 text-red-400"
+              />
+
+              <div>
+                <p className="text-xs font-bold text-red-300">
+                  Deposit request needs attention
+                </p>
+
+                <p className="mt-1 text-[10px] leading-4 text-red-300/80">
+                  {error}
+                </p>
+              </div>
             </div>
           </section>
         )}

@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     siteName: 'REDIQ',
     images: [
       {
-        url: '/images/logo.png',
+        url: '/images/futuristic.png',
         width: 1200,
         height: 630,
         alt: 'REDIQ',

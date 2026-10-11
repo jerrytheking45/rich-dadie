@@ -1,9 +1,14 @@
-﻿import {
+﻿
+import Image from 'next/image';
+
+import {
   ArrowUpRight,
   BarChart3,
   Gift,
   LockKeyhole,
   ShieldCheck,
+  CheckCircle2,
+  Sparkles,
 } from 'lucide-react';
 
 const benefits = [
@@ -37,83 +42,141 @@ export default function LandingWhyUs() {
   return (
     <section
       id="why-us"
-      className="relative overflow-hidden bg-[#07101F]"
+      className="relative scroll-mt-20 overflow-hidden bg-[#07101F]"
     >
-      <div className="absolute left-[-18%] top-1/2 h-64 w-64 -translate-y-1/2 rounded-full bg-blue-500/5 blur-[100px] sm:h-96 sm:w-96 sm:blur-[130px]" />
-      <div className="absolute right-[-15%] top-10 h-64 w-64 rounded-full bg-emerald-400/5 blur-[100px] sm:right-[-10%] sm:h-80 sm:w-80 sm:blur-[120px]" />
+      {/* Subtle ambient effects */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -left-20 top-10 h-44 w-44 rounded-full bg-[#E60033]/8 blur-[80px]"
+      />
 
-      <div className="relative mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-18 md:px-8 md:py-20 lg:px-10 lg:py-24">
-        <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-center lg:gap-16 xl:gap-20">
-          <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/8 bg-white/5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-white/45">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#F7C948]" />
-              Built around your journey
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-20 bottom-0 h-48 w-48 rounded-full bg-emerald-400/5 blur-[80px]"
+      />
+
+      <div className="relative mx-auto max-w-7xl px-4 py-7 sm:px-6 sm:py-9 lg:px-10 lg:py-11">
+
+        {/* RESPONSIVE CONTENT GRID */}
+        <div className="grid items-center gap-6 md:grid-cols-[0.85fr_1.15fr] lg:gap-9">
+
+          {/* LEFT CONTENT */}
+          <div className="min-w-0">
+
+            {/* Badge */}
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-[#E60033]/20 bg-[#E60033]/10 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-[#FF476B]">
+              <Sparkles size={11} />
+              Why choose REDIQ
             </div>
 
-            <h2 className="mt-4 text-[1.85rem] font-black leading-[1.08] tracking-[-0.03em] text-white sm:mt-5 sm:text-4xl lg:text-5xl">
-              Everything you need to manage your investment journey.
+            {/* Heading */}
+            <h2 className="mt-3 max-w-lg text-[22px] font-black leading-[1.15] tracking-tight text-white sm:text-[27px] lg:text-[30px]">
+              Everything you need.
+              <span className="block text-[#FF476B]">
+                One investment platform.
+              </span>
             </h2>
 
-            <p className="mt-4 max-w-lg text-sm leading-6 text-white/40 sm:mt-5 sm:text-base sm:leading-7">
+            {/* Description */}
+            <p className="mt-2 max-w-lg text-[11px] leading-[1.7] text-white/50 sm:text-xs sm:leading-5 lg:text-[13px]">
               REDIQ brings your investment plans, deposits,
-              portfolio activity, and account information together
-              in one platform.
+              portfolio activity and account information
+              together in one modern platform.
             </p>
 
-            <div className="mt-6 flex items-center gap-3 sm:mt-8">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#F7C948]/15 bg-[#F7C948]/5 text-[#F7C948] sm:h-10 sm:w-10">
-                <BarChart3 size={16} className="sm:hidden" />
-                <BarChart3 size={17} className="hidden sm:block" />
+            {/* BRAND FEATURE CARD */}
+            <div className="mt-4 flex max-w-md items-center gap-3 rounded-xl border border-white/8 bg-[#0B1426] p-3">
+
+              {/* REDIQ logo */}
+              <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl bg-[#E60033] shadow-lg shadow-[#E60033]/15">
+                <Image
+                  src="/images/logo.png"
+                  alt="REDIQ logo"
+                  fill
+                  sizes="40px"
+                  className="object-cover"
+                />
               </div>
 
-              <div>
-                <p className="text-xs font-bold text-white">
+              <div className="min-w-0 flex-1">
+                <p className="text-[11px] font-black text-white sm:text-xs">
                   Designed for clarity
                 </p>
 
-                <p className="mt-0.5 text-[10px] text-white/30">
-                  Follow your account from one place.
+                <p className="mt-0.5 text-[10px] leading-4 text-white/40">
+                  Manage your investment journey from one place.
                 </p>
               </div>
+
+              <CheckCircle2
+                size={16}
+                className="shrink-0 text-[#FF476B]"
+              />
+            </div>
+
+            {/* Small information tags */}
+            <div className="mt-3 flex flex-wrap gap-2">
+
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/8 bg-white/5 px-2.5 py-1.5 text-[9px] font-medium text-white/50">
+                <BarChart3 size={11} className="text-[#FF476B]" />
+                Portfolio tools
+              </span>
+
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/8 bg-white/5 px-2.5 py-1.5 text-[9px] font-medium text-white/50">
+                <ShieldCheck size={11} className="text-[#FF476B]" />
+                Account workflows
+              </span>
             </div>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
+          {/* RIGHT — BENEFIT CARDS */}
+          <div className="grid gap-2.5 sm:grid-cols-2 sm:gap-3">
+
             {benefits.map((item) => {
               const Icon = item.icon;
 
               return (
                 <article
                   key={item.number}
-                  className="group rounded-[1.35rem] border border-white/8 bg-white/[0.035] p-4 transition duration-300 hover:-translate-y-1 hover:border-white/15 hover:bg-white/5.5 sm:rounded-[1.6rem] sm:p-5"
+                  className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-white/8 bg-[#0B1426] p-3.5 transition-all duration-300 hover:-translate-y-1 hover:border-[#E60033]/25 hover:bg-[#101D30] sm:p-4"
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/8 bg-[#0B192B] text-emerald-300 transition group-hover:border-emerald-400/20 sm:h-11 sm:w-11 sm:rounded-2xl">
-                      <Icon size={17} className="sm:hidden" />
-                      <Icon size={18} className="hidden sm:block" />
+
+                  {/* Subtle hover accent */}
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-[#E60033]/0 to-transparent transition-all duration-300 group-hover:via-[#E60033]/50" />
+
+                  {/* ICON AND NUMBER */}
+                  <div className="flex items-center justify-between gap-3">
+
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#E60033]/20 bg-[#E60033]/10 text-[#FF476B] transition-colors group-hover:bg-[#E60033]/15">
+                      <Icon size={17} />
                     </div>
 
-                    <span className="text-[10px] font-black tracking-[0.14em] text-white/15">
+                    <span className="text-[10px] font-black tracking-[0.12em] text-white/20">
                       {item.number}
                     </span>
                   </div>
 
-                  <h3 className="mt-4 text-base font-black text-white sm:mt-6">
+                  {/* TITLE */}
+                  <h3 className="mt-3 text-[13px] font-black leading-5 tracking-tight text-white sm:text-sm">
                     {item.title}
                   </h3>
 
-                  <p className="mt-2 text-xs leading-5 text-white/35 sm:leading-6">
+                  {/* DESCRIPTION */}
+                  <p className="mt-1.5 flex-1 text-[11px] leading-[1.65] text-white/45 sm:text-xs sm:leading-5">
                     {item.text}
                   </p>
 
-                  <div className="mt-4 flex items-center justify-between border-t border-white/6 pt-3 sm:mt-5 sm:pt-4">
-                    <span className="text-[9px] font-bold uppercase tracking-[0.12em] text-white/20">
-                      REDIQ
+                  {/* CARD FOOTER */}
+                  <div className="mt-3 flex items-center justify-between border-t border-white/7 pt-2.5">
+
+                    <span className="text-[9px] font-bold uppercase tracking-[0.12em] text-white/25">
+                      REDIQ Investment
                     </span>
 
                     <ArrowUpRight
-                      size={14}
-                      className="text-white/15 transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-[#F7C948]"
+                      size={13}
+                      aria-hidden="true"
+                      className="text-[#FF476B]/65 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-[#FF476B]"
                     />
                   </div>
                 </article>
@@ -121,6 +184,9 @@ export default function LandingWhyUs() {
             })}
           </div>
         </div>
+
+        {/* BOTTOM ACCENT */}
+        <div className="mt-6 h-px bg-linear-to-r from-transparent via-[#E60033]/20 to-transparent" />
       </div>
     </section>
   );

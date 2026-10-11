@@ -708,8 +708,62 @@ const InvestFlow = () => {
           "success",
         );
       } catch (err) {
-        const message =
-          getErrorMessage(err);
+        const responseData =
+          err && typeof err === "object" && "response" in err
+            ? (
+                err as {
+                  response?: {
+                    data?: {
+                      error?: unknown;
+                      message?: unknown;
+                      detail?: unknown;
+                    };
+                  };
+                }
+              ).response?.data
+            : undefined;
+
+        // Prefer the backend's specific error instead of Axios's
+        // generic "Request failed with status code 400" message.
+        const backendMessage =
+          typeof responseData?.error === "string"
+            ? responseData.error
+            : typeof responseData?.message === "string"
+              ? responseData.message
+              : typeof responseData?.detail === "string"
+                ? responseData.detail
+                : "";
+
+        let message = backendMessage || getErrorMessage(err);
+        const normalizedMessage = message.toLowerCase();
+
+        if (
+          normalizedMessage.includes("transaction hash already used") ||
+          normalizedMessage.includes("transaction hash has already been used")
+        ) {
+          message =
+            "This transaction hash has already been used for another deposit. Please check the transaction ID.";
+        } else if (
+          normalizedMessage.includes("invalid transaction hash") ||
+          normalizedMessage.includes("invalid tx hash") ||
+          normalizedMessage.includes("invalid transaction id")
+        ) {
+          message =
+            "This transaction ID is invalid. Please check the transaction hash and try again.";
+        } else if (
+          normalizedMessage.includes("transaction not found") ||
+          normalizedMessage.includes("transaction hash not found") ||
+          normalizedMessage.includes("transaction was not found")
+        ) {
+          message =
+            "We couldn't find this transaction on the TRON network. Please check the transaction ID and confirm the transaction has been broadcast.";
+        } else if (
+          normalizedMessage.includes("transaction pending") ||
+          normalizedMessage.includes("not confirmed")
+        ) {
+          message =
+            "This transaction is not confirmed on the TRON network yet. Please wait for confirmation and try again.";
+        }
 
         setDepositError(
           recoveryData

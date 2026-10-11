@@ -1,4 +1,4 @@
-import axios from "axios";
+﻿import axios, { type InternalAxiosRequestConfig } from "axios";
 
 const getApiBase = () => {
   if (typeof window !== "undefined") {
@@ -25,7 +25,39 @@ const api = axios.create({
   baseURL: API_BASE,
 });
 
-// Request interceptor – add access token
+type RetryableRequest = InternalAxiosRequestConfig & {
+  _retry?: boolean;
+};
+
+// All simultaneous 401 responses share one refresh request.
+let refreshPromise: Promise<string> | null = null;
+
+function setAuthCookie(name: string, value: string, days = 7) {
+  if (typeof document === "undefined") return;
+
+  const expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+  document.cookie =
+    `${name}=${value}; path=/; expires=${expires.toUTCString()}; SameSite=Lax`;
+}
+
+function deleteAuthCookie(name: string) {
+  if (typeof document === "undefined") return;
+
+  document.cookie =
+    `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
+}
+
+const handleAuthFailure = () => {
+  if (typeof window === "undefined") return;
+
+  localStorage.removeItem("access_token");
+  localStorage.removeItem("refresh_token");
+  deleteAuthCookie("access_token");
+  deleteAuthCookie("refresh_token");
+
+  window.dispatchEvent(new Event("auth:logout"));
+};
+
 api.interceptors.request.use(
   (config) => {
     if (typeof window !== "undefined") {
@@ -41,57 +73,82 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Helper: clear authentication and notify AuthProvider
-const handleAuthFailure = () => {
-  if (typeof window === "undefined") return;
-
-  localStorage.removeItem("access_token");
-  localStorage.removeItem("refresh_token");
-
-  window.dispatchEvent(new Event("auth:logout"));
-};
-
-// Response interceptor – handle 401 and refresh token
 api.interceptors.response.use(
   (response) => response,
-
   async (error) => {
-    const originalRequest = error.config;
+    const originalRequest = error.config as RetryableRequest | undefined;
+    const status = error.response?.status;
+    const requestUrl = originalRequest?.url ?? "";
 
-    if (
-      error.response?.status === 401 &&
-      originalRequest &&
-      !originalRequest._retry
-    ) {
+    const isAuthEndpoint =
+      requestUrl.includes("/investment/auth/login") ||
+      requestUrl.includes("/investment/auth/refresh") ||
+      requestUrl.includes("/investment/auth/logout");
+
+    if (status === 401 && originalRequest && !isAuthEndpoint) {
+      // A request already retried with a refreshed token is still unauthorized.
+      if (originalRequest._retry) {
+        handleAuthFailure();
+        return Promise.reject(error);
+      }
+
       originalRequest._retry = true;
 
-      try {
-        const refreshToken = localStorage.getItem("refresh_token");
+      const refreshToken =
+        typeof window !== "undefined"
+          ? localStorage.getItem("refresh_token")
+          : null;
 
-        if (!refreshToken) {
-          handleAuthFailure();
-          return Promise.reject(error);
-        }
+      if (!refreshToken) {
+        handleAuthFailure();
+        return Promise.reject(error);
+      }
 
-        const response = await axios.post(
-          `${API_BASE}/investment/auth/refresh`,
-          {
+      if (!refreshPromise) {
+        refreshPromise = axios
+          .post(`${API_BASE}/investment/auth/refresh`, {
             refresh_token: refreshToken,
-          }
-        );
+          })
+          .then((response) => {
+            const accessToken = response.data?.access_token;
+            const nextRefreshToken = response.data?.refresh_token;
 
-        const { access_token, refresh_token } = response.data;
+            if (!accessToken || !nextRefreshToken) {
+              handleAuthFailure();
+              throw new Error("The refresh response did not contain both tokens.");
+            }
 
-        localStorage.setItem("access_token", access_token);
+            localStorage.setItem("access_token", accessToken);
+            localStorage.setItem("refresh_token", nextRefreshToken);
 
-        localStorage.setItem("refresh_token", refresh_token);
+            setAuthCookie("access_token", accessToken);
+            setAuthCookie("refresh_token", nextRefreshToken);
 
-        originalRequest.headers.Authorization = `Bearer ${access_token}`;
+            return accessToken as string;
+          })
+          .catch((refreshError: unknown) => {
+            // Expired/rejected refresh tokens require a new login.
+            // Network errors and server errors do not automatically erase the session.
+            if (
+              axios.isAxiosError(refreshError) &&
+              refreshError.response?.status === 401
+            ) {
+              handleAuthFailure();
+            }
+
+            throw refreshError;
+          })
+          .finally(() => {
+            refreshPromise = null;
+          });
+      }
+
+      try {
+        const newAccessToken = await refreshPromise;
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
 
         return api(originalRequest);
       } catch (refreshError) {
-        handleAuthFailure();
-
         return Promise.reject(refreshError);
       }
     }
@@ -99,9 +156,9 @@ api.interceptors.response.use(
     console.error("[API ERROR]", {
       message: error.message,
       code: error.code,
-      status: error.response?.status,
+      status,
       data: error.response?.data,
-      url: error.config?.url,
+      url: requestUrl,
       baseURL: error.config?.baseURL,
     });
 
