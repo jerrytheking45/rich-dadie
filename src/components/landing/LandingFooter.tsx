@@ -1,4 +1,4 @@
-﻿
+
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -202,8 +202,7 @@ export default function LandingFooter() {
               <span className="font-bold text-white/60">
                 Investment notice:
               </span>{' '}
-              Investments involve financial risk. Expected returns
-              are not guaranteed. Review the terms, applicable fees,
+               Review the terms, applicable fees,
               investment duration and withdrawal conditions before
               making an investment decision.
             </p>
