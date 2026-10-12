@@ -1,39 +1,92 @@
 
 // src/app/investment/profile/wallet/page.tsx
 
-'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+
 import {
-  ArrowLeft,
+  AlertCircle,
   ArrowDownToLine,
+  ArrowLeft,
   ArrowUpFromLine,
   ChevronRight,
   FileText,
   History,
-  Lock,
+  LockKeyhole,
   PlusCircle,
   RefreshCw,
+  Repeat2,
   TrendingUp,
   Wallet as WalletIcon,
-  Repeat2,
-} from 'lucide-react';
+  CreditCard,
+} from "lucide-react";
 
-//import InvestmentBottomNav from '@/src/components/InvestmentBottomNav';
-import { useSettings } from '@/src/context/useSettings';
-import { investmentApi } from '@/src/lib/api/investmentApi';
-import { formatUSDT } from '@/src/lib/utils/currency';
-import type { BalanceSummary } from '@/src/lib/types/investment';
+import { useSettings } from "@/src/context/useSettings";
+import { investmentApi } from "@/src/lib/api/investmentApi";
+import { formatUSDT } from "@/src/lib/utils/currency";
+
+import type { BalanceSummary } from "@/src/lib/types/investment";
 
 interface WalletAction {
   label: string;
   description: string;
   path: string;
   icon: typeof WalletIcon;
-  iconClassName: string;
-  iconBackground: string;
 }
+
+const walletActions: WalletAction[] = [
+  {
+    label: "Wallet Binding",
+    description: "Manage your connected withdrawal wallet.",
+    path: "/investment/profile/payments",
+    icon: WalletIcon,
+  },
+  {
+    label: "Account Deposit",
+    description: "Add USDT to your available account balance.",
+    path: "/investment/profile/account-deposit",
+    icon: ArrowDownToLine,
+  },
+  {
+    label: "Investment Deposit",
+    description: "Fund a pending investment using its deposit address.",
+    path: "/investment/profile/deposit",
+    icon: TrendingUp,
+  },
+  {
+    label: "Withdraw",
+    description: "Withdraw funds from your available balance.",
+    path: "/investment/profile/withdraw",
+    icon: ArrowUpFromLine,
+  },
+  {
+    label: "Reinvest",
+    description: "Explore plans for another investment.",
+    path: "/investment/plans",
+    icon: Repeat2,
+  },
+  {
+    label: "Transaction History",
+    description: "Review your transactions and investment activity.",
+    path: "/investment/profile/transactions",
+    icon: History,
+  },
+  {
+    label: "Statements",
+    description: "View account statements and ledger entries.",
+    path: "/investment/profile/statements",
+    icon: FileText,
+  },
+  {
+    label: "Payments",
+    description: "Manage your payment and wallet settings.",
+    path: "/investment/profile/payments",
+    icon: CreditCard,
+  },
+];
 
 export default function WalletPage() {
   const router = useRouter();
@@ -44,214 +97,201 @@ export default function WalletPage() {
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
+  const requestIdRef = useRef(0);
 
-  const loadWallet = async (showRefresh = false) => {
+  
+/*
+ * The backend balance-summary endpoint remains
+ * the authoritative source for wallet balances.
+ *
+ * Only activeBalance represents available funds.
+ */
+
+const loadWallet = useCallback(
+  async (showRefresh = false) => {
+    const requestId = ++requestIdRef.current;
+
     if (showRefresh) {
       setRefreshing(true);
     } else {
       setLoading(true);
     }
 
-    setError('');
+    setError("");
 
     try {
-      /*
-       * IMPORTANT:
-       *
-       * The backend balance-summary endpoint is now the
-       * authoritative source for wallet balances.
-       *
-       * We intentionally do NOT calculate the available
-       * balance from investments or call ledgerApi.getBalance().
-       */
-      const summary = await investmentApi.getBalanceSummary();
+      const summary =
+        await investmentApi.getBalanceSummary();
 
-      setBalanceSummary(summary);
-    } catch (err) {
-      console.error('Failed to load wallet balance summary:', err);
-
-      setError('Failed to load your wallet information.');
-      setBalanceSummary(null);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const initializeWallet = async () => {
-      if (cancelled) {
+      // Ignore responses from superseded requests.
+      if (requestId !== requestIdRef.current) {
         return;
       }
 
-      await loadWallet();
-    };
+      setBalanceSummary(summary);
+    } catch (err) {
+      if (requestId !== requestIdRef.current) {
+        return;
+      }
 
-    void initializeWallet();
+      console.error(
+        "Failed to load wallet balance summary:",
+        err
+      );
 
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+      setError(
+        "Unable to retrieve your wallet information. Please try again."
+      );
+
+      // Never display stale balances after a failed request.
+      setBalanceSummary(null);
+    } finally {
+      if (requestId === requestIdRef.current) {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    }
+  },
+  []
+);
+
+/*
+ * Initial wallet request.
+ *
+ * State updates happen after the API promise settles,
+ * rather than synchronously inside the effect.
+ *
+ * The initial loading state is already true.
+ */
+useEffect(() => {
+  const requestId = ++requestIdRef.current;
+
+  const fetchInitialWallet = async () => {
+    try {
+      const summary =
+        await investmentApi.getBalanceSummary();
+
+      if (requestId !== requestIdRef.current) {
+        return;
+      }
+
+      setBalanceSummary(summary);
+    } catch (err) {
+      if (requestId !== requestIdRef.current) {
+        return;
+      }
+
+      console.error(
+        "Failed to load wallet balance summary:",
+        err
+      );
+
+      setError(
+        "Unable to retrieve your wallet information. Please try again."
+      );
+
+      setBalanceSummary(null);
+    } finally {
+      if (requestId === requestIdRef.current) {
+        setLoading(false);
+      }
+    }
+  };
+
+  void fetchInitialWallet();
+
+  return () => {
+    // Invalidate the request when the component unmounts
+    // or React re-runs the effect in Strict Mode.
+    requestIdRef.current += 1;
+  };
+}, []);
+
+  const activeBalance =
+    balanceSummary?.activeBalance ?? 0;
+
+  const totalInvested =
+    balanceSummary?.totalInvested ?? 0;
+
+  const totalExpectedProfit =
+    balanceSummary?.totalExpectedProfit ?? 0;
+
+  const totalLockedBalance =
+    balanceSummary?.totalLockedBalance ?? 0;
+
+  const activeInvestments =
+    balanceSummary?.activeInvestments ?? 0;
+
+  const maturedInvestments =
+    balanceSummary?.maturedInvestments ?? 0;
+
+  const assetSymbol =
+    balanceSummary?.assetSymbol || "USDT";
 
   /*
-   * ---------------------------------------------------------------------------
-   * Backend balance summary
-   * ---------------------------------------------------------------------------
-   */
-
-  const activeBalance = balanceSummary?.activeBalance ?? 0;
-  const totalInvested = balanceSummary?.totalInvested ?? 0;
-  const totalExpectedProfit = balanceSummary?.totalExpectedProfit ?? 0;
-  const totalLockedBalance = balanceSummary?.totalLockedBalance ?? 0;
-  const activeInvestments = balanceSummary?.activeInvestments ?? 0;
-  const maturedInvestments = balanceSummary?.maturedInvestments ?? 0;
-  const assetSymbol = balanceSummary?.assetSymbol || 'USDT';
-
-  /*
-   * Only activeBalance is withdrawable/reinvestable.
-   *
-   * totalInvested,
-   * totalExpectedProfit,
-   * totalLockedBalance
-   *
-   * are portfolio figures and must never be treated as
-   * available account funds.
+   * Only activeBalance is available account money.
+   * The other figures are portfolio information.
    */
   const hasAvailableBalance =
-    Number.isFinite(activeBalance) && activeBalance > 0;
+    !error &&
+    balanceSummary !== null &&
+    Number.isFinite(activeBalance) &&
+    activeBalance > 0;
 
-  const walletActions: WalletAction[] = [
-    {
-      label: 'Wallet Binding',
-      description: 'Manage your connected withdrawal wallet address.',
-      path: '/investment/profile/payments',
-      icon: WalletIcon,
-      iconClassName: 'text-emerald-300',
-      iconBackground: 'bg-emerald-400/10 border border-emerald-400/10',
-    },
-    {
-      label: 'Account Deposit',
-      description: 'Deposit USDT directly into your available account balance.',
-      path: '/investment/profile/account-deposit',
-      icon: ArrowDownToLine,
-      iconClassName: 'text-sky-300',
-      iconBackground: 'bg-sky-400/10 border border-sky-400/10',
-    },
-    {
-      label: 'Investment Deposit',
-      description: 'Fund a pending investment using its assigned deposit address.',
-      path: '/investment/profile/deposit',
-      icon: TrendingUp,
-      iconClassName: 'text-violet-300',
-      iconBackground: 'bg-violet-400/10 border border-violet-400/10',
-    },
-    {
-      label: 'Withdraw',
-      description:
-        'Withdraw available account funds using your protected withdrawal wallet.',
-      path: '/investment/profile/withdraw',
-      icon: ArrowUpFromLine,
-      iconClassName: 'text-amber-300',
-      iconBackground: 'bg-amber-400/10 border border-amber-400/10',
-    },
-    {
-      label: 'Reinvest',
-      description:
-        'Use your available account balance to start another investment.',
-      path: '/investment/plans',
-      icon: Repeat2,
-      iconClassName: 'text-emerald-300',
-      iconBackground: 'bg-emerald-400/10 border border-emerald-400/10',
-    },
-    {
-      label: 'Transaction History',
-      description: 'View your investment activity and transaction records.',
-      path: '/investment/profile/transactions',
-      icon: History,
-      iconClassName: 'text-violet-300',
-      iconBackground: 'bg-violet-400/10 border border-violet-400/10',
-    },
-    {
-      label: 'Statements',
-      description:
-        'View your real ledger entries, balances and account activity.',
-      path: '/investment/profile/statements',
-      icon: FileText,
-      iconClassName: 'text-white/70',
-      iconBackground: 'bg-white/5 border border-white/8',
-    },
-    {
-      label: 'Payments',
-      description:
-        'View your real ledger entries, balances and account activity.',
-      path: '/investment/profile/payments',
-      icon: FileText,
-      iconClassName: 'text-white/70',
-      iconBackground: 'bg-white/5 border border-white/8',
-    },
-  ];
+  const balanceUnavailable =
+    loading || !!error || !balanceSummary;
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#050B18] text-white">
-        <main className="mx-auto flex min-h-screen w-full max-w-xl items-center justify-center px-5">
-          <div className="flex flex-col items-center">
-            <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl border border-emerald-400/15 bg-[#0B1426] shadow-[0_0_35px_rgba(16,185,129,0.08)]">
-              <div className="absolute inset-0 rounded-2xl bg-emerald-400/5 blur-xl" />
-              <RefreshCw
-                size={20}
-                className="relative animate-spin text-emerald-300"
-                aria-hidden="true"
-              />
-            </div>
-
-            <p className="mt-4 text-sm font-semibold text-white/75">
-              Loading wallet
-            </p>
-
-            <p className="mt-1 text-xs text-white/35">
-              Securely retrieving your balance...
-            </p>
-          </div>
-        </main>
-      </div>
-    );
-  }
+  const displayAmount = (amount: number) =>
+    balanceUnavailable
+      ? "—"
+      : formatUSDT(amount, currency);
 
   return (
-    <div className="min-h-screen bg-[#050B18] text-white">
-      <main className="relative mx-auto w-full max-w-2xl overflow-hidden px-4 pb-32 pt-5 sm:px-6 lg:max-w-5xl lg:px-8">
-        {/* Background atmosphere */}
-        <div className="pointer-events-none absolute -left-32 top-24 h-64 w-64 rounded-full bg-violet-600/8 blur-3xl" />
-        <div className="pointer-events-none absolute -right-32 top-72 h-72 w-72 rounded-full bg-emerald-500/8 blur-3xl" />
+    <div className="relative min-h-screen overflow-x-hidden bg-[#050B18] text-white">
 
-        {/* Header */}
-        <header className="relative flex items-center justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-3">
+      {/* BACKGROUND */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 overflow-hidden"
+      >
+        <div className="absolute -right-24 top-16 h-64 w-64 rounded-full bg-[#E60033]/7 blur-[85px]" />
+        <div className="absolute -left-24 top-[55%] h-64 w-64 rounded-full bg-[#E60033]/5 blur-[85px]" />
+      </div>
+
+      <main className="relative mx-auto w-full min-w-0 max-w-2xl px-3 pb-32 pt-4 min-[375px]:px-4 sm:px-6 sm:pt-6 lg:max-w-5xl lg:px-8">
+
+        {/* =====================================
+            HEADER
+        ====================================== */}
+
+        <header className="flex min-w-0 items-center justify-between gap-3">
+
+          <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
+
             <button
               type="button"
-              onClick={() => router.push('/investment/profile')}
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/8 bg-[#0B1426] text-white/65 shadow-lg shadow-black/10 transition hover:border-white/15 hover:bg-[#101D33] hover:text-white active:scale-95"
+              onClick={() =>
+                router.push("/investment/profile")
+              }
               aria-label="Back to profile"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-[#0B1426] text-white/65 transition hover:border-[#E60033]/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E60033]/50 sm:h-10 sm:w-10"
             >
-              <ArrowLeft size={18} />
+              <ArrowLeft size={17} aria-hidden="true" />
             </button>
 
             <div className="min-w-0">
-              <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-emerald-300/65">
+
+              <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-[#FF476B]">
                 Account
               </p>
 
-              <h1 className="truncate text-xl font-extrabold tracking-tight text-white">
-                Wallet
+              <h1 className="text-[19px] font-black tracking-tight text-white sm:text-[23px]">
+                My Wallet
               </h1>
 
-              <p className="text-[10px] text-white/35">
-                Manage your funds and financial activity
+              <p className="truncate text-[10px] text-white/40 sm:text-[11px]">
+                Manage your funds and account activity
               </p>
             </div>
           </div>
@@ -259,229 +299,320 @@ export default function WalletPage() {
           <button
             type="button"
             onClick={() => void loadWallet(true)}
-            disabled={refreshing}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/8 bg-[#0B1426] text-white/55 shadow-lg transition hover:border-white/15 hover:bg-[#101D33] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-            aria-label="Refresh wallet"
+            disabled={loading || refreshing}
+            aria-label="Refresh wallet balance"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-[#0B1426] text-white/60 transition hover:border-[#E60033]/30 hover:text-[#FF476B] disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E60033]/50 sm:h-10 sm:w-10"
           >
             <RefreshCw
-              size={17}
-              className={refreshing ? 'animate-spin' : ''}
+              size={16}
+              className={
+                loading || refreshing ? "animate-spin" : ""
+              }
+              aria-hidden="true"
             />
           </button>
         </header>
 
-        {/* Error */}
+        {/* =====================================
+            ERROR
+        ====================================== */}
+
         {error && (
           <section
             role="alert"
-            className="relative mt-5 overflow-hidden rounded-2xl border border-red-400/15 bg-red-500/8 p-4"
+            className="mt-5 rounded-2xl border border-[#E60033]/25 bg-[#E60033]/8 p-4"
           >
             <div className="flex items-start gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-red-500/10 text-red-300">
-                <span className="text-sm font-black">!</span>
-              </div>
+
+              <AlertCircle
+                size={19}
+                className="mt-0.5 shrink-0 text-[#FF476B]"
+                aria-hidden="true"
+              />
 
               <div className="min-w-0">
-                <p className="text-xs font-semibold text-red-200">
+
+                <p className="text-xs font-bold text-white">
+                  Wallet information unavailable
+                </p>
+
+                <p className="mt-1 text-[11px] leading-5 text-white/55">
                   {error}
                 </p>
 
                 <button
                   type="button"
                   onClick={() => void loadWallet(true)}
-                  className="mt-3 rounded-xl border border-red-400/15 bg-red-400/10 px-4 py-2 text-xs font-bold text-red-200 transition hover:bg-red-400/15"
+                  disabled={refreshing}
+                  className="mt-3 inline-flex min-h-9 items-center gap-2 rounded-lg bg-[#E60033] px-4 text-[11px] font-bold text-white transition hover:bg-[#FF174B] disabled:opacity-50"
                 >
-                  Try Again
+                  <RefreshCw
+                    size={13}
+                    className={refreshing ? "animate-spin" : ""}
+                    aria-hidden="true"
+                  />
+                  Try again
                 </button>
               </div>
             </div>
           </section>
         )}
 
-        {/* Available Balance */}
-        <section className="relative mt-5 overflow-hidden rounded-[28px] border border-white/10 bg-linear-to-br from-[#101D33] via-[#0B1426] to-[#11102B] p-5 shadow-2xl shadow-black/20 sm:p-6">
-          <div className="pointer-events-none absolute -right-20 -top-24 h-56 w-56 rounded-full bg-emerald-400/10 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-28 -left-20 h-56 w-56 rounded-full bg-violet-500/10 blur-3xl" />
+        {/* =====================================
+            AVAILABLE BALANCE CARD
+        ====================================== */}
+
+        <section
+          aria-label="Available account balance"
+          aria-busy={loading || refreshing}
+          className="relative mt-5 min-w-0 overflow-hidden rounded-[22px] border border-[#E60033]/20 bg-linear-to-br from-[#29101D] via-[#111525] to-[#07101F] p-4 shadow-xl shadow-black/20 min-[375px]:p-5 sm:rounded-[26px] sm:p-6"
+        >
+
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -right-16 -top-20 h-52 w-52 rounded-full bg-[#E60033]/15 blur-[60px]"
+          />
 
           <div className="relative">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-emerald-400/15 bg-emerald-400/10">
-                  <WalletIcon
-                    size={19}
-                    className="text-emerald-300"
-                    aria-hidden="true"
-                  />
+
+            <div className="flex min-w-0 items-start justify-between gap-2">
+
+              <div className="flex min-w-0 items-center gap-2.5">
+
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#FF476B]/20 bg-[#E60033]/15 text-[#FF476B]">
+                  <WalletIcon size={18} aria-hidden="true" />
                 </div>
 
-                <div>
-                  <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-white/40">
+                <div className="min-w-0">
+
+                  <p className="text-[9px] font-bold uppercase tracking-[0.13em] text-white/50">
                     Available Balance
                   </p>
 
-                  <p className="mt-1 text-xs font-semibold text-white/60">
+                  <p className="mt-1 text-[11px] font-bold text-white/75">
                     {assetSymbol}
                   </p>
                 </div>
               </div>
 
-              <span className="rounded-full border border-emerald-400/15 bg-emerald-400/8 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-emerald-300">
-                Available
+              <span className="shrink-0 rounded-full border border-white/15 bg-white/5 px-2 py-1 text-[9px] font-bold text-white/65">
+                Account Funds
               </span>
             </div>
 
-            <p className="mt-6 text-3xl font-black tracking-tight text-white sm:text-4xl">
-              {formatUSDT(activeBalance, currency)}
-            </p>
+            {/* BALANCE */}
+            <div className="mt-5 min-w-0">
 
-            <p className="mt-2 max-w-md text-[10px] leading-5 text-white/40">
-              Funds currently available in your account. This balance can be
-              withdrawn or used for a new investment.
-            </p>
+              {loading ? (
+                <div
+                  role="status"
+                  className="flex items-center gap-2 text-white/65"
+                >
+                  <RefreshCw
+                    size={19}
+                    className="animate-spin"
+                    aria-hidden="true"
+                  />
+                  <span className="text-sm font-semibold">
+                    Loading balance...
+                  </span>
+                </div>
+              ) : (
+                <p className="min-w-0 wrap-break-word text-[clamp(1.5rem,6vw,2.5rem)] font-black leading-tight tracking-tight tabular-nums text-white">
+                  {displayAmount(activeBalance)}
+                </p>
+              )}
 
-            <div className="mt-6 grid grid-cols-3 gap-2">
+              <p className="mt-2 max-w-md text-[10px] leading-5 text-white/50 sm:text-[11px]">
+                Funds available in your account for withdrawal
+                or use toward another investment.
+              </p>
+            </div>
+
+            {/* PRIMARY ACTIONS */}
+            <div className="mt-5 grid grid-cols-3 gap-1.5 min-[375px]:gap-2 sm:mt-6 sm:gap-3">
+
               <button
                 type="button"
                 onClick={() =>
-                  router.push('/investment/profile/account-deposit')
+                  router.push(
+                    "/investment/profile/account-deposit"
+                  )
                 }
-                className="flex items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-white/7 px-3 py-2.5 text-[10px] font-bold text-white transition hover:bg-white/12 active:scale-[0.98]"
+                className="flex min-h-10 min-w-0 flex-col items-center justify-center gap-1 rounded-xl bg-[#E60033] px-1.5 py-2 text-[10px] font-bold text-white transition hover:bg-[#FF174B] active:scale-[0.98] min-[375px]:flex-row sm:text-[11px]"
               >
-                <ArrowDownToLine size={14} />
+                <ArrowDownToLine
+                  size={15}
+                  aria-hidden="true"
+                />
                 Deposit
               </button>
 
               <button
                 type="button"
                 onClick={() =>
-                  router.push('/investment/profile/withdraw')
+                  router.push(
+                    "/investment/profile/withdraw"
+                  )
                 }
                 disabled={!hasAvailableBalance}
-                className={`flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2.5 text-[10px] font-bold text-white transition active:scale-[0.98] ${
-                  hasAvailableBalance
-                    ? 'border-white/10 bg-white/7 hover:bg-white/12'
-                    : 'cursor-not-allowed border-white/5 bg-white/4 text-white/25'
-                }`}
+                className="flex min-h-10 min-w-0 flex-col items-center justify-center gap-1 rounded-xl border border-white/15 bg-white/8 px-1.5 py-2 text-[10px] font-bold text-white transition hover:bg-white/15 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-35 min-[375px]:flex-row sm:text-[11px]"
               >
-                <ArrowUpFromLine size={14} />
+                <ArrowUpFromLine
+                  size={15}
+                  aria-hidden="true"
+                />
                 Withdraw
               </button>
 
               <button
                 type="button"
-                onClick={() => router.push('/investment/plans')}
+                onClick={() =>
+                  router.push("/investment/plans")
+                }
                 disabled={!hasAvailableBalance}
-                className={`flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2.5 text-[10px] font-bold text-white transition active:scale-[0.98] ${
-                  hasAvailableBalance
-                    ? 'border-white/10 bg-white/7 hover:bg-white/12'
-                    : 'cursor-not-allowed border-white/5 bg-white/4 text-white/25'
-                }`}
+                className="flex min-h-10 min-w-0 flex-col items-center justify-center gap-1 rounded-xl border border-white/15 bg-white/8 px-1.5 py-2 text-[10px] font-bold text-white transition hover:bg-white/15 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-35 min-[375px]:flex-row sm:text-[11px]"
               >
-                <Repeat2 size={14} />
+                <Repeat2 size={15} aria-hidden="true" />
                 Reinvest
               </button>
             </div>
           </div>
+
+          <div
+            aria-hidden="true"
+            className="absolute inset-x-0 bottom-0 h-0.5 bg-linear-to-r from-[#E60033] via-[#FF476B]/60 to-transparent"
+          />
         </section>
 
-        {/* Portfolio Summary */}
-        <section className="relative mt-5 grid grid-cols-2 gap-3">
-          <div className="rounded-2xl border border-white/8 bg-[#0B1426] p-4 shadow-xl shadow-black/10">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-400/10 bg-emerald-400/8 text-emerald-300">
-              <TrendingUp size={18} />
-            </div>
+        {/* =====================================
+            PORTFOLIO OVERVIEW
+        ====================================== */}
 
-            <p className="mt-4 text-[9px] font-bold uppercase tracking-[0.14em] text-white/35">
-              Total Invested
+        <section className="mt-6">
+
+          <div className="mb-3">
+
+            <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[#FF476B]">
+              Overview
             </p>
 
-            <p className="mt-1 text-lg font-black text-white">
-              {formatUSDT(totalInvested, currency)}
-            </p>
-
-            <p className="mt-1 text-[10px] text-white/30">
-              {activeInvestments}{' '}
-              {activeInvestments === 1
-                ? 'active investment'
-                : 'active investments'}
-            </p>
+            <h2 className="mt-1 text-sm font-black text-white sm:text-base">
+              Portfolio Summary
+            </h2>
           </div>
 
-          <div className="rounded-2xl border border-white/8 bg-[#0B1426] p-4 shadow-xl shadow-black/10">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-amber-400/10 bg-amber-400/8 text-amber-300">
-              <Lock size={18} />
-            </div>
+          <div className="grid grid-cols-2 gap-2 min-[375px]:gap-3">
 
-            <p className="mt-4 text-[9px] font-bold uppercase tracking-[0.14em] text-white/35">
-              Locked Balance
-            </p>
+            {/* INVESTED */}
+            <div className="min-w-0 rounded-2xl border border-white/10 bg-[#0B1426] p-3 sm:p-4">
 
-            <p className="mt-1 text-lg font-black text-white">
-              {formatUSDT(totalLockedBalance, currency)}
-            </p>
-
-            <p className="mt-1 text-[10px] text-white/30">
-              Funds currently locked in active investments
-            </p>
-          </div>
-        </section>
-
-        {/* Financial Activity */}
-        <section className="relative mt-5 overflow-hidden rounded-[26px] border border-white/8 bg-[#0B1426] shadow-xl shadow-black/10">
-          <div className="border-b border-white/6 px-5 pb-4 pt-5">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-violet-400/10 bg-violet-400/8 text-violet-300">
-                <WalletIcon size={18} />
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#E60033]/20 bg-[#E60033]/10 text-[#FF476B]">
+                <TrendingUp size={17} aria-hidden="true" />
               </div>
 
-              <div>
-                <h2 className="text-sm font-extrabold text-white">
+              <p className="mt-4 text-[9px] font-bold uppercase tracking-widest text-white/45">
+                Total Invested
+              </p>
+
+              <p className="mt-1 wrap-break-word text-[clamp(0.875rem,3vw,1.125rem)] font-black leading-snug tabular-nums text-white">
+                {displayAmount(totalInvested)}
+              </p>
+
+              <p className="mt-2 text-[10px] leading-4 text-white/40">
+                {balanceUnavailable
+                  ? "Portfolio data unavailable"
+                  : `${activeInvestments} active ${
+                      activeInvestments === 1
+                        ? "investment"
+                        : "investments"
+                    }`}
+              </p>
+            </div>
+
+            {/* LOCKED */}
+            <div className="min-w-0 rounded-2xl border border-white/10 bg-[#0B1426] p-3 sm:p-4">
+
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/75">
+                <LockKeyhole size={17} aria-hidden="true" />
+              </div>
+
+              <p className="mt-4 text-[9px] font-bold uppercase tracking-widest text-white/45">
+                Locked Balance
+              </p>
+
+              <p className="mt-1 wrap-break-word text-[clamp(0.875rem,3vw,1.125rem)] font-black leading-snug tabular-nums text-white">
+                {displayAmount(totalLockedBalance)}
+              </p>
+
+              <p className="mt-2 text-[10px] leading-4 text-white/40">
+                Funds locked in investments
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* =====================================
+            WALLET ACTIONS
+        ====================================== */}
+
+        <section className="mt-6 min-w-0 overflow-hidden rounded-2xl border border-white/10 bg-[#0B1426]">
+
+          <div className="border-b border-white/8 p-4 sm:p-5">
+
+            <div className="flex items-center gap-3">
+
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[#E60033]/20 bg-[#E60033]/10 text-[#FF476B]">
+                <WalletIcon size={17} aria-hidden="true" />
+              </div>
+
+              <div className="min-w-0">
+
+                <h2 className="text-[13px] font-black text-white sm:text-sm">
                   Wallet & Financial Activity
                 </h2>
 
-                <p className="mt-0.5 text-[10px] text-white/30">
-                  Manage deposits, withdrawals, wallets and account records.
+                <p className="mt-1 text-[10px] leading-4 text-white/40">
+                  Manage your funds, wallets and records.
                 </p>
               </div>
             </div>
           </div>
 
-          <div>
-            {walletActions.map((action, index) => {
+          <div className="divide-y divide-white/6">
+
+            {walletActions.map((action) => {
               const Icon = action.icon;
 
               return (
                 <button
                   key={action.label}
                   type="button"
-                  onClick={() => router.push(action.path)}
-                  className={`group flex w-full items-center justify-between px-5 py-4 text-left transition hover:bg-white/3 active:bg-white/5 ${
-                    index !== walletActions.length - 1
-                      ? 'border-b border-white/6'
-                      : ''
-                  }`}
+                  onClick={() =>
+                    router.push(action.path)
+                  }
+                  className="group flex w-full min-w-0 items-center gap-3 px-3 py-3 text-left transition hover:bg-white/4 active:bg-white/6 sm:px-5 sm:py-3.5"
                 >
-                  <div className="flex min-w-0 items-center gap-3">
-                    <div
-                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${action.iconBackground}`}
-                    >
-                      <Icon size={18} className={action.iconClassName} />
-                    </div>
 
-                    <div className="min-w-0">
-                      <p className="text-xs font-bold text-white/85">
-                        {action.label}
-                      </p>
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[#E60033]/15 bg-[#E60033]/8 text-[#FF476B] sm:h-10 sm:w-10">
+                    <Icon size={17} aria-hidden="true" />
+                  </div>
 
-                      <p className="mt-0.5 max-w-72.5 text-[10px] leading-4 text-white/30">
-                        {action.description}
-                      </p>
-                    </div>
+                  <div className="min-w-0 flex-1">
+
+                    <p className="text-[11px] font-bold text-white/85 sm:text-xs">
+                      {action.label}
+                    </p>
+
+                    <p className="mt-1 text-[10px] leading-4 text-white/40">
+                      {action.description}
+                    </p>
                   </div>
 
                   <ChevronRight
-                    size={17}
-                    className="ml-3 shrink-0 text-white/20 transition group-hover:translate-x-0.5 group-hover:text-white/50"
+                    size={16}
+                    className="shrink-0 text-white/30 transition group-hover:translate-x-0.5 group-hover:text-[#FF476B]"
+                    aria-hidden="true"
                   />
                 </button>
               );
@@ -489,81 +620,107 @@ export default function WalletPage() {
           </div>
         </section>
 
-        {/* Investment Summary */}
-        <section className="relative mt-5 rounded-[26px] border border-white/8 bg-[#0B1426] p-5 shadow-xl shadow-black/10">
+        {/* =====================================
+            INVESTMENT SUMMARY
+        ====================================== */}
+
+        <section className="mt-5 min-w-0 rounded-2xl border border-white/10 bg-[#0B1426] p-4 sm:p-5">
+
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-violet-400/10 bg-violet-400/8 text-violet-300">
-              <TrendingUp size={18} />
+
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[#E60033]/20 bg-[#E60033]/10 text-[#FF476B]">
+              <TrendingUp size={17} aria-hidden="true" />
             </div>
 
             <div>
-              <h2 className="text-sm font-extrabold text-white">
+
+              <h2 className="text-[13px] font-black text-white sm:text-sm">
                 Investment Summary
               </h2>
 
-              <p className="mt-0.5 text-[10px] text-white/30">
-                Current investment portfolio activity
+              <p className="mt-1 text-[10px] text-white/40">
+                Your current portfolio figures
               </p>
             </div>
           </div>
 
           <div className="mt-5 space-y-3">
+
             <InfoRow
               label="Active investments"
-              value={String(activeInvestments)}
+              value={
+                balanceUnavailable
+                  ? "—"
+                  : String(activeInvestments)
+              }
             />
 
             <InfoRow
               label="Matured investments"
-              value={String(maturedInvestments)}
+              value={
+                balanceUnavailable
+                  ? "—"
+                  : String(maturedInvestments)
+              }
             />
 
             <InfoRow
               label="Total invested"
-              value={formatUSDT(totalInvested, currency)}
+              value={displayAmount(totalInvested)}
             />
 
             <InfoRow
-              label="Expected profit"
-              value={formatUSDT(totalExpectedProfit, currency)}
-              valueClassName="text-emerald-300"
+              label="Projected profit"
+              value={displayAmount(totalExpectedProfit)}
             />
 
             <InfoRow
               label="Locked balance"
-              value={formatUSDT(totalLockedBalance, currency)}
-              valueClassName="text-amber-300"
+              value={displayAmount(totalLockedBalance)}
             />
 
-            <div className="my-3 border-t border-white/6" />
+            <div className="border-t border-white/10 pt-3">
 
-            <InfoRow
-              label="Available account balance"
-              value={formatUSDT(activeBalance, currency)}
-              valueClassName="text-emerald-300"
-            />
+              <InfoRow
+                label="Available account balance"
+                value={displayAmount(activeBalance)}
+                valueClassName="text-[#FF7895]"
+              />
+            </div>
           </div>
+
+          <p className="mt-4 text-[10px] leading-5 text-white/40">
+            Projected profit is a portfolio estimate, not
+            available account funds. Returns may vary.
+          </p>
         </section>
 
-        {/* Quick Actions */}
-        <section className="relative mt-5 grid grid-cols-2 gap-3">
+        {/* =====================================
+            QUICK ACCESS
+        ====================================== */}
+
+        <section className="mt-5 grid grid-cols-2 gap-2 min-[375px]:gap-3">
+
           <button
             type="button"
             onClick={() =>
-              router.push('/investment/profile/payments')
+              router.push(
+                "/investment/profile/payments"
+              )
             }
-            className="group flex items-center gap-3 rounded-2xl border border-white/8 bg-[#0B1426] p-4 text-left shadow-xl shadow-black/10 transition hover:border-emerald-400/15 hover:bg-[#101D33] active:scale-[0.99]"
+            className="group flex min-w-0 items-center gap-2.5 rounded-xl border border-white/10 bg-[#0B1426] p-3 text-left transition hover:border-[#E60033]/25 sm:p-4"
           >
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-emerald-400/10 bg-emerald-400/8 text-emerald-300">
-              <PlusCircle size={17} />
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#E60033]/10 text-[#FF476B]">
+              <PlusCircle size={17} aria-hidden="true" />
             </div>
 
             <div className="min-w-0">
-              <p className="text-xs font-bold text-white/85">
+
+              <p className="text-[11px] font-bold text-white sm:text-xs">
                 Add Wallet
               </p>
 
-              <p className="mt-0.5 text-[9px] text-white/30">
+              <p className="mt-0.5 text-[9px] text-white/40">
                 Payment method
               </p>
             </div>
@@ -572,20 +729,23 @@ export default function WalletPage() {
           <button
             type="button"
             onClick={() =>
-              router.push('/investment/profile/statements')
+              router.push(
+                "/investment/profile/statements"
+              )
             }
-            className="group flex items-center gap-3 rounded-2xl border border-white/8 bg-[#0B1426] p-4 text-left shadow-xl shadow-black/10 transition hover:border-violet-400/15 hover:bg-[#101D33] active:scale-[0.99]"
+            className="group flex min-w-0 items-center gap-2.5 rounded-xl border border-white/10 bg-[#0B1426] p-3 text-left transition hover:border-[#E60033]/25 sm:p-4"
           >
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/8 bg-white/5 text-white/65">
-              <FileText size={17} />
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#E60033]/10 text-[#FF476B]">
+              <FileText size={17} aria-hidden="true" />
             </div>
 
             <div className="min-w-0">
-              <p className="text-xs font-bold text-white/85">
+
+              <p className="text-[11px] font-bold text-white sm:text-xs">
                 Statements
               </p>
 
-              <p className="mt-0.5 text-[9px] text-white/30">
+              <p className="mt-0.5 text-[9px] text-white/40">
                 Ledger activity
               </p>
             </div>
@@ -596,20 +756,29 @@ export default function WalletPage() {
   );
 }
 
+/* ==========================================
+   SUMMARY ROW
+========================================== */
+
 function InfoRow({
   label,
   value,
-  valueClassName = 'text-white/80',
+  valueClassName = "text-white/85",
 }: {
   label: string;
   value: string;
   valueClassName?: string;
 }) {
   return (
-    <div className="flex items-center justify-between gap-4">
-      <span className="text-xs text-white/40">{label}</span>
+    <div className="flex min-w-0 items-start justify-between gap-3">
 
-      <span className={`text-xs font-bold ${valueClassName}`}>
+      <span className="min-w-0 flex-1 text-[11px] leading-5 text-white/50">
+        {label}
+      </span>
+
+      <span
+        className={`min-w-0 max-w-[58%] wrap-break-word text-right text-[11px] font-bold leading-5 tabular-nums ${valueClassName}`}
+      >
         {value}
       </span>
     </div>

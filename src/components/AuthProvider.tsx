@@ -216,7 +216,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         });
       }
     } catch (error) {
-      console.error("Backend logout failed:", error);
+      console.error("System logout failed:", error);
     } finally {
       localStorage.removeItem("access_token");
       localStorage.removeItem("refresh_token");

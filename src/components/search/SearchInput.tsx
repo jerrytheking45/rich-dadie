@@ -1,10 +1,8 @@
-'use client';
 
-import {
-  Search,
-  X,
-} from 'lucide-react';
-import type { RefObject } from 'react';
+"use client";
+
+import { Search, X } from "lucide-react";
+import type { RefObject } from "react";
 
 interface SearchInputProps {
   value: string;
@@ -22,83 +20,38 @@ export default function SearchInput({
   inputRef,
 }: SearchInputProps) {
   return (
-    <div className="relative w-full">
+    <div className="relative w-full min-w-0">
+
+      {/* SEARCH ICON */}
       <Search
-        size={18}
+        size={17}
         aria-hidden="true"
-        className="
-          pointer-events-none
-          absolute
-          left-4
-          top-1/2
-          -translate-y-1/2
-          text-emerald-400/50
-        "
+        className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#FF476B] sm:left-4"
       />
 
+      {/* INPUT */}
       <input
         ref={inputRef}
         type="search"
-        value={value}
-        onChange={(event) =>
-          onChange(event.target.value)
-        }
-        placeholder="Search investments, deposits, withdrawals..."
+        name="rediq-search"
+        aria-label="Search your REDIQ account"
+        autoComplete="off"
         autoFocus={autoFocus}
-        className="
-          h-12
-          w-full
-          rounded-2xl
-          border
-          border-white/8
-          bg-[#07101F]
-          pl-11
-          pr-11
-          text-sm
-          font-medium
-          text-white
-          shadow-inner
-          shadow-black/10
-          outline-none
-          transition
-
-          placeholder:text-white/20
-
-          hover:border-white/12
-
-          focus:border-emerald-400/25
-          focus:bg-[#091525]
-          focus:ring-4
-          focus:ring-emerald-400/5
-
-          sm:h-13
-        "
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder="Search your account..."
+        className="h-11 w-full min-w-0 appearance-none rounded-xl border border-white/10 bg-[#07101F] pl-10 pr-11 text-[12px] font-medium text-white outline-none transition placeholder:text-white/30 hover:border-white/20 focus:border-[#E60033]/50 focus:bg-[#0B1426] focus:ring-2 focus:ring-[#E60033]/10 sm:h-12 sm:pl-11 sm:text-[13px] [&::-webkit-search-cancel-button]:hidden"
       />
 
-      {value && (
+      {/* CLEAR */}
+      {value.length > 0 && (
         <button
           type="button"
           onClick={onClear}
           aria-label="Clear search"
-          className="
-            absolute
-            right-2
-            top-1/2
-            flex
-            h-8
-            w-8
-            -translate-y-1/2
-            items-center
-            justify-center
-            rounded-full
-            text-white/25
-            transition
-            hover:bg-white/8
-            hover:text-white/70
-            active:scale-95
-          "
+          className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-white/45 transition hover:bg-[#E60033]/10 hover:text-[#FF476B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E60033]/50"
         >
-          <X size={16} />
+          <X size={16} aria-hidden="true" />
         </button>
       )}
     </div>

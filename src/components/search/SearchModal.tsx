@@ -1,28 +1,31 @@
 
-'use client';
+"use client";
 
 import {
   ArrowLeft,
   Loader2,
+  RefreshCw,
   Search,
   X,
-} from 'lucide-react';
+} from "lucide-react";
+
 import {
   useCallback,
   useEffect,
   useRef,
   useState,
-} from 'react';
+} from "react";
 
-import { useSearch } from '@/src/hooks/useSearch';
+import { useSearch } from "@/src/hooks/useSearch";
+
 import type {
   SearchQueryType,
-} from '@/src/lib/types/search';
+} from "@/src/lib/types/search";
 
-import SearchInput from './SearchInput';
-import SearchFilters from './SearchFilters';
-import SearchResults from './SearchResults';
-import SearchEmptyState from './SearchEmptyState';
+import SearchInput from "./SearchInput";
+import SearchFilters from "./SearchFilters";
+import SearchResults from "./SearchResults";
+import SearchEmptyState from "./SearchEmptyState";
 
 interface SearchModalProps {
   open: boolean;
@@ -33,12 +36,12 @@ export default function SearchModal({
   open,
   onClose,
 }: SearchModalProps) {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
   const [type, setType] =
-    useState<SearchQueryType>('all');
+    useState<SearchQueryType>("all");
 
-  const inputRef =
-    useRef<HTMLInputElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const dialogRef = useRef<HTMLDivElement | null>(null);
 
   const {
     data,
@@ -49,23 +52,25 @@ export default function SearchModal({
     clear,
   } = useSearch();
 
-  const handleClose = useCallback(() => {
-  setQuery('');
-  setType('all');
-  clear();
-  onClose();
-}, [clear, onClose]);
+  /* ==========================================
+     CLOSE
+  ========================================== */
 
-  /*
-   * Focus the search field whenever
-   * the modal becomes visible.
-   *
-   * No state is changed inside this effect.
-   */
+  const handleClose = useCallback(() => {
+    setQuery("");
+    setType("all");
+    clear();
+    onClose();
+  }, [clear, onClose]);
+
+  /* ==========================================
+     AUTOFOCUS
+  ========================================== */
+
   useEffect(() => {
-    if (!open) {
-      return;
-    }
+    if (!open) return;
+
+    const previousFocus = document.activeElement;
 
     const timeout = window.setTimeout(() => {
       inputRef.current?.focus();
@@ -73,100 +78,115 @@ export default function SearchModal({
 
     return () => {
       window.clearTimeout(timeout);
+
+      if (previousFocus instanceof HTMLElement) {
+        previousFocus.focus();
+      }
     };
   }, [open]);
 
-  /*
-   * Debounced search.
-   */
+  /* ==========================================
+     DEBOUNCED SEARCH
+  ========================================== */
+
   useEffect(() => {
-    if (!open) {
-      return;
-    }
+    if (!open) return;
 
-    const trimmedQuery =
-      query.trim();
+    const trimmed = query.trim();
 
-    if (!trimmedQuery) {
+    if (!trimmed) {
       clear();
       return;
     }
 
     const timeout = window.setTimeout(() => {
-      void search(
-        trimmedQuery,
-        type,
-      );
+      void search(trimmed, type);
     }, 350);
 
     return () => {
       window.clearTimeout(timeout);
     };
-  }, [
-    open,
-    query,
-    type,
-    search,
-    clear,
-  ]);
+  }, [open, query, type, search, clear]);
 
-  /*
-   * Lock background scrolling while
-   * the search modal is open.
-   */
+  /* ==========================================
+     BACKGROUND SCROLL LOCK
+  ========================================== */
+
   useEffect(() => {
-    if (!open) {
-      return;
-    }
+    if (!open) return;
 
-    const previousOverflow =
-      document.body.style.overflow;
+    const previousOverflow = document.body.style.overflow;
 
-    document.body.style.overflow =
-      'hidden';
+    document.body.style.overflow = "hidden";
 
     return () => {
-      document.body.style.overflow =
-        previousOverflow;
+      document.body.style.overflow = previousOverflow;
     };
   }, [open]);
 
-  /*
-   * Escape closes the modal.
-   */
+  /* ==========================================
+     KEYBOARD HANDLING
+  ========================================== */
+
   useEffect(() => {
-  if (!open) {
-    return;
-  }
+    if (!open) return;
 
-  const handleKeyDown = (
-    event: KeyboardEvent,
-  ) => {
-    if (event.key === 'Escape') {
-      handleClose();
-    }
-  };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        handleClose();
+        return;
+      }
 
-  window.addEventListener(
-    'keydown',
-    handleKeyDown,
-  );
+      if (event.key !== "Tab") return;
 
-  return () => {
-    window.removeEventListener(
-      'keydown',
-      handleKeyDown,
-    );
-  };
-}, [open, handleClose]);
+      const dialog = dialogRef.current;
 
-  /*
-   * Reset happens from the close action,
-   * not from an effect.
-   */
+      if (!dialog) return;
+
+      const focusable = Array.from(
+        dialog.querySelectorAll<HTMLElement>(
+          'button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href], [tabindex]:not([tabindex="-1"])'
+        )
+      ).filter(
+        (element) => element.getClientRects().length > 0
+      );
+
+      if (!focusable.length) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (
+        event.shiftKey &&
+        (document.activeElement === first ||
+          !dialog.contains(document.activeElement))
+      ) {
+        event.preventDefault();
+        last.focus();
+      } else if (
+        !event.shiftKey &&
+        (document.activeElement === last ||
+          !dialog.contains(document.activeElement))
+      ) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open, handleClose]);
+
+  /* ==========================================
+     ACTIONS
+  ========================================== */
 
   const handleClear = () => {
-    setQuery('');
+    setQuery("");
     clear();
 
     window.setTimeout(() => {
@@ -175,269 +195,83 @@ export default function SearchModal({
   };
 
   const handleRetry = () => {
-    const trimmedQuery =
-      query.trim();
+    const trimmed = query.trim();
 
-    if (!trimmedQuery) {
-      return;
+    if (trimmed) {
+      void search(trimmed, type);
     }
-
-    void search(
-      trimmedQuery,
-      type,
-    );
   };
 
-  if (!open) {
-    return null;
-  }
+  if (!open) return null;
 
-  const hasQuery =
-    query.trim().length > 0;
+  const hasQuery = query.trim().length > 0;
 
   return (
     <div
-      className="
-        fixed
-        inset-0
-        z-100
-        flex
-        items-end
-        justify-center
-        bg-black/65
-        px-0
-        backdrop-blur-md
-        sm:items-center
-        sm:px-4
-      "
-      role="dialog"
-      aria-modal="true"
-      aria-label="Search your account"
+      className="fixed inset-0 z-100 flex items-end justify-center bg-black/75 backdrop-blur-sm sm:items-center sm:p-4"
+      role="presentation"
       onMouseDown={(event) => {
-        if (
-          event.target ===
-          event.currentTarget
-        ) {
+        if (event.target === event.currentTarget) {
           handleClose();
         }
       }}
     >
-      {/* BACKGROUND GLOW */}
+
+      {/* =====================================
+          MODAL
+      ====================================== */}
+
       <div
-        aria-hidden="true"
-        className="
-          pointer-events-none
-          fixed
-          inset-0
-          overflow-hidden
-        "
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="rediq-search-title"
+        className="relative flex h-[94dvh] w-full min-w-0 flex-col overflow-hidden rounded-t-3xl border border-white/10 bg-[#050B18] shadow-2xl shadow-black/50 sm:h-auto sm:max-h-[calc(100dvh-2rem)] sm:max-w-2xl sm:rounded-3xl lg:max-w-3xl"
       >
-        <div
-          className="
-            absolute
-            -right-24
-            -top-24
-            h-80
-            w-80
-            rounded-full
-            bg-purple-600/10
-            blur-3xl
-          "
-        />
 
-        <div
-          className="
-            absolute
-            -bottom-24
-            -left-24
-            h-80
-            w-80
-            rounded-full
-            bg-emerald-500/8
-            blur-3xl
-          "
-        />
-      </div>
-
-      {/* MODAL */}
-      <div
-        className="
-          relative
-          flex
-          h-[94vh]
-          w-full
-          flex-col
-          overflow-hidden
-          rounded-t-[30px]
-          border
-          border-white/8
-          bg-[#050B18]
-          shadow-2xl
-          shadow-black/50
-
-          sm:h-auto
-          sm:max-h-[calc(100vh-3rem)]
-          sm:max-w-2xl
-          sm:rounded-[30px]
-
-          lg:max-w-3xl
-        "
-        onMouseDown={(event) => {
-          event.stopPropagation();
-        }}
-      >
-        {/* MODAL GLOW */}
+        {/* TOP ACCENT */}
         <div
           aria-hidden="true"
-          className="
-            pointer-events-none
-            absolute
-            -right-24
-            -top-32
-            h-72
-            w-72
-            rounded-full
-            bg-purple-500/10
-            blur-3xl
-          "
-        />
-
-        <div
-          aria-hidden="true"
-          className="
-            pointer-events-none
-            absolute
-            -left-24
-            bottom-0
-            h-64
-            w-64
-            rounded-full
-            bg-emerald-500/5
-            blur-3xl
-          "
+          className="absolute inset-x-0 top-0 z-10 h-0.5 bg-linear-to-r from-[#E60033] via-[#FF476B]/60 to-transparent"
         />
 
         {/* HEADER */}
-        <header
-          className="
-            relative
-            flex
-            shrink-0
-            items-center
-            gap-3
-            border-b
-            border-white/8
-            bg-[#07101F]/95
-            px-4
-            py-3.5
-            backdrop-blur-xl
-            sm:px-5
-          "
-        >
+        <header className="relative flex shrink-0 items-center gap-3 border-b border-white/10 bg-[#07101F] px-4 pb-3 pt-5 sm:px-5 sm:py-4">
+
           {/* MOBILE HANDLE */}
           <div
             aria-hidden="true"
-            className="
-              absolute
-              left-1/2
-              top-1.5
-              h-1
-              w-10
-              -translate-x-1/2
-              rounded-full
-              bg-white/10
-              sm:hidden
-            "
+            className="absolute left-1/2 top-2 h-1 w-9 -translate-x-1/2 rounded-full bg-white/20 sm:hidden"
           />
 
-          {/* CLOSE */}
+          {/* BACK BUTTON */}
           <button
             type="button"
             onClick={handleClose}
             aria-label="Close search"
-            className="
-              mt-1
-              flex
-              h-10
-              w-10
-              shrink-0
-              items-center
-              justify-center
-              rounded-xl
-              border
-              border-white/8
-              bg-white/4
-              text-white/45
-              transition
-              hover:bg-white/8
-              hover:text-white
-              active:scale-95
-              focus:outline-none
-              focus:ring-2
-              focus:ring-emerald-400/20
-            "
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/65 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E60033]/50"
           >
-            <ArrowLeft
-              size={18}
-              aria-hidden="true"
-            />
+            <ArrowLeft size={17} aria-hidden="true" />
           </button>
 
           {/* TITLE */}
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <span
-                className="
-                  text-[9px]
-                  font-bold
-                  uppercase
-                  tracking-[0.16em]
-                  text-emerald-400/65
-                "
-              >
-                REDIQ
-              </span>
 
-              <span
-                aria-hidden="true"
-                className="
-                  h-1
-                  w-1
-                  rounded-full
-                  bg-white/15
-                "
-              />
+            <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-[#FF476B]">
+              REDIQ · Account Search
+            </p>
 
-              <span className="text-[9px] font-semibold text-white/25">
-                Account Search
-              </span>
-            </div>
-
-            <h2 className="mt-0.5 text-[16px] font-extrabold text-white sm:text-[17px]">
+            <h2
+              id="rediq-search-title"
+              className="mt-0.5 text-[16px] font-black text-white sm:text-lg"
+            >
               Search
             </h2>
           </div>
 
-          {/* SEARCH ICON */}
-          <div
-            className="
-              flex
-              h-9
-              w-9
-              shrink-0
-              items-center
-              justify-center
-              rounded-xl
-              border
-              border-purple-400/10
-              bg-purple-400/10
-              text-purple-300
-            "
-          >
-            <Search
-              size={16}
-              aria-hidden="true"
-            />
+          {/* ICON */}
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#E60033]/20 bg-[#E60033]/10 text-[#FF476B]">
+            <Search size={16} aria-hidden="true" />
           </div>
 
           {/* DESKTOP CLOSE */}
@@ -445,62 +279,30 @@ export default function SearchModal({
             type="button"
             onClick={handleClose}
             aria-label="Close search"
-            className="
-              hidden
-              h-9
-              w-9
-              shrink-0
-              items-center
-              justify-center
-              rounded-xl
-              border
-              border-white/8
-              bg-white/4
-              text-white/30
-              transition
-              hover:bg-white/8
-              hover:text-white
-              sm:flex
-            "
+            className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/50 transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E60033]/50 sm:flex"
           >
-            <X size={16} />
+            <X size={16} aria-hidden="true" />
           </button>
         </header>
 
-        {/* CONTENT */}
-        <div
-          className="
-            relative
-            min-h-0
-            flex-1
-            overflow-y-auto
-          "
-        >
-          <div
-            className="
-              px-4
-              pb-8
-              pt-4
-              sm:px-5
-              sm:pb-9
-              sm:pt-5
-            "
-          >
-            {/* INTRO */}
-            <div className="mb-4">
-              <p className="text-[11px] leading-5 text-white/30">
-                Search across your investments,
-                deposits, withdrawals,
-                transactions and support.
-              </p>
-            </div>
+        {/* =====================================
+            SCROLLABLE CONTENT
+        ====================================== */}
+
+        <div className="relative min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain">
+
+          <div className="min-w-0 px-3 pb-8 pt-4 min-[375px]:px-4 sm:px-5 sm:py-5">
+
+            <p className="mb-4 text-[11px] leading-5 text-white/50">
+              Find investments, deposits, withdrawals,
+              transactions, plans and support records.
+            </p>
 
             {/* INPUT */}
             <SearchInput
               value={query}
               onChange={setQuery}
               onClear={handleClear}
-              autoFocus
               inputRef={inputRef}
             />
 
@@ -513,49 +315,30 @@ export default function SearchModal({
             </div>
 
             {/* RESULTS */}
-            <div className="mt-5">
+            <div
+              aria-live="polite"
+              className="mt-5 min-w-0"
+            >
+
               {/* LOADING */}
               {loading && (
                 <div
-                  className="
-                    flex
-                    min-h-52
-                    flex-col
-                    items-center
-                    justify-center
-                    rounded-3xl
-                    border
-                    border-white/8
-                    bg-[#07101F]
-                  "
+                  role="status"
+                  className="flex min-h-44 flex-col items-center justify-center rounded-2xl border border-white/10 bg-[#0B1426] px-4 py-8 text-center"
                 >
-                  <div
-                    className="
-                      flex
-                      h-11
-                      w-11
-                      items-center
-                      justify-center
-                      rounded-2xl
-                      border
-                      border-emerald-400/10
-                      bg-emerald-400/10
-                    "
-                  >
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#E60033]/10 text-[#FF476B]">
                     <Loader2
-                      size={18}
-                      className="
-                        animate-spin
-                        text-emerald-400
-                      "
+                      size={19}
+                      className="animate-spin"
+                      aria-hidden="true"
                     />
                   </div>
 
-                  <p className="mt-3 text-xs font-bold text-white/70">
+                  <p className="mt-3 text-xs font-bold text-white/80">
                     Searching...
                   </p>
 
-                  <p className="mt-1 text-[10px] text-white/25">
+                  <p className="mt-1 text-[10px] text-white/40">
                     Looking through your account
                   </p>
                 </div>
@@ -564,122 +347,57 @@ export default function SearchModal({
               {/* ERROR */}
               {!loading && error && (
                 <div
-                  className="
-                    rounded-3xl
-                    border
-                    border-red-400/10
-                    bg-[#07101F]
-                    px-5
-                    py-9
-                    text-center
-                  "
+                  role="alert"
+                  className="rounded-2xl border border-[#E60033]/20 bg-[#0B1426] px-4 py-8 text-center"
                 >
-                  <div
-                    className="
-                      mx-auto
-                      flex
-                      h-11
-                      w-11
-                      items-center
-                      justify-center
-                      rounded-2xl
-                      border
-                      border-red-400/10
-                      bg-red-400/10
-                    "
-                  >
-                    <Search
-                      size={18}
-                      className="text-red-400"
-                    />
+                  <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-[#E60033]/10 text-[#FF476B]">
+                    <Search size={19} aria-hidden="true" />
                   </div>
 
-                  <p
-                    className="
-                      mt-3
-                      text-[9px]
-                      font-bold
-                      uppercase
-                      tracking-[0.16em]
-                      text-red-400/60
-                    "
-                  >
-                    Search Error
-                  </p>
-
-                  <h3 className="mt-1 text-sm font-extrabold text-white">
+                  <h3 className="mt-3 text-sm font-black text-white">
                     Search failed
                   </h3>
 
-                  <p className="mx-auto mt-2 max-w-sm text-[11px] leading-5 text-white/30">
+                  <p className="mx-auto mt-2 max-w-sm text-[11px] leading-5 text-white/50">
                     {error}
                   </p>
 
                   <button
                     type="button"
                     onClick={handleRetry}
-                    className="
-                      mt-5
-                      rounded-xl
-                      border
-                      border-emerald-400/10
-                      bg-emerald-400/10
-                      px-5
-                      py-2.5
-                      text-[10px]
-                      font-bold
-                      text-emerald-400
-                      transition
-                      hover:bg-emerald-400/15
-                      hover:text-emerald-300
-                      active:scale-95
-                    "
+                    className="mt-4 inline-flex min-h-10 items-center gap-2 rounded-xl bg-[#E60033] px-5 text-[11px] font-bold text-white transition hover:bg-[#FF174B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF476B]"
                   >
-                    Try Again
+                    <RefreshCw size={14} aria-hidden="true" />
+                    Try again
                   </button>
                 </div>
               )}
 
-              {/* INITIAL */}
-              {!loading &&
-                !error &&
-                !hasQuery && (
-                  <SearchEmptyState />
-                )}
+              {/* INITIAL STATE */}
+              {!loading && !error && !hasQuery && (
+                <SearchEmptyState />
+              )}
 
               {/* RESULTS */}
-              {!loading &&
-                !error &&
-                hasQuery &&
-                data && (
+              {!loading && !error && hasQuery && data && (
+                <div className="min-w-0 rounded-2xl border border-white/10 bg-[#0B1426] p-3 sm:p-4">
                   <SearchResults
                     results={results}
                     query={data.query}
                     total={data.total}
                   />
-                )}
+                </div>
+              )}
             </div>
           </div>
         </div>
 
         {/* FOOTER */}
-        <div
-          className="
-            relative
-            hidden
-            shrink-0
-            border-t
-            border-white/6
-            px-5
-            py-2.5
-            text-center
-            sm:block
-          "
-        >
-          <p className="text-[8px] text-white/15">
-            Secure REDIQ account search
+        <footer className="hidden shrink-0 border-t border-white/8 bg-[#07101F] px-5 py-3 text-center sm:block">
+          <p className="text-[9px] text-white/35">
+            REDIQ Account Search
           </p>
-        </div>
+        </footer>
       </div>
     </div>
   );

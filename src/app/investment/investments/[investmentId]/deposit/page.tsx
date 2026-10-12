@@ -1,18 +1,22 @@
 
 //src/app/investment/investments/[investmentId]/deposit/page.tsx
 
-'use client';
+
+"use client";
 
 import {
+  useCallback,
   useEffect,
   useRef,
   useState,
   type FormEvent,
   type ReactNode,
-} from 'react';
-import { useParams, useRouter } from 'next/navigation';
+} from "react";
+import { useParams, useRouter } from "next/navigation";
 import {
+  AlertCircle,
   ArrowLeft,
+  ArrowRight,
   CheckCircle2,
   Clock3,
   Copy,
@@ -23,301 +27,300 @@ import {
   ShieldCheck,
   Wallet,
   XCircle,
-} from 'lucide-react';
+} from "lucide-react";
 
-import { investmentApi } from '@/src/lib/api/investmentApi';
-import { useSettings } from '@/src/context/useSettings';
-import { formatUSDT } from '@/src/lib/utils/currency';
-
-import type {
-  Deposit,
-  Investment,
-} from '@/src/lib/types/investment';
+import { investmentApi } from "@/src/lib/api/investmentApi";
+import { useSettings } from "@/src/context/useSettings";
+import { formatUSDT } from "@/src/lib/utils/currency";
+import type { Deposit, Investment } from "@/src/lib/types/investment";
 
 const SUBMISSION_COOLDOWN_SECONDS = 60;
+const STATUS_REFRESH_INTERVAL = 5000;
+
+function getSubmissionError(err: unknown): string {
+  const responseData =
+    err && typeof err === "object" && "response" in err
+      ? (
+          err as {
+            response?: {
+              data?: {
+                error?: unknown;
+                message?: unknown;
+                detail?: unknown;
+              };
+            };
+          }
+        ).response?.data
+      : undefined;
+
+  const backendMessage =
+    typeof responseData?.error === "string"
+      ? responseData.error
+      : typeof responseData?.message === "string"
+        ? responseData.message
+        : typeof responseData?.detail === "string"
+          ? responseData.detail
+          : "";
+
+  const message =
+    backendMessage ||
+    (err instanceof Error && err.message
+      ? err.message
+      : "Failed to submit the transaction hash.");
+
+  const normalized = message.toLowerCase();
+
+  if (
+    normalized.includes("idx_investment_deposits_network_tx_hash_unique") ||
+    normalized.includes("duplicate key value") ||
+    normalized.includes("transaction hash already used") ||
+    normalized.includes("transaction hash has already been used")
+  ) {
+    return "This transaction hash has already been submitted. Each transaction hash can only be used once. Please verify the transaction ID.";
+  }
+
+  if (
+    normalized.includes("sqlstate") ||
+    normalized.includes("duplicate key") ||
+    normalized.includes("update pending investment deposit:")
+  ) {
+    return "We could not submit this transaction. Please verify the transaction hash and try again.";
+  }
+
+  if (
+    normalized.includes("invalid transaction hash") ||
+    normalized.includes("invalid tx hash")
+  ) {
+    return "This transaction hash appears to be invalid. Please check it and try again.";
+  }
+
+  return message;
+}
 
 export default function InvestmentDepositPage() {
   const router = useRouter();
-
-  const { investmentId } =
-    useParams<{ investmentId: string }>();
-
+  const { investmentId } = useParams<{ investmentId: string }>();
   const { currency } = useSettings();
 
-  const [investment, setInvestment] =
-    useState<Investment | null>(null);
+  const [investment, setInvestment] = useState<Investment | null>(null);
+  const [deposit, setDeposit] = useState<Deposit | null>(null);
+  const [history, setHistory] = useState<Deposit[]>([]);
 
-  const [deposit, setDeposit] =
-    useState<Deposit | null>(null);
-
-  const [history, setHistory] =
-    useState<Deposit[]>([]);
-
-  const [txHash, setTxHash] = useState('');
+  const [txHash, setTxHash] = useState("");
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] =
-    useState(false);
-  const [cooldownSeconds, setCooldownSeconds] =
-    useState(0);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [addressCopied, setAddressCopied] =
-    useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [cooldownSeconds, setCooldownSeconds] = useState(0);
 
-  const copyResetTimerRef =
-    useRef<number | null>(null);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [addressCopied, setAddressCopied] = useState(false);
 
-  const cooldownTimerRef =
-    useRef<number | null>(null);
+  const copyTimerRef = useRef<number | null>(null);
+  const cooldownUntilRef = useRef<number>(0);
+  const submissionLockRef = useRef(false);
 
   useEffect(() => {
     return () => {
-      if (copyResetTimerRef.current !== null) {
-        window.clearTimeout(
-          copyResetTimerRef.current,
-        );
-      }
-
-      if (cooldownTimerRef.current !== null) {
-        window.clearInterval(
-          cooldownTimerRef.current,
-        );
+      if (copyTimerRef.current !== null) {
+        window.clearTimeout(copyTimerRef.current);
       }
     };
   }, []);
 
   useEffect(() => {
-    if (!investmentId) {
-      return;
+  if (cooldownSeconds <= 0) {
+    return;
+  }
+
+  const timer = window.setInterval(() => {
+    const remaining = Math.max(
+      0,
+      Math.ceil(
+        (cooldownUntilRef.current - Date.now()) / 1000,
+      ),
+    );
+
+    setCooldownSeconds(remaining);
+  }, 1000);
+
+  return () => {
+    window.clearInterval(timer);
+  };
+}, [cooldownSeconds]);
+
+  useEffect(() => {
+  if (!investmentId) {
+    return;
+  }
+
+  let cancelled = false;
+
+  async function load() {
+    try {
+      const [
+        investmentData,
+        depositData,
+        depositsData,
+      ] = await Promise.all([
+        investmentApi.getInvestment(investmentId),
+        investmentApi.getDeposit(investmentId),
+        investmentApi.getDeposits(1, 50),
+      ]);
+
+      if (cancelled) {
+        return;
+      }
+
+      setInvestment(investmentData);
+      setDeposit(depositData);
+
+      setHistory(
+        depositsData.deposits.filter(
+          (item) => item.investmentId === investmentId,
+        ),
+      );
+
+      setTxHash(
+        (current) =>
+          current || depositData.txHash || "",
+      );
+
+      setError("");
+    } catch (err) {
+      if (cancelled) {
+        return;
+      }
+
+      console.error(
+        "Failed to load investment deposit:",
+        err,
+      );
+
+      setInvestment(null);
+      setDeposit(null);
+
+      setError(
+        err instanceof Error && err.message
+          ? err.message
+          : "Failed to load investment deposit.",
+      );
+    } finally {
+      if (!cancelled) {
+        setLoading(false);
+      }
     }
+  }
+
+  void load();
+
+  return () => {
+    cancelled = true;
+  };
+}, [investmentId]);
+
+  useEffect(() => {
+    if (!investmentId) return;
 
     let cancelled = false;
+    let inFlight = false;
 
-    const load = async () => {
-      setLoading(true);
-      setError('');
+    async function refreshStatus() {
+      if (inFlight) return;
+      inFlight = true;
 
       try {
-        const [
-          investmentData,
-          depositData,
-          depositsData,
-        ] = await Promise.all([
+        const [investmentData, depositData] = await Promise.all([
+          investmentApi.getInvestment(investmentId),
+          investmentApi.getDeposit(investmentId),
+        ]);
+
+        if (cancelled) return;
+
+        setInvestment(investmentData);
+        setDeposit(depositData);
+        setTxHash((current) => current || depositData.txHash || "");
+      } catch (err) {
+        console.error("Silent deposit status refresh failed:", err);
+      } finally {
+        inFlight = false;
+      }
+    }
+
+    const timer = window.setInterval(() => {
+      void refreshStatus();
+    }, STATUS_REFRESH_INTERVAL);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, [investmentId]);
+
+  const refreshAll = useCallback(async () => {
+    if (!investmentId || refreshing) return;
+
+    setRefreshing(true);
+
+    try {
+      const [investmentData, depositData, depositsData] =
+        await Promise.all([
           investmentApi.getInvestment(investmentId),
           investmentApi.getDeposit(investmentId),
           investmentApi.getDeposits(1, 50),
         ]);
 
-        if (cancelled) {
-          return;
-        }
-
-        setInvestment(investmentData);
-        setDeposit(depositData);
-
-        setHistory(
-          depositsData.deposits.filter(
-            (item) =>
-              item.investmentId ===
-              investmentId,
-          ),
-        );
-
-        setTxHash((current) =>
-          current || depositData.txHash || '',
-        );
-      } catch (err: unknown) {
-        if (cancelled) {
-          return;
-        }
-
-        console.error(
-          'Failed to load investment deposit:',
-          err,
-        );
-
-        setError(
-          err instanceof Error && err.message
-            ? err.message
-            : 'Failed to load investment deposit.',
-        );
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    };
-
-    queueMicrotask(() => {
-      if (!cancelled) {
-        void load();
-      }
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [investmentId]);
-
-  useEffect(() => {
-    if (!investmentId) {
-      return;
-    }
-
-    let cancelled = false;
-
-    const refreshInvestmentStatus =
-      async () => {
-        try {
-          const [
-            investmentData,
-            depositData,
-          ] = await Promise.all([
-            investmentApi.getInvestment(
-              investmentId,
-            ),
-            investmentApi.getDeposit(
-              investmentId,
-            ),
-          ]);
-
-          if (cancelled) {
-            return;
-          }
-
-          setInvestment(investmentData);
-          setDeposit(depositData);
-
-          setTxHash((current) =>
-            current || depositData.txHash || '',
-          );
-        } catch (err: unknown) {
-          console.error(
-            'Silent investment status refresh failed:',
-            err,
-          );
-        }
-      };
-
-    const intervalId = window.setInterval(
-      () => {
-        void refreshInvestmentStatus();
-      },
-      5000,
-    );
-
-    return () => {
-      cancelled = true;
-      window.clearInterval(intervalId);
-    };
-  }, [investmentId]);
-
-  useEffect(() => {
-    if (cooldownSeconds <= 0) {
-      if (cooldownTimerRef.current !== null) {
-        window.clearInterval(
-          cooldownTimerRef.current,
-        );
-
-        cooldownTimerRef.current = null;
-      }
-
-      return;
-    }
-
-    if (cooldownTimerRef.current !== null) {
-      window.clearInterval(
-        cooldownTimerRef.current,
+      setInvestment(investmentData);
+      setDeposit(depositData);
+      setHistory(
+        depositsData.deposits.filter(
+          (item) => item.investmentId === investmentId,
+        ),
       );
+      setError("");
+    } catch (err) {
+      console.error("Deposit refresh failed:", err);
+      setError("Could not refresh deposit information. Please try again.");
+    } finally {
+      setRefreshing(false);
+    }
+  }, [investmentId, refreshing]);
+
+  const copyAddress = async () => {
+    const address = deposit?.companyDepositAddress?.trim();
+
+    if (!address) {
+      setError("The deposit address is unavailable.");
+      return;
     }
 
-    cooldownTimerRef.current =
-      window.setInterval(() => {
-        setCooldownSeconds((current) => {
-          if (current <= 1) {
-            if (
-              cooldownTimerRef.current !== null
-            ) {
-              window.clearInterval(
-                cooldownTimerRef.current,
-              );
+    try {
+      await navigator.clipboard.writeText(address);
 
-              cooldownTimerRef.current = null;
-            }
+      setAddressCopied(true);
+      setError("");
 
-            return 0;
-          }
-
-          return current - 1;
-        });
-      }, 1000);
-
-    return () => {
-      if (cooldownTimerRef.current !== null) {
-        window.clearInterval(
-          cooldownTimerRef.current,
-        );
-
-        cooldownTimerRef.current = null;
-      }
-    };
-  }, [cooldownSeconds]);
-
-  const handleCopyDepositAddress =
-    async () => {
-      const address =
-        deposit?.companyDepositAddress?.trim();
-
-      if (!address) {
-        setError(
-          'The deposit address is unavailable.',
-        );
-        return;
+      if (copyTimerRef.current !== null) {
+        window.clearTimeout(copyTimerRef.current);
       }
 
-      try {
-        await navigator.clipboard.writeText(
-          address,
-        );
-
-        setAddressCopied(true);
-        setSuccess('Address copied.');
-        setError('');
-
-        if (
-          copyResetTimerRef.current !== null
-        ) {
-          window.clearTimeout(
-            copyResetTimerRef.current,
-          );
-        }
-
-        copyResetTimerRef.current =
-          window.setTimeout(() => {
-            setAddressCopied(false);
-          }, 2000);
-      } catch (err: unknown) {
-        console.error(
-          'Failed to copy deposit address:',
-          err,
-        );
-
+      copyTimerRef.current = window.setTimeout(() => {
         setAddressCopied(false);
-        setError(
-          'Unable to copy the deposit address.',
-        );
-        setSuccess('');
-      }
-    };
+      }, 2000);
+    } catch (err) {
+      console.error("Address copy failed:", err);
+      setAddressCopied(false);
+      setError("Unable to copy the deposit address.");
+    }
+  };
 
-  const handleSubmit = async (
-    event: FormEvent<HTMLFormElement>,
-  ) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (
-      submitting ||
-      cooldownSeconds > 0
+      !investmentId ||
+      submissionLockRef.current ||
+      cooldownUntilRef.current > Date.now()
     ) {
       return;
     }
@@ -325,122 +328,64 @@ export default function InvestmentDepositPage() {
     const normalizedTxHash = txHash.trim();
 
     if (!normalizedTxHash) {
-      setError('Enter the transaction hash.');
+      setError("Enter the transaction hash.");
       return;
     }
 
+    submissionLockRef.current = true;
     setSubmitting(true);
-    setError('');
-    setSuccess('');
+    setError("");
+    setSuccess("");
+
+    let accepted = false;
 
     try {
-      const updatedDeposit =
-        await investmentApi.submitDeposit(
-          investmentId,
-          normalizedTxHash,
-        );
+      const updatedDeposit = await investmentApi.submitDeposit(
+        investmentId,
+        normalizedTxHash,
+      );
 
+      accepted = true;
       setDeposit(updatedDeposit);
+      setTxHash(normalizedTxHash);
+
+      cooldownUntilRef.current =
+        Date.now() + SUBMISSION_COOLDOWN_SECONDS * 1000;
+      setCooldownSeconds(SUBMISSION_COOLDOWN_SECONDS);
 
       setSuccess(
-        'Your transaction has been submitted for verification. Please wait while the transaction is verified.',
+        "Your transaction hash was accepted for verification. This does not mean the deposit has been confirmed yet.",
       );
+    } catch (err) {
+      console.error("Deposit submission failed:", err);
+      setError(getSubmissionError(err));
+    } finally {
+      submissionLockRef.current = false;
+      setSubmitting(false);
+    }
 
-      /*
-       * Start the one-minute submission cooldown
-       * only after the API accepts the submission.
-       */
-      setCooldownSeconds(
-        SUBMISSION_COOLDOWN_SECONDS,
+    if (!accepted) return;
+
+    // These refreshes must not reverse a successful submission.
+    try {
+      const updatedInvestment = await investmentApi.getInvestment(
+        investmentId,
       );
-
-      const updatedInvestment =
-        await investmentApi.getInvestment(
-          investmentId,
-        );
-
       setInvestment(updatedInvestment);
+    } catch (err) {
+      console.error("Post-submission investment refresh failed:", err);
+    }
 
-      const deposits =
-        await investmentApi.getDeposits(
-          1,
-          50,
-        );
+    try {
+      const depositsData = await investmentApi.getDeposits(1, 50);
 
       setHistory(
-        deposits.deposits.filter(
-          (item) =>
-            item.investmentId ===
-            investmentId,
+        depositsData.deposits.filter(
+          (item) => item.investmentId === investmentId,
         ),
       );
-    } catch (err: unknown) {
-      console.error(
-        'Investment deposit submission failed:',
-        err,
-      );
-
-      const responseData =
-        err && typeof err === "object" && "response" in err
-          ? (
-              err as {
-                response?: {
-                  data?: {
-                    error?: unknown;
-                    message?: unknown;
-                    detail?: unknown;
-                  };
-                };
-              }
-            ).response?.data
-          : undefined;
-
-      const backendMessage =
-        typeof responseData?.error === "string"
-          ? responseData.error
-          : typeof responseData?.message === "string"
-            ? responseData.message
-            : typeof responseData?.detail === "string"
-              ? responseData.detail
-              : "";
-
-      let message =
-        backendMessage ||
-        (err instanceof Error && err.message
-          ? err.message
-          : "Failed to submit the transaction hash.");
-
-      const normalizedMessage = message.toLowerCase();
-
-      if (
-        normalizedMessage.includes(
-          "idx_investment_deposits_network_tx_hash_unique",
-        ) ||
-        normalizedMessage.includes("duplicate key value") ||
-        normalizedMessage.includes("transaction hash already used") ||
-        normalizedMessage.includes("transaction hash has already been used")
-      ) {
-        message =
-          "This transaction hash has already been submitted for another deposit. Each transaction hash can only be used once. Please check the transaction ID and submit the correct hash.";
-      } else if (
-        normalizedMessage.includes("sqlstate") ||
-        normalizedMessage.includes("duplicate key") ||
-        normalizedMessage.includes("update pending investment deposit:")
-      ) {
-        // Do not expose internal database or SQL details to users.
-        message =
-          "We couldn't submit this transaction. Please verify the transaction hash and try again.";
-      } else if (
-        normalizedMessage.includes("invalid transaction hash") ||
-        normalizedMessage.includes("invalid tx hash")
-      ) {
-        message =
-          "This transaction ID appears to be invalid. Please check the hash and try again.";
-      }
-
-      setError(message);
-    } finally {
-      setSubmitting(false);
+    } catch (err) {
+      console.error("Post-submission history refresh failed:", err);
     }
   };
 
@@ -449,11 +394,7 @@ export default function InvestmentDepositPage() {
       <PageShell>
         <ErrorState
           message="Invalid investment ID."
-          onBack={() =>
-            router.push(
-              '/investment/investments',
-            )
-          }
+          onBack={() => router.push("/investment/investments")}
         />
       </PageShell>
     );
@@ -462,15 +403,14 @@ export default function InvestmentDepositPage() {
   if (loading) {
     return (
       <PageShell>
-        <div className="flex min-h-[70vh] items-center justify-center">
+        <div className="flex min-h-[65vh] items-center justify-center">
           <div className="text-center">
             <Loader2
-              size={25}
-              className="mx-auto animate-spin text-emerald-300"
+              size={27}
+              className="mx-auto animate-spin text-[#FF476B]"
             />
-
-            <p className="mt-3 text-sm text-white/35">
-              Loading deposit...
+            <p className="mt-3 text-xs text-white/45">
+              Loading investment deposit...
             </p>
           </div>
         </div>
@@ -482,14 +422,9 @@ export default function InvestmentDepositPage() {
     return (
       <PageShell>
         <ErrorState
-          message={
-            error ||
-            'Investment deposit could not be found.'
-          }
+          message={error || "Investment deposit could not be found."}
           onBack={() =>
-            router.push(
-              `/investment/investments/${investmentId}`,
-            )
+            router.push(`/investment/investments/${investmentId}`)
           }
         />
       </PageShell>
@@ -497,399 +432,322 @@ export default function InvestmentDepositPage() {
   }
 
   const isCompleted =
-    deposit.status === 'CONFIRMED' ||
-    investment.status === 'ACTIVE' ||
-    investment.status === 'MATURED';
+    deposit.status === "CONFIRMED" ||
+    investment.status === "ACTIVE" ||
+    investment.status === "MATURED";
 
-  const canSubmit =
-    !isCompleted &&
-    deposit.status !== 'CONFIRMED';
-
-  const submissionLocked =
-    submitting || cooldownSeconds > 0;
+  const submissionLocked = submitting || cooldownSeconds > 0;
+  const canSubmit = !isCompleted && !submissionLocked;
 
   return (
-    <main className="relative mx-auto w-full max-w-2xl overflow-hidden px-4 pb-32 pt-5 sm:px-6 lg:max-w-5xl lg:px-8">
-      {/* Header */}
-      <header className="flex items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-3">
+    <PageShell>
+      <div className="mx-auto w-full max-w-5xl">
+        {/* HEADER */}
+        <header className="flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <button
+              type="button"
+              onClick={() =>
+                router.push(`/investment/investments/${investmentId}`)
+              }
+              aria-label="Back to investment"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-[#0B1426] text-white/70"
+            >
+              <ArrowLeft size={17} />
+            </button>
+
+            <div className="min-w-0">
+              <p className="text-[9px] font-extrabold uppercase tracking-[0.15em] text-[#FF476B]">
+                Investment Deposit
+              </p>
+              <h1 className="truncate text-lg font-black sm:text-xl">
+                Complete Deposit
+              </h1>
+            </div>
+          </div>
+
           <button
             type="button"
-            onClick={() =>
-              router.push(
-                `/investment/investments/${investmentId}`,
-              )
-            }
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/65 transition hover:bg-white/10 hover:text-white"
-            aria-label="Back to investment"
+            onClick={() => void refreshAll()}
+            disabled={refreshing}
+            aria-label="Refresh deposit"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-[#0B1426] text-white/65 disabled:opacity-40"
           >
-            <ArrowLeft size={18} />
+            <RefreshCw
+              size={16}
+              className={refreshing ? "animate-spin" : ""}
+            />
           </button>
+        </header>
 
-          <div className="min-w-0">
-            <p className="text-[9px] uppercase tracking-[0.18em] text-white/30">
-              Investment deposit
-            </p>
+        {/* INVESTMENT SUMMARY */}
+        <section className="relative mt-5 overflow-hidden rounded-[22px] border border-[#E60033]/20 bg-linear-to-br from-[#25101E] via-[#101827] to-[#0B1426] p-4 sm:p-6">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[9px] font-extrabold uppercase tracking-wide text-[#FF476B]">
+                Investment
+              </p>
+              <h2 className="mt-1 wrap-break-words text-lg font-black">
+                {investment.planName || "Investment Plan"}
+              </h2>
+              <p className="mt-1 break-all text-[9px] text-white/40">
+                {investment.id}
+              </p>
+            </div>
 
-            <h1 className="truncate text-[18px] font-extrabold text-white">
-              Complete Deposit
-            </h1>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={() =>
-            router.push(
-              '/investment/investments',
-            )
-          }
-          className="shrink-0 rounded-xl border border-white/8 bg-white/5 px-3 py-2 text-[10px] font-bold text-white/60 transition hover:bg-white/10 hover:text-white"
-        >
-          My Investments
-        </button>
-      </header>
-
-      {/* Investment summary */}
-      <section className="mt-5 rounded-[26px] border border-white/8 bg-[#0B1426] p-5 shadow-[0_20px_55px_rgba(0,0,0,0.2)]">
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0">
-            <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-white/30">
-              Investment
-            </p>
-
-            <h2 className="mt-1 truncate text-lg font-extrabold text-white">
-              {investment.planName ||
-                'Investment Plan'}
-            </h2>
-
-            <p className="mt-1 break-all text-[9px] text-white/25">
-              {investment.id}
-            </p>
+            <StatusBadge status={deposit.status} />
           </div>
 
-          <StatusBadge
-            status={deposit.status}
-          />
-        </div>
-
-        <div className="mt-5 grid grid-cols-2 gap-3">
-          <div className="rounded-xl border border-white/6 bg-white/4 p-3">
-            <p className="text-[9px] text-white/30">
-              Investment amount
-            </p>
-
-            <p className="mt-1 text-sm font-extrabold text-white">
-              {formatUSDT(
-                investment.amount,
-                currency,
-              )}
-            </p>
+          <div className="mt-5 grid grid-cols-2 gap-2">
+            <Metric
+              label="Investment amount"
+              value={formatUSDT(investment.amount, currency)}
+            />
+            <Metric
+              label="Expected deposit"
+              value={formatUSDT(deposit.expectedAmount, currency)}
+            />
           </div>
+        </section>
 
-          <div className="rounded-xl border border-white/6 bg-white/4 p-3">
-            <p className="text-[9px] text-white/30">
-              Expected deposit
-            </p>
-
-            <p className="mt-1 text-sm font-extrabold text-white">
-              {formatUSDT(
-                deposit.expectedAmount,
-                currency,
-              )}
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Success */}
-      {success && (
-        <section className="mt-4 rounded-2xl border border-emerald-400/15 bg-emerald-400/8 p-4">
-          <div className="flex gap-3">
+        {/* MESSAGES */}
+        {success && (
+          <div
+            role="status"
+            className="mt-4 flex gap-3 rounded-xl border border-emerald-400/20 bg-emerald-400/5 p-4"
+          >
             <CheckCircle2
               size={18}
               className="mt-0.5 shrink-0 text-emerald-300"
             />
-
-            <p className="text-xs leading-5 text-emerald-200">
+            <p className="text-[11px] leading-5 text-emerald-200">
               {success}
             </p>
           </div>
-        </section>
-      )}
+        )}
 
-      {/* Completed */}
-      {isCompleted ? (
-        <section className="mt-4 rounded-[26px] border border-emerald-400/15 bg-emerald-400/7 p-5">
-          <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-emerald-400/15 bg-emerald-400/10 text-emerald-300">
-              <CheckCircle2 size={21} />
-            </div>
-
-            <div>
-              <h2 className="text-sm font-extrabold text-emerald-200">
-                Deposit completed
-              </h2>
-
-              <p className="mt-1 text-[10px] leading-5 text-emerald-100/50">
-                This investment deposit has been
-                confirmed. No further transaction
-                submission is required.
-              </p>
-            </div>
+        {error && (
+          <div
+            role="alert"
+            className="mt-4 flex gap-3 rounded-xl border border-[#E60033]/25 bg-[#E60033]/10 p-4"
+          >
+            <XCircle
+              size={18}
+              className="mt-0.5 shrink-0 text-[#FF476B]"
+            />
+            <p className="wrap-break-words text-[11px] leading-5 text-[#FF9AAF]">
+              {error}
+            </p>
           </div>
+        )}
 
-          {deposit.txHash && (
-            <div className="mt-4 rounded-xl border border-white/7 bg-[#07101F] p-3">
-              <p className="text-[9px] text-white/30">
-                Transaction hash
-              </p>
-
-              <p className="mt-1 break-all font-mono text-[10px] text-white/65">
-                {deposit.txHash}
-              </p>
-            </div>
-          )}
-        </section>
-      ) : (
-        <>
-          {/* Submission */}
-          <section className="mt-4 rounded-[26px] border border-white/8 bg-[#0B1426] p-5 shadow-[0_15px_45px_rgba(0,0,0,0.18)]">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-400/10 bg-emerald-400/8 text-emerald-300">
-                <Wallet size={19} />
-              </div>
-
+        {isCompleted ? (
+          <section className="mt-4 rounded-[22px] border border-emerald-400/20 bg-[#0B1426] p-5">
+            <div className="flex gap-3">
+              <CheckCircle2
+                size={23}
+                className="shrink-0 text-emerald-300"
+              />
               <div>
-                <h2 className="text-sm font-extrabold text-white">
-                  Submit your transaction
+                <h2 className="text-sm font-black text-emerald-200">
+                  Investment deposit completed
                 </h2>
-
-                <p className="text-[10px] text-white/30">
-                  Enter the TRON transaction hash
-                  for your investment deposit.
+                <p className="mt-1 text-[11px] leading-5 text-white/50">
+                  This investment is recorded as active, matured, or
+                  its deposit is confirmed. No further transaction
+                  submission is required here.
                 </p>
               </div>
             </div>
 
-            <div className="mt-4 rounded-xl border border-purple-400/10 bg-purple-400/6 p-3">
-              <p className="text-[10px] font-bold text-purple-200">
-                Need to retry?
-              </p>
-
-              <p className="mt-1 text-[10px] leading-5 text-purple-100/45">
-                You can submit the original transaction
-                hash again if it was entered incorrectly,
-                or replace it with the correct transaction
-                hash.
-              </p>
-            </div>
-
-            {/* Deposit address */}
-            <section className="mt-4 rounded-[22px] border border-purple-400/15 bg-purple-400/6 p-5">
+            {deposit.txHash && (
+              <div className="mt-4 rounded-xl bg-[#07101F] p-3">
+                <p className="text-[9px] text-white/40">
+                  Recorded transaction hash
+                </p>
+                <p className="mt-1 break-all font-mono text-[10px] text-white/75">
+                  {deposit.txHash}
+                </p>
+              </div>
+            )}
+          </section>
+        ) : (
+          <div className="mt-4 grid min-w-0 grid-cols-1 items-start gap-4 lg:grid-cols-2">
+            {/* DEPOSIT INSTRUCTIONS */}
+            <section className="min-w-0 rounded-[22px] border border-white/10 bg-[#0B1426] p-4 sm:p-5">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-purple-400/10 bg-white/5 text-purple-300">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#E60033]/10 text-[#FF476B]">
                   <Wallet size={19} />
                 </div>
 
                 <div>
-                  <h2 className="text-sm font-extrabold text-white">
-                    Send USDT to this address
+                  <h2 className="text-sm font-black">
+                    Deposit Instructions
                   </h2>
-
-                  <p className="text-[10px] text-white/35">
-                    Send exactly the required amount on
-                    the TRON network.
+                  <p className="text-[10px] text-white/45">
+                    USDT on the TRON network (TRC20)
                   </p>
                 </div>
               </div>
 
-              <div className="mt-4 rounded-xl border border-white/8 bg-[#07101F] p-3">
-                <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-white/30">
-                  TRON deposit address
+              <div className="mt-4 rounded-xl border border-white/10 bg-[#07101F] p-3">
+                <p className="text-[9px] font-extrabold uppercase tracking-wide text-white/45">
+                  Expected deposit amount
+                </p>
+                <p className="mt-1 wrap-break-words text-xl font-black">
+                  {formatUSDT(deposit.expectedAmount, currency)}
+                </p>
+              </div>
+
+              <div className="mt-3 rounded-xl border border-white/10 bg-[#07101F] p-3">
+                <p className="text-[9px] font-extrabold uppercase tracking-wide text-white/45">
+                  Company TRON deposit address
                 </p>
 
-                <p className="mt-2 break-all font-mono text-[11px] font-bold text-white/80">
-                  {deposit.companyDepositAddress}
+                <p className="mt-2 break-all font-mono text-[11px] font-bold leading-5 text-white/85">
+                  {deposit.companyDepositAddress || "Unavailable"}
                 </p>
 
                 <button
                   type="button"
-                  onClick={
-                    handleCopyDepositAddress
-                  }
-                  className={`mt-3 flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-3 text-xs font-bold transition ${
+                  onClick={() => void copyAddress()}
+                  disabled={!deposit.companyDepositAddress?.trim()}
+                  className={`mt-3 flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border px-3 text-xs font-extrabold transition disabled:opacity-40 ${
                     addressCopied
-                      ? 'border-emerald-400/25 bg-emerald-400/10 text-emerald-300 hover:bg-emerald-400/15'
-                      : 'border-white/8 bg-white/5 text-white/65 hover:bg-white/10 hover:text-white'
+                      ? "border-emerald-400/25 bg-emerald-400/10 text-emerald-300"
+                      : "border-white/10 bg-white/5 text-white/80 hover:bg-white/10"
                   }`}
-                  aria-live="polite"
                 >
                   {addressCopied ? (
                     <>
-                      <CheckCircle2
-                        size={15}
-                        className="text-emerald-300"
-                      />
-                      <span>Address copied</span>
+                      <CheckCircle2 size={15} />
+                      Address copied
                     </>
                   ) : (
                     <>
                       <Copy size={15} />
-                      <span>
-                        Copy deposit address
-                      </span>
+                      Copy deposit address
                     </>
                   )}
                 </button>
               </div>
 
-              <p className="mt-3 text-[9px] leading-4 text-purple-100/55">
-                Only send TRC20 USDT on the TRON network
-                to this address. Sending another token or
-                using another network may cause the deposit
-                to fail verification.
-              </p>
-            </section>
-
-            <form
-              onSubmit={handleSubmit}
-              className="mt-4"
-            >
-              <label
-                htmlFor="tx-hash"
-                className="text-[10px] font-bold text-white/65"
-              >
-                TRON transaction hash
-              </label>
-
-              <textarea
-                id="tx-hash"
-                value={txHash}
-                onChange={(event) =>
-                  setTxHash(event.target.value)
-                }
-                placeholder="Paste your TRON transaction hash"
-                rows={1}
-                disabled={submissionLocked}
-                className="mt-2 w-full resize-none rounded-xl border border-white/8 bg-[#07101F] px-3 py-3 font-mono text-[11px] text-white outline-none transition placeholder:font-sans placeholder:text-white/20 focus:border-emerald-400/40 focus:ring-2 focus:ring-emerald-400/10 disabled:cursor-not-allowed disabled:opacity-60"
-              />
-
-              <p className="mt-2 text-[9px] leading-4 text-white/25">
-                Make sure this transaction was sent on
-                the TRON network and matches the required
-                deposit amount.
-              </p>
-
-              <button
-                type="submit"
-                disabled={
-                  submissionLocked ||
-                  !txHash.trim() ||
-                  !canSubmit
-                }
-                className={`mt-4 flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-xs font-bold text-white transition ${
-                  submissionLocked
-                    ? 'cursor-not-allowed border border-white/8 bg-white/10 text-white/40'
-                    : 'bg-emerald-500 hover:bg-emerald-400'
-                }`}
-              >
-                {submitting ? (
-                  <>
-                    <Loader2
-                      size={15}
-                      className="animate-spin"
-                    />
-                    Submitting...
-                  </>
-                ) : cooldownSeconds > 0 ? (
-                  <>
-                    <Clock3 size={15} />
-                    Submitted — wait{' '}
-                    {cooldownSeconds}s
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw size={15} />
-                    Submit Transaction
-                  </>
-                )}
-              </button>
-
-              {cooldownSeconds > 0 && (
-                <div className="mt-3 rounded-xl border border-purple-400/10 bg-purple-400/5 px-3 py-2.5 text-center">
-                  <p className="text-[9px] leading-4 text-purple-200/70">
-                    Your transaction is being checked.
-                    Please wait{' '}
-                    <span className="font-bold text-purple-200">
-                      {cooldownSeconds} seconds
-                    </span>{' '}
-                    before submitting again.
-                  </p>
-                </div>
-              )}
-            </form>
-          </section>
-
-      {/* Error */}
-      {error && (
-        <section className="mt-4 rounded-2xl border border-red-400/15 bg-red-400/8 p-4">
-          <div className="flex gap-3">
-            <XCircle
-              size={18}
-              className="mt-0.5 shrink-0 text-red-300"
-            />
-
-            <p className="text-xs leading-5 text-red-200">
-              {error}
-            </p>
-          </div>
-        </section>
-      )}
-
-          {/* Current deposit */}
-          <section className="mt-4 rounded-[26px] border border-white/8 bg-[#0B1426] p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-sm font-extrabold text-white">
-                  Current Deposit
-                </h2>
-
-                <p className="mt-0.5 text-[9px] text-white/25">
-                  Deposit record attached to this
-                  investment
+              <div className="mt-3 flex gap-2 rounded-xl border border-amber-400/20 bg-amber-400/5 p-3">
+                <AlertCircle
+                  size={16}
+                  className="mt-0.5 shrink-0 text-amber-300"
+                />
+                <p className="text-[10px] leading-5 text-white/60">
+                  Send only TRC20 USDT to the displayed address.
+                  Confirm the network, destination, and required
+                  amount before sending. Transfers on the wrong
+                  network may be unrecoverable.
                 </p>
               </div>
+            </section>
 
-              <ShieldCheck
-                size={19}
-                className="text-emerald-300"
-              />
+            {/* SUBMISSION */}
+            <section className="min-w-0 rounded-[22px] border border-white/10 bg-[#0B1426] p-4 sm:p-5">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#E60033]/10 text-[#FF476B]">
+                  <ShieldCheck size={19} />
+                </div>
+
+                <div>
+                  <h2 className="text-sm font-black">
+                    Submit Transaction Hash
+                  </h2>
+                  <p className="text-[10px] text-white/45">
+                    Provide your TRON transaction ID for verification.
+                  </p>
+                </div>
+              </div>
+
+              <form onSubmit={handleSubmit} className="mt-5">
+                <label
+                  htmlFor="tx-hash"
+                  className="text-[11px] font-bold text-white/75"
+                >
+                  TRON transaction hash
+                </label>
+
+                <textarea
+                  id="tx-hash"
+                  rows={3}
+                  value={txHash}
+                  onChange={(event) => setTxHash(event.target.value)}
+                  placeholder="Paste your transaction hash here"
+                  disabled={submissionLocked}
+                  spellCheck={false}
+                  className="mt-2 w-full resize-y rounded-xl border border-white/10 bg-[#07101F] px-3 py-3 font-mono text-[11px] text-white outline-none placeholder:font-sans placeholder:text-white/30 focus:border-[#E60033]/50 focus:ring-2 focus:ring-[#E60033]/10 disabled:opacity-50"
+                />
+
+                <p className="mt-2 text-[10px] leading-5 text-white/45">
+                  Submitting a hash requests verification; it does not
+                  automatically confirm the deposit.
+                </p>
+
+                <button
+                  type="submit"
+                  disabled={!canSubmit || !txHash.trim()}
+                  className="mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#E60033] px-4 text-xs font-extrabold text-white transition hover:bg-[#FF174B] disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/40"
+                >
+                  {submitting ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      Submitting...
+                    </>
+                  ) : cooldownSeconds > 0 ? (
+                    <>
+                      <Clock3 size={16} />
+                      Please wait {cooldownSeconds}s
+                    </>
+                  ) : (
+                    <>
+                      Submit Transaction
+                      <ArrowRight size={15} />
+                    </>
+                  )}
+                </button>
+              </form>
+
+              {cooldownSeconds > 0 && (
+                <p className="mt-3 rounded-xl border border-white/10 bg-[#07101F] p-3 text-center text-[10px] leading-5 text-white/55">
+                  Your submission was accepted. You may submit again
+                  after {cooldownSeconds} seconds if further correction
+                  is needed and the backend permits it.
+                </p>
+              )}
+
+              <div className="mt-4 border-t border-white/10 pt-4">
+                <p className="text-[10px] leading-5 text-white/45">
+                  If the original hash was incorrect, verify the correct
+                  transaction ID before attempting another submission.
+                  A hash already used for another deposit cannot be reused.
+                </p>
+              </div>
+            </section>
+          </div>
+        )}
+
+        {/* RECORDS */}
+        <div className="mt-4 grid min-w-0 grid-cols-1 items-start gap-4 lg:grid-cols-2">
+          <section className="min-w-0 rounded-[22px] border border-white/10 bg-[#0B1426] p-4 sm:p-5">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-sm font-black">Current Deposit</h2>
+              <StatusBadge status={deposit.status} />
             </div>
 
             <div className="mt-4 space-y-2">
-              <DetailRow
-                label="Deposit ID"
-                value={deposit.id}
-                mono
-              />
-
-              <DetailRow
-                label="Status"
-                value={deposit.status}
-              />
-
+              <DetailRow label="Deposit ID" value={deposit.id} mono />
+              <DetailRow label="Status" value={deposit.status} />
               <DetailRow
                 label="Expected amount"
-                value={formatUSDT(
-                  deposit.expectedAmount,
-                  currency,
-                )}
+                value={formatUSDT(deposit.expectedAmount, currency)}
               />
-
               {deposit.txHash && (
                 <DetailRow
-                  label="Transaction"
+                  label="Transaction hash"
                   value={deposit.txHash}
                   mono
                 />
@@ -899,165 +757,127 @@ export default function InvestmentDepositPage() {
             <button
               type="button"
               onClick={() =>
-                router.push(
-                  `/investment/profile/deposit/${deposit.id}`,
-                )
+                router.push(`/investment/profile/deposit/${deposit.id}`)
               }
-              className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-white/8 bg-white/5 px-4 py-3 text-xs font-bold text-white/65 transition hover:bg-white/10 hover:text-white"
+              className="mt-4 flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 text-xs font-bold text-white/75 hover:bg-white/10"
             >
               View deposit details
               <ExternalLink size={14} />
             </button>
           </section>
-        </>
-      )}
 
-      {/* Deposit history */}
-      <section className="mt-4 rounded-[26px] border border-white/8 bg-[#0B1426] p-5">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/8 bg-white/5 text-white/55">
-            <History size={18} />
-          </div>
+          <section className="min-w-0 rounded-[22px] border border-white/10 bg-[#0B1426] p-4 sm:p-5">
+            <div className="flex items-center gap-2">
+              <History size={17} className="text-[#FF476B]" />
+              <h2 className="text-sm font-black">Deposit History</h2>
+            </div>
 
-          <div>
-            <h2 className="text-sm font-extrabold text-white">
-              Deposit History
-            </h2>
-
-            <p className="text-[9px] text-white/25">
-              Previous deposit attempts for this
-              investment
+            <p className="mt-1 text-[10px] text-white/40">
+              Records found in the first 50 returned deposits.
             </p>
-          </div>
-        </div>
 
-        {history.length === 0 ? (
-          <div className="mt-4 rounded-xl border border-white/6 bg-white/4 p-4 text-center">
-            <p className="text-[10px] text-white/30">
-              No previous deposit records found.
-            </p>
-          </div>
-        ) : (
-          <div className="mt-4 space-y-2">
-            {history.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() =>
-                  router.push(
-                    `/investment/profile/deposit/${item.id}`,
-                  )
-                }
-                className="w-full rounded-xl border border-white/6 bg-white/4 p-3 text-left transition hover:border-white/10 hover:bg-white/7"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="text-[9px] font-bold text-white/30">
-                      Deposit
-                    </p>
+            {history.length === 0 ? (
+              <p className="mt-4 rounded-xl bg-[#07101F] p-4 text-center text-[11px] text-white/45">
+                No deposit records found in the loaded history.
+              </p>
+            ) : (
+              <div className="mt-4 space-y-2">
+                {history.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() =>
+                      router.push(`/investment/profile/deposit/${item.id}`)
+                    }
+                    className="w-full min-w-0 rounded-xl border border-white/10 bg-[#07101F] p-3 text-left transition hover:border-[#E60033]/30"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="min-w-0 break-all font-mono text-[10px] text-white/65">
+                        {item.id}
+                      </p>
+                      <StatusBadge status={item.status} />
+                    </div>
 
-                    <p className="mt-1 truncate font-mono text-[10px] text-white/60">
-                      {item.id}
-                    </p>
-                  </div>
+                    <div className="mt-3 flex items-center justify-between gap-2">
+                      <span className="text-[10px] text-white/45">
+                        Expected amount
+                      </span>
+                      <span className="text-right text-xs font-black">
+                        {formatUSDT(item.expectedAmount, currency)}
+                      </span>
+                    </div>
 
-                  <StatusBadge
-                    status={item.status}
-                  />
-                </div>
-
-                <div className="mt-3 flex items-center justify-between">
-                  <span className="text-[9px] text-white/25">
-                    Amount
-                  </span>
-
-                  <span className="text-xs font-extrabold text-white/80">
-                    {formatUSDT(
-                      item.expectedAmount,
-                      currency,
+                    {item.txHash && (
+                      <p className="mt-2 truncate font-mono text-[9px] text-white/40">
+                        TXID: {item.txHash}
+                      </p>
                     )}
-                  </span>
-                </div>
 
-                {item.txHash && (
-                  <div className="mt-2 flex items-center justify-between gap-3">
-                    <span className="shrink-0 text-[9px] text-white/25">
-                      TXID
-                    </span>
+                    <p className="mt-3 flex items-center justify-end gap-1 text-[10px] font-bold text-[#FF476B]">
+                      View deposit
+                      <ExternalLink size={12} />
+                    </p>
+                  </button>
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
 
-                    <span className="truncate font-mono text-[9px] text-white/35">
-                      {item.txHash}
-                    </span>
-                  </div>
-                )}
-
-                <div className="mt-3 flex items-center justify-end gap-1 text-[9px] font-bold text-emerald-300">
-                  View deposit
-                  <ExternalLink size={11} />
-                </div>
-              </button>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* Verification */}
-      <section className="mt-4 rounded-[22px] border border-white/8 bg-[#0B1426] p-4">
-        <div className="flex gap-3">
-          <Clock3
-            size={18}
-            className="mt-0.5 shrink-0 text-white/40"
-          />
-
+        <div className="mt-4 flex gap-3 rounded-xl border border-white/10 bg-[#0B1426] p-4">
+          <Clock3 size={17} className="mt-0.5 shrink-0 text-white/50" />
           <div>
-            <p className="text-xs font-bold text-white/75">
-              Verification
-            </p>
-
-            <p className="mt-1 text-[10px] leading-5 text-white/30">
-              After submission, the transaction is
-              checked on the blockchain. Keep the
-              transaction hash available until
-              verification is complete.
+            <h3 className="text-xs font-black">Transaction Verification</h3>
+            <p className="mt-1 text-[10px] leading-5 text-white/45">
+              Your deposit status refreshes automatically. Keep your
+              transaction hash until the deposit has been verified
+              and its final status is reflected in your account.
             </p>
           </div>
         </div>
-      </section>
+      </div>
+    </PageShell>
+  );
+}
+
+function PageShell({ children }: { children: ReactNode }) {
+  return (
+    <main className="relative min-h-screen w-full overflow-x-hidden bg-[#050B18] px-3 pb-32 pt-4 text-white min-[375px]:px-4 sm:px-6 sm:pt-6 lg:px-8">
+      {children}
     </main>
   );
 }
 
-function PageShell({
-  children,
-}: {
-  children: ReactNode;
-}) {
-  return <div className="relative">{children}</div>;
+function Metric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0 rounded-xl border border-white/10 bg-[#07101F]/60 p-3">
+      <p className="text-[9px] text-white/45">{label}</p>
+      <p className="mt-1 wrap-break-words text-xs font-black sm:text-sm">
+        {value}
+      </p>
+    </div>
+  );
 }
 
-function StatusBadge({
-  status,
-}: {
-  status: string;
-}) {
+function StatusBadge({ status }: { status: string }) {
   const normalized = status.toUpperCase();
 
-  const isSuccess =
-    normalized === 'CONFIRMED' ||
-    normalized === 'COMPLETED';
+  const confirmed =
+    normalized === "CONFIRMED" || normalized === "COMPLETED";
 
-  const isFailed =
-    normalized === 'FAILED' ||
-    normalized === 'CANCELLED';
+  const failed =
+    normalized === "FAILED" ||
+    normalized === "CANCELLED" ||
+    normalized === "REJECTED";
 
   return (
     <span
-      className={`shrink-0 rounded-full border px-2.5 py-1 text-[9px] font-bold ${
-        isSuccess
-          ? 'border-emerald-400/15 bg-emerald-400/8 text-emerald-300'
-          : isFailed
-            ? 'border-red-400/15 bg-red-400/8 text-red-300'
-            : 'border-purple-400/15 bg-purple-400/8 text-purple-300'
+      className={`max-w-[45%] shrink-0 wrap-break-words rounded-lg border px-2.5 py-1 text-[9px] font-extrabold ${
+        confirmed
+          ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-300"
+          : failed
+            ? "border-[#E60033]/30 bg-[#E60033]/10 text-[#FF8BA3]"
+            : "border-amber-400/20 bg-amber-400/10 text-amber-200"
       }`}
     >
       {status}
@@ -1075,20 +895,15 @@ function DetailRow({
   mono?: boolean;
 }) {
   return (
-    <div className="rounded-xl border border-white/5 bg-white/4 px-3 py-3">
-      <div className="flex items-start justify-between gap-4">
-        <span className="shrink-0 text-[9px] text-white/25">
-          {label}
-        </span>
-
-        <span
-          className={`break-all text-right text-[10px] font-bold text-white/60 ${
-            mono ? 'font-mono' : ''
-          }`}
-        >
-          {value}
-        </span>
-      </div>
+    <div className="flex min-w-0 items-start justify-between gap-3 rounded-xl border border-white/5 bg-[#07101F] p-3">
+      <span className="shrink-0 text-[10px] text-white/45">{label}</span>
+      <span
+        className={`min-w-0 break-all text-right text-[10px] font-bold text-white/75 ${
+          mono ? "font-mono" : ""
+        }`}
+      >
+        {value}
+      </span>
     </div>
   );
 }
@@ -1101,28 +916,23 @@ function ErrorState({
   onBack: () => void;
 }) {
   return (
-    <main className="mx-auto flex min-h-[70vh] max-w-xl items-center justify-center">
-      <div className="w-full rounded-[26px] border border-white/8 bg-[#0B1426] p-8 text-center shadow-[0_20px_60px_rgba(0,0,0,0.25)]">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-white/8 bg-white/5 text-2xl">
-          📦
-        </div>
-
-        <h1 className="mt-4 text-lg font-extrabold text-white">
+    <div className="mx-auto flex min-h-[65vh] max-w-xl items-center justify-center">
+      <div className="w-full rounded-[22px] border border-white/10 bg-[#0B1426] p-7 text-center">
+        <AlertCircle size={26} className="mx-auto text-[#FF476B]" />
+        <h1 className="mt-4 text-base font-black">
           Deposit unavailable
         </h1>
-
-        <p className="mt-1 text-xs leading-5 text-white/35">
+        <p className="mt-2 wrap-break-words text-xs leading-5 text-white/50">
           {message}
         </p>
-
         <button
           type="button"
           onClick={onBack}
-          className="mt-5 rounded-xl bg-emerald-500 px-5 py-3 text-xs font-bold text-white transition hover:bg-emerald-400"
+          className="mt-5 rounded-xl bg-[#E60033] px-5 py-3 text-xs font-extrabold text-white hover:bg-[#FF174B]"
         >
           Back to investment
         </button>
       </div>
-    </main>
+    </div>
   );
 }

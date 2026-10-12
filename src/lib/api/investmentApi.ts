@@ -435,7 +435,7 @@ reinvestFromBalance: async (
     );
 
     throw new Error(
-      'Deposit was created, but the backend did not return a deposit ID.',
+      'Deposit was created, but the system did not return a deposit ID.',
     );
   }
 

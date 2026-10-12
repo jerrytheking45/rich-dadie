@@ -1,35 +1,31 @@
 
 // src/app/investment/invest/StepReview/page.tsx
 
+
 "use client";
 
 import {
   AlertCircle,
   ArrowLeft,
-  CheckCircle,
+  ArrowRight,
+  Check,
   CreditCard,
+  Info,
   Loader2,
   Wallet,
 } from "lucide-react";
-
-import {
-  useEffect,
-  useState,
-} from "react";
+import { useEffect, useState } from "react";
 
 import type {
   BalanceSummary,
   InvestmentPlan,
 } from "../../../../lib/types/investment";
-
 import { useSettings } from "../../../../context/useSettings";
 import { useTranslation } from "../../../../i18n/translations";
 import { investmentApi } from "../../../../lib/api/investmentApi";
 import { formatCurrency } from "../../../../lib/utils/currency";
 
-export type FundingSource =
-  | "deposit"
-  | "balance";
+export type FundingSource = "deposit" | "balance";
 
 interface StepReviewProps {
   plan: InvestmentPlan;
@@ -37,16 +33,14 @@ interface StepReviewProps {
   expectedReturn: number;
   totalProjected: number;
   fundingSource: FundingSource;
-  setFundingSource: (
-    source: FundingSource,
-  ) => void;
-  onConfirm: (
-    source: FundingSource,
-  ) => void;
+  setFundingSource: (source: FundingSource) => void;
+  onConfirm: (source: FundingSource) => void;
   onBack: () => void;
+  creating?: boolean;
+  paymentReady?: boolean;
 }
 
-const StepReview = ({
+export default function StepReview({
   plan,
   amount,
   expectedReturn,
@@ -55,410 +49,289 @@ const StepReview = ({
   setFundingSource,
   onConfirm,
   onBack,
-}: StepReviewProps) => {
+  creating = false,
+  paymentReady = true,
+}: StepReviewProps) {
   const { currency } = useSettings();
   const { t } = useTranslation();
 
   const [balanceSummary, setBalanceSummary] =
     useState<BalanceSummary | null>(null);
-
-  const [loadingBalance, setLoadingBalance] =
-    useState(true);
-
-  const [balanceError, setBalanceError] =
-    useState("");
+  const [loadingBalance, setLoadingBalance] = useState(true);
+  const [balanceError, setBalanceError] = useState("");
 
   useEffect(() => {
     let cancelled = false;
 
-    const loadBalanceSummary =
-      async () => {
-        try {
-          const summary =
-            await investmentApi.getBalanceSummary();
+    async function loadBalance() {
+      try {
+        const summary =
+          await investmentApi.getBalanceSummary();
 
-          if (cancelled) {
-            return;
-          }
+        if (cancelled) return;
 
-          setBalanceSummary(summary);
-          setBalanceError("");
-        } catch (error) {
-          if (cancelled) {
-            return;
-          }
+        setBalanceSummary(summary);
+        setBalanceError("");
+      } catch (err) {
+        if (cancelled) return;
 
-          console.error(
-            "Failed to load investment balance summary:",
-            error,
-          );
+        console.error("Failed to load balance:", err);
+        setBalanceError("Unable to retrieve your available balance.");
+      } finally {
+        if (!cancelled) setLoadingBalance(false);
+      }
+    }
 
-          setBalanceSummary(null);
-          setBalanceError(
-            "Unable to load your available balance.",
-          );
-        } finally {
-          if (!cancelled) {
-            setLoadingBalance(false);
-          }
-        }
-      };
-
-    void loadBalanceSummary();
+    void loadBalance();
 
     return () => {
       cancelled = true;
     };
   }, []);
 
-  const availableBalance =
-    balanceSummary?.activeBalance ?? 0;
+  const availableBalance = balanceSummary?.activeBalance ?? 0;
 
-  const isBalanceSufficient =
+  const sufficientBalance =
     !loadingBalance &&
     !balanceError &&
+    Number.isFinite(availableBalance) &&
     availableBalance >= amount;
 
-  const formattedAvailableBalance =
-    formatCurrency(
-      availableBalance,
-      currency,
-    );
+  const balanceSelected = fundingSource === "balance";
 
-  const formattedAmount =
-    formatCurrency(
-      amount,
-      currency,
-    );
-
-  const formattedExpectedReturn =
-    formatCurrency(
-      expectedReturn,
-      currency,
-    );
-
-  const formattedTotalProjected =
-    formatCurrency(
-      totalProjected,
-      currency,
-    );
-
-  const handleBalanceFunding = () => {
-    if (
-      loadingBalance ||
-      balanceError ||
-      !isBalanceSufficient
-    ) {
-      return;
-    }
-
-    setFundingSource("balance");
-  };
-
-  const handleConfirm = () => {
-    if (
-      fundingSource === "balance" &&
-      !isBalanceSufficient
-    ) {
-      return;
-    }
-
-    onConfirm(fundingSource);
-  };
+  const canConfirm =
+    !creating &&
+    paymentReady &&
+    (!balanceSelected || sufficientBalance);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/30">
-          Investment
+        <p className="text-[10px] font-extrabold uppercase tracking-[0.13em] text-[#FF476B]">
+          Step 02
         </p>
-
-        <h2 className="mt-1 text-xl font-black tracking-tight text-white">
+        <h2 className="mt-1 text-lg font-black sm:text-xl">
           {t("review.title")}
         </h2>
+        <p className="mt-1 text-xs leading-5 text-white/45">
+          Check the figures and select how you want to fund
+          this investment.
+        </p>
       </div>
 
-      {/* Summary */}
-      <section className="rounded-3xl border border-white/8 bg-[#0B1426] p-5">
-        <ReviewRow
-          label={t("review.plan")}
-          value={plan.name}
-        />
+      <section className="rounded-[22px] border border-white/10 bg-[#0B1426] p-4 sm:p-5">
+        <h3 className="text-sm font-black">
+          Investment summary
+        </h3>
 
-        <ReviewRow
-          label={t("review.amount")}
-          value={formattedAmount}
-        />
+        <div className="mt-3">
+          <ReviewRow label={t("review.plan")} value={plan.name} />
+          <ReviewRow
+            label={t("review.amount")}
+            value={formatCurrency(amount, currency)}
+          />
+          <ReviewRow
+            label={t("review.expected_return")}
+            value={formatCurrency(expectedReturn, currency)}
+          />
+          <ReviewRow
+            label="Expected rate"
+            value={`${plan.expectedReturnRate}%`}
+          />
+          <ReviewRow
+            label="Duration"
+            value={`${plan.durationDays} days`}
+          />
+        </div>
 
-        <ReviewRow
-          label={t("review.expected_return")}
-          value={`+${formattedExpectedReturn}`}
-          valueClassName="text-emerald-300"
-        />
-
-        <div className="mt-2 flex items-center justify-between gap-4 border-t border-white/8 pt-4">
-          <span className="text-sm font-black text-white/65">
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#E60033]/20 bg-[#E60033]/5 p-3">
+          <span className="text-[11px] font-bold text-white/65">
             {t("review.total_projected")}
           </span>
-
-          <span className="text-sm font-black text-[#F7C948]">
-            {formattedTotalProjected}
+          <span className="break-all text-base font-black text-white">
+            {formatCurrency(totalProjected, currency)}
           </span>
         </div>
+
+        <p className="mt-3 text-[10px] leading-5 text-white/40">
+          Expected earnings and projected totals are estimates,
+          not confirmed or credited returns.
+        </p>
       </section>
 
-      {/* Funding source */}
-      <section className="rounded-3xl border border-white/8 bg-[#0B1426] p-5">
-        <p className="text-sm font-black text-white">
+      <section className="rounded-[22px] border border-white/10 bg-[#0B1426] p-4 sm:p-5">
+        <h3 className="text-sm font-black">
           {t("review.funding_source")}
+        </h3>
+        <p className="mt-1 text-[11px] text-white/45">
+          Choose one funding method to continue.
         </p>
 
-        {/* Deposit */}
         <button
           type="button"
-          onClick={() =>
-            setFundingSource("deposit")
-          }
-          className={[
-            "mt-4 flex w-full items-center gap-3 rounded-2xl border p-4 text-left transition",
+          onClick={() => setFundingSource("deposit")}
+          disabled={creating}
+          aria-pressed={fundingSource === "deposit"}
+          className={`mt-4 flex w-full items-center gap-3 rounded-xl border p-3.5 text-left transition disabled:opacity-50 ${
             fundingSource === "deposit"
-              ? "border-emerald-400/40 bg-emerald-400/8"
-              : "border-white/8 bg-[#07101F] hover:border-white/15",
-          ].join(" ")}
+              ? "border-[#E60033]/60 bg-[#E60033]/10"
+              : "border-white/10 bg-[#07101F] hover:border-white/25"
+          }`}
         >
-          <div
-            className={[
-              "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl",
-              fundingSource === "deposit"
-                ? "bg-emerald-400/10"
-                : "bg-white/5",
-            ].join(" ")}
-          >
-            <CreditCard
-              size={17}
-              className={
-                fundingSource === "deposit"
-                  ? "text-emerald-300"
-                  : "text-white/35"
-              }
-            />
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#E60033]/10 text-[#FF476B]">
+            <CreditCard size={19} />
           </div>
 
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-bold text-white/80">
+            <p className="text-xs font-extrabold text-white">
               {t("review.deposit")}
             </p>
-
-            <p className="mt-0.5 text-xs text-white/30">
+            <p className="mt-1 text-[10px] leading-4 text-white/45">
               {t("review.deposit_desc")}
             </p>
           </div>
 
-          {fundingSource === "deposit" && (
-            <div className="h-3 w-3 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.6)]" />
-          )}
+          <SelectionIndicator selected={fundingSource === "deposit"} />
         </button>
 
-        {/* Balance */}
         <button
           type="button"
-          onClick={handleBalanceFunding}
-          disabled={
-            loadingBalance ||
-            !!balanceError ||
-            !isBalanceSufficient
-          }
-          className={[
-            "mt-3 flex w-full items-center gap-3 rounded-2xl border p-4 text-left transition",
-            fundingSource === "balance"
-              ? "border-emerald-400/40 bg-emerald-400/8"
-              : "border-white/8 bg-[#07101F] hover:border-white/15",
-            loadingBalance ||
-            balanceError ||
-            !isBalanceSufficient
-              ? "cursor-not-allowed opacity-45"
-              : "",
-          ].join(" ")}
+          onClick={() => {
+            if (sufficientBalance) setFundingSource("balance");
+          }}
+          disabled={creating || !sufficientBalance}
+          aria-pressed={balanceSelected}
+          className={`mt-3 flex w-full items-center gap-3 rounded-xl border p-3.5 text-left transition ${
+            balanceSelected
+              ? "border-[#E60033]/60 bg-[#E60033]/10"
+              : "border-white/10 bg-[#07101F] hover:border-white/25"
+          } disabled:cursor-not-allowed disabled:opacity-55`}
         >
-          <div
-            className={[
-              "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl",
-              fundingSource === "balance"
-                ? "bg-emerald-400/10"
-                : "bg-white/5",
-            ].join(" ")}
-          >
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/5 text-white/65">
             {loadingBalance ? (
-              <Loader2
-                size={17}
-                className="animate-spin text-white/35"
-              />
+              <Loader2 size={19} className="animate-spin" />
             ) : (
-              <Wallet
-                size={17}
-                className={
-                  fundingSource === "balance"
-                    ? "text-emerald-300"
-                    : "text-white/35"
-                }
-              />
+              <Wallet size={19} />
             )}
           </div>
 
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-bold text-white/80">
+            <p className="text-xs font-extrabold text-white">
               {t("review.account_balance")}
             </p>
 
-            {loadingBalance && (
-              <p className="mt-0.5 text-xs text-white/30">
-                Checking your available balance...
+            {loadingBalance ? (
+              <p className="mt-1 text-[10px] text-white/45">
+                Checking available balance...
               </p>
-            )}
-
-            {!loadingBalance &&
-              balanceError && (
-                <div className="mt-1 flex items-center gap-1.5 text-xs text-red-300">
-                  <AlertCircle
-                    size={13}
-                    aria-hidden="true"
-                  />
-
-                  <span>
-                    {balanceError}
-                  </span>
-                </div>
-              )}
-
-            {!loadingBalance &&
-              !balanceError &&
-              isBalanceSufficient && (
-                <p className="text-xs text-white/30">
-                  {t(
-                    "review.available_balance",
-                  )}
-                  :{" "}
-                  <span className="font-semibold text-emerald-300">
-                    {formattedAvailableBalance}
-                  </span>
-                </p>
-              )}
-
-            {!loadingBalance &&
-              !balanceError &&
-              !isBalanceSufficient && (
-                <p className="text-xs text-red-300">
-                  {t(
-                    "review.insufficient_balance",
-                  )}{" "}
+            ) : balanceError ? (
+              <p className="mt-1 text-[10px] text-[#FF8BA3]">
+                {balanceError}
+              </p>
+            ) : (
+              <>
+                <p className="mt-1 text-[10px] text-white/55">
                   Available:{" "}
-                  {formattedAvailableBalance}
+                  <span className="font-bold text-white">
+                    {formatCurrency(availableBalance, currency)}
+                  </span>
                 </p>
-              )}
+
+                {!sufficientBalance && (
+                  <p className="mt-1 text-[10px] text-[#FF8BA3]">
+                    {t("review.insufficient_balance")}
+                  </p>
+                )}
+              </>
+            )}
           </div>
 
-          {fundingSource === "balance" && (
-            <div className="h-3 w-3 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.6)]" />
-          )}
+          <SelectionIndicator selected={balanceSelected} />
         </button>
       </section>
 
-      {/* Backend balance */}
-      {!loadingBalance &&
-        !balanceError &&
-        balanceSummary && (
-          <section className="rounded-[22px] border border-emerald-400/10 bg-emerald-400/5 p-4">
-            <div className="flex items-start gap-3">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-400/10">
-                <Wallet
-                  size={15}
-                  className="text-emerald-300"
-                />
-              </div>
-
-              <div className="min-w-0">
-                <p className="text-xs font-black text-emerald-200">
-                  Available investment balance
-                </p>
-
-                <p className="mt-1 text-lg font-black text-emerald-300">
-                  {formattedAvailableBalance}
-                </p>
-
-                <p className="mt-1 text-[10px] leading-4 text-white/30">
-                  This is your calculated
-                  active balance after locked
-                  investment funds are accounted
-                  for.
-                </p>
-              </div>
-            </div>
-          </section>
-        )}
-
-      {/* Terms */}
-      <div className="flex items-start gap-2.5 rounded-[22px] border border-[#F7C948]/10 bg-[#F7C948]/5 p-4">
-        <CheckCircle
+      <div className="flex items-start gap-2.5 rounded-xl border border-amber-400/20 bg-amber-400/5 p-3">
+        <Info
           size={16}
-          className="mt-0.5 shrink-0 text-[#F7C948]"
+          className="mt-0.5 shrink-0 text-amber-300"
         />
-
-        <p className="text-xs leading-5 text-[#F7C948]/70">
-          {t("review.terms_notice")}
+        <p className="text-[10px] leading-5 text-white/60">
+          {t("review.terms_notice")} Investments involve risk,
+          including possible loss of capital. Returns are not guaranteed.
         </p>
       </div>
 
-      {/* Navigation */}
-      <div className="flex gap-3">
+      {!paymentReady && (
+        <div
+          role="alert"
+          className="flex items-center gap-2 rounded-xl border border-[#E60033]/20 bg-[#E60033]/10 p-3 text-[11px] text-[#FF9AAF]"
+        >
+          <AlertCircle size={15} />
+          Payment network details are not ready yet.
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 gap-3">
         <button
           type="button"
           onClick={onBack}
-          className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-white/8 bg-[#0B1426] py-4 text-sm font-bold text-white/55 transition hover:bg-[#0D182C] hover:text-white"
+          disabled={creating}
+          className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-white/10 bg-[#0B1426] px-3 text-xs font-bold text-white/70 transition hover:bg-white/5 disabled:opacity-40"
         >
-          <ArrowLeft size={18} />
+          <ArrowLeft size={16} />
           {t("invest.back")}
         </button>
 
         <button
           type="button"
-          onClick={handleConfirm}
-          disabled={
-            fundingSource === "balance" &&
-            !isBalanceSufficient
-          }
-          className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-linear-to-r from-emerald-500 to-emerald-400 py-4 text-sm font-black text-[#03130C] shadow-[0_15px_35px_-15px_rgba(52,211,153,0.7)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
+          onClick={() => onConfirm(fundingSource)}
+          disabled={!canConfirm}
+          className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#E60033] px-3 text-xs font-extrabold text-white transition hover:bg-[#FF174B] disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/35"
         >
-          {t("invest.confirm")}
+          {creating ? (
+            <>
+              <Loader2 size={16} className="animate-spin" />
+              Processing...
+            </>
+          ) : (
+            <>
+              {t("invest.confirm")}
+              <ArrowRight size={16} />
+            </>
+          )}
         </button>
       </div>
     </div>
   );
-};
+}
 
-interface ReviewRowProps {
-  label: string;
-  value: string;
-  valueClassName?: string;
+function SelectionIndicator({ selected }: { selected: boolean }) {
+  return (
+    <div
+      className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
+        selected
+          ? "border-[#E60033] bg-[#E60033] text-white"
+          : "border-white/25 bg-transparent"
+      }`}
+    >
+      {selected && <Check size={12} strokeWidth={3} />}
+    </div>
+  );
 }
 
 function ReviewRow({
   label,
   value,
-  valueClassName = "text-white/75",
-}: ReviewRowProps) {
+}: {
+  label: string;
+  value: string;
+}) {
   return (
-    <div className="flex items-center justify-between gap-4 border-b border-white/5 py-3 last:border-b-0">
-      <span className="text-xs text-white/35">
-        {label}
-      </span>
-
-      <span
-        className={`text-right text-sm font-semibold ${valueClassName}`}
-      >
+    <div className="flex min-w-0 items-start justify-between gap-3 border-b border-white/5 py-3 last:border-b-0">
+      <span className="text-[11px] text-white/45">{label}</span>
+      <span className="min-w-0 wrap-break-words text-right text-[11px] font-extrabold text-white/85">
         {value}
       </span>
     </div>
   );
 }
-
-export default StepReview;

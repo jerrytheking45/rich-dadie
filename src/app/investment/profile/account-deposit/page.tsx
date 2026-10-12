@@ -1,21 +1,29 @@
-'use client';
+
+"use client";
 
 import {
   ArrowDownToLine,
   ArrowLeft,
   CheckCircle2,
+  ChevronRight,
   Copy,
+  History,
   RefreshCw,
   ShieldCheck,
   Wallet,
   XCircle,
-} from 'lucide-react';
-import axios from 'axios';
-import { useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useSettings } from '@/src/context/useSettings';
-import { investmentApi } from '@/src/lib/api/investmentApi';
-import { formatUSDT } from '@/src/lib/utils/currency';
+} from "lucide-react";
+import axios from "axios";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { useRouter } from "next/navigation";
+import { useSettings } from "@/src/context/useSettings";
+import { investmentApi } from "@/src/lib/api/investmentApi";
+import { formatUSDT } from "@/src/lib/utils/currency";
 
 import type {
   AccountDeposit,
@@ -24,14 +32,12 @@ import type {
   Asset,
   AssetNetwork,
   PrepareAccountDepositResponse,
-} from '@/src/lib/types/investment';
-
-const USDT_SYMBOL = 'USDT';
+} from "@/src/lib/types/investment";
 
 const TRON_NETWORK_NAMES = [
-  'TRON',
-  'TRC20',
-  'TRON TRC20',
+  "TRON",
+  "TRC20",
+  "TRON TRC20",
 ];
 
 function getApiErrorMessage(
@@ -41,34 +47,33 @@ function getApiErrorMessage(
   if (axios.isAxiosError(error)) {
     const data = error.response?.data;
 
-    if (
-      typeof data === 'object' &&
-      data !== null
-    ) {
+    if (typeof data === "object" && data !== null) {
+      const response = data as {
+        error?: unknown;
+        message?: unknown;
+      };
+
       if (
-        typeof data.error === 'string' &&
-        data.error.trim()
+        typeof response.error === "string" &&
+        response.error.trim()
       ) {
-        return data.error.trim();
+        return response.error.trim();
       }
 
       if (
-        typeof data.message === 'string' &&
-        data.message.trim()
+        typeof response.message === "string" &&
+        response.message.trim()
       ) {
-        return data.message.trim();
+        return response.message.trim();
       }
     }
 
-    if (
-      typeof error.message === 'string' &&
-      error.message.trim()
-    ) {
+    if (error.message.trim()) {
       return error.message;
     }
   }
 
-  if (error instanceof Error) {
+  if (error instanceof Error && error.message.trim()) {
     return error.message;
   }
 
@@ -79,20 +84,19 @@ function getStatusClasses(
   status: AccountDepositStatus,
 ): string {
   switch (status) {
-    case 'CONFIRMED':
-      return 'border-emerald-400/20 bg-emerald-400/10 text-emerald-300';
+    case "CONFIRMED":
+      return "border-emerald-400/20 bg-emerald-400/10 text-emerald-300";
 
-    case 'FAILED':
-    case 'EXPIRED':
-    case 'UNMATCHED':
-      return 'border-red-400/20 bg-red-400/10 text-red-300';
+    case "FAILED":
+    case "EXPIRED":
+    case "UNMATCHED":
+      return "border-red-400/20 bg-red-400/10 text-red-300";
 
-    case 'VERIFYING':
-      return 'border-amber-400/20 bg-amber-400/10 text-amber-300';
+    case "VERIFYING":
+      return "border-amber-400/20 bg-amber-400/10 text-amber-300";
 
-    case 'PENDING':
     default:
-      return 'border-white/10 bg-white/[0.06] text-slate-300';
+      return "border-white/10 bg-white/5 text-slate-300";
   }
 }
 
@@ -104,12 +108,12 @@ function InfoBox({
   value: string;
 }) {
   return (
-    <div className="rounded-2xl border border-white/[0.07] bg-white/[0.035] p-3.5">
-      <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+    <div className="min-w-0 rounded-xl border border-white/[0.07] bg-[#07101F] p-3">
+      <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
         {label}
       </p>
 
-      <p className="mt-1.5 truncate text-xs font-extrabold text-white">
+      <p className="mt-1.5 truncate text-xs font-extrabold text-white sm:text-sm">
         {value}
       </p>
     </div>
@@ -120,9 +124,10 @@ export default function AccountDepositPage() {
   const router = useRouter();
   const { currency } = useSettings();
 
-  // ---------------------------------------------------------------------------
-  // Asset / network
-  // ---------------------------------------------------------------------------
+  const prepareLock = useRef(false);
+  const submitLock = useRef(false);
+  const verifyLock = useRef(false);
+  const refreshLock = useRef(false);
 
   const [selectedAsset, setSelectedAsset] =
     useState<Asset | null>(null);
@@ -130,22 +135,10 @@ export default function AccountDepositPage() {
   const [selectedNetwork, setSelectedNetwork] =
     useState<AssetNetwork | null>(null);
 
-  // ---------------------------------------------------------------------------
-  // Deposit address
-  // ---------------------------------------------------------------------------
-
   const [address, setAddress] =
     useState<AccountDepositAddress | null>(null);
 
-  // ---------------------------------------------------------------------------
-  // Deposit amount
-  // ---------------------------------------------------------------------------
-
-  const [amount, setAmount] = useState('');
-
-  // ---------------------------------------------------------------------------
-  // Deposit state
-  // ---------------------------------------------------------------------------
+  const [amount, setAmount] = useState("");
 
   const [preparedDeposit, setPreparedDeposit] =
     useState<PrepareAccountDepositResponse | null>(null);
@@ -153,148 +146,110 @@ export default function AccountDepositPage() {
   const [deposit, setDeposit] =
     useState<AccountDeposit | null>(null);
 
-  // ---------------------------------------------------------------------------
-  // Transaction hash
-  // ---------------------------------------------------------------------------
-
-  const [txHash, setTxHash] = useState('');
-
-  // ---------------------------------------------------------------------------
-  // History
-  // ---------------------------------------------------------------------------
+  const [txHash, setTxHash] = useState("");
 
   const [history, setHistory] =
     useState<AccountDeposit[]>([]);
 
-  // ---------------------------------------------------------------------------
-  // Loading states
-  // ---------------------------------------------------------------------------
+  const [historyExpanded, setHistoryExpanded] =
+    useState(false);
+
+  const [historyError, setHistoryError] = useState("");
 
   const [loading, setLoading] = useState(true);
-
-  const [loadingAddress, setLoadingAddress] =
-    useState(false);
-
-  const [preparing, setPreparing] =
-    useState(false);
-
-  const [submitting, setSubmitting] =
-    useState(false);
-
-  const [verifying, setVerifying] =
-    useState(false);
-
-  const [refreshing, setRefreshing] =
-    useState(false);
-
-  // ---------------------------------------------------------------------------
-  // UI state
-  // ---------------------------------------------------------------------------
-
+  const [loadingAddress, setLoadingAddress] = useState(false);
+  const [preparing, setPreparing] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [copied, setCopied] = useState(false);
-
-  const [error, setError] = useState('');
-
-  // ===========================================================================
-  // INITIALIZATION
-  // ===========================================================================
+  const [error, setError] = useState("");
 
   useEffect(() => {
     let cancelled = false;
 
-    const initialize = async () => {
+    async function initialize() {
       try {
-        setLoading(true);
-        setError('');
-
-        // 1. Load assets
         const assetResponse =
           await investmentApi.getAssets();
 
-        if (cancelled) {
-          return;
-        }
+        if (cancelled) return;
 
         const usdt = assetResponse.find(
           (asset) =>
-            asset.symbol?.trim().toUpperCase() ===
-            USDT_SYMBOL,
+            asset.isActive &&
+            asset.symbol?.trim().toUpperCase() === "USDT",
         );
 
         if (!usdt) {
-          throw new Error(
-            'USDT is currently unavailable.',
-          );
+          throw new Error("USDT is currently unavailable.");
         }
 
-        // 2. Load USDT networks
         const networkResponse =
           await investmentApi.getNetworks(usdt.id);
 
-        if (cancelled) {
-          return;
-        }
+        if (cancelled) return;
 
         const tron = networkResponse.find(
           (network) =>
+            network.isActive &&
             TRON_NETWORK_NAMES.includes(
-              network.network
-                ?.trim()
-                .toUpperCase(),
+              network.network?.trim().toUpperCase(),
             ),
         );
 
         if (!tron) {
           throw new Error(
-            'TRON network is currently unavailable for USDT.',
+            "TRON network is currently unavailable for USDT.",
           );
         }
 
-        // 3. Load address + history in parallel
-        const [
-          addressResponse,
-          historyResponse,
-        ] = await Promise.all([
-          investmentApi.getAccountDepositAddress(
-            usdt.id,
-            tron.id,
-          ),
-          investmentApi.getAccountDeposits(
-            1,
-            20,
-          ),
-        ]);
+        const [addressResult, historyResult] =
+          await Promise.allSettled([
+            investmentApi.getAccountDepositAddress(
+              usdt.id,
+              tron.id,
+            ),
+            investmentApi.getAccountDeposits(1, 20),
+          ]);
 
-        if (cancelled) {
-          return;
-        }
+        if (cancelled) return;
 
-        // 4. Update state
         setSelectedAsset(usdt);
         setSelectedNetwork(tron);
-        setAddress(addressResponse);
-        setHistory(historyResponse.deposits);
+
+        if (addressResult.status === "fulfilled") {
+          setAddress(addressResult.value);
+        } else {
+          setError(
+            getApiErrorMessage(
+              addressResult.reason,
+              "Unable to load your deposit address.",
+            ),
+          );
+        }
+
+        if (historyResult.status === "fulfilled") {
+          setHistory(historyResult.value.deposits);
+          setHistoryError("");
+        } else {
+          setHistoryError(
+            "Unable to load deposit history.",
+          );
+        }
       } catch (err) {
-        if (cancelled) {
-          return;
-        }
-
-        console.error(
-          'Failed to initialize account deposit:',
-          err,
-        );
-
-        setError(
-          err instanceof Error
-            ? err.message
-            : 'Failed to load deposit information.',
-        );
-      } finally {
         if (!cancelled) {
-          setLoading(false);
+          setError(
+            getApiErrorMessage(
+              err,
+              "Unable to load deposit information.",
+            ),
+          );
         }
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-    };
+    }
 
     void initialize();
 
@@ -303,38 +258,25 @@ export default function AccountDepositPage() {
     };
   }, []);
 
-  // ===========================================================================
-  // LOAD HISTORY
-  // ===========================================================================
-
   const loadHistory = async () => {
     try {
-      const response =
-        await investmentApi.getAccountDeposits(
-          1,
-          20,
-        );
+      const result =
+        await investmentApi.getAccountDeposits(1, 20);
 
-      setHistory(response.deposits);
+      setHistory(result.deposits);
+      setHistoryError("");
     } catch (err) {
-      console.error(
-        'Failed to load account deposit history:',
-        err,
+      setHistoryError(
+        getApiErrorMessage(
+          err,
+          "Unable to refresh deposit history.",
+        ),
       );
     }
   };
 
-  // ===========================================================================
-  // LOAD ADDRESS
-  // ===========================================================================
-
   const loadAddress = async () => {
-    if (
-      !selectedAsset ||
-      !selectedNetwork
-    ) {
-      return;
-    }
+    if (!selectedAsset || !selectedNetwork) return;
 
     setLoadingAddress(true);
 
@@ -347,46 +289,27 @@ export default function AccountDepositPage() {
 
       setAddress(result);
     } catch (err) {
-      console.error(
-        'Failed to load account deposit address:',
-        err,
-      );
-
       setError(
-        err instanceof Error
-          ? err.message
-          : 'Failed to load your deposit address.',
+        getApiErrorMessage(
+          err,
+          "Unable to load your deposit address.",
+        ),
       );
     } finally {
       setLoadingAddress(false);
     }
   };
 
-  // ===========================================================================
-  // NUMERIC AMOUNT
-  // ===========================================================================
-
   const numericAmount = useMemo(() => {
     const value = Number(amount);
 
-    if (
-      !Number.isFinite(value) ||
-      value <= 0
-    ) {
-      return 0;
-    }
-
-    return value;
+    return Number.isFinite(value) && value > 0
+      ? value
+      : 0;
   }, [amount]);
 
-  // ===========================================================================
-  // COPY ADDRESS
-  // ===========================================================================
-
   const copyAddress = async () => {
-    if (!address?.depositAddress) {
-      return;
-    }
+    if (!address?.depositAddress) return;
 
     try {
       await navigator.clipboard.writeText(
@@ -395,41 +318,28 @@ export default function AccountDepositPage() {
 
       setCopied(true);
 
-      window.setTimeout(() => {
-        setCopied(false);
-      }, 1800);
-    } catch (err) {
-      console.error(
-        'Failed to copy address:',
-        err,
-      );
+      window.setTimeout(() => setCopied(false), 1800);
+    } catch {
+      setError("Unable to copy the deposit address.");
     }
   };
 
-  // ===========================================================================
-  // PREPARE DEPOSIT
-  // ===========================================================================
-
   const prepareDeposit = async () => {
-    if (
-      !selectedAsset ||
-      !selectedNetwork
-    ) {
-      setError(
-        'USDT on TRON is not available.',
-      );
+    if (prepareLock.current) return;
+
+    if (!selectedAsset || !selectedNetwork) {
+      setError("USDT on TRON is not available.");
       return;
     }
 
     if (numericAmount <= 0) {
-      setError(
-        'Enter a valid deposit amount.',
-      );
+      setError("Enter a valid deposit amount.");
       return;
     }
 
+    prepareLock.current = true;
     setPreparing(true);
-    setError('');
+    setError("");
 
     try {
       const result =
@@ -441,102 +351,77 @@ export default function AccountDepositPage() {
 
       setPreparedDeposit(result);
       setDeposit(null);
-      setTxHash('');
+      setTxHash("");
     } catch (err) {
-      console.error(
-        'Failed to prepare account deposit:',
-        err,
-      );
-
       setError(
         getApiErrorMessage(
           err,
-          'Failed to prepare account deposit.',
+          "Unable to prepare your deposit.",
         ),
       );
     } finally {
+      prepareLock.current = false;
       setPreparing(false);
     }
   };
 
-  // ===========================================================================
-  // SUBMIT TRANSACTION HASH
-  // ===========================================================================
-
   const submitTransaction = async () => {
+    if (submitLock.current) return;
+
     const cleanTxHash = txHash.trim();
 
     if (!preparedDeposit?.id) {
-      setError(
-        'No prepared deposit was found. Please prepare the deposit first.',
-      );
+      setError("Prepare your deposit first.");
       return;
     }
 
     if (!cleanTxHash) {
-      setError(
-        'Please enter the transaction hash.',
-      );
+      setError("Enter the transaction hash.");
       return;
     }
 
+    submitLock.current = true;
     setSubmitting(true);
-    setError('');
+    setError("");
 
     try {
-      const updatedDeposit =
+      const result =
         await investmentApi.submitAccountDeposit(
           preparedDeposit.id,
           cleanTxHash,
         );
 
       setPreparedDeposit(null);
-      setDeposit(updatedDeposit);
-
-      setTxHash(
-        updatedDeposit.txHash ||
-          cleanTxHash,
-      );
+      setDeposit(result);
+      setTxHash(result.txHash || cleanTxHash);
 
       await loadHistory();
     } catch (err) {
-      console.error(
-        'Failed to submit account deposit:',
-        err,
-      );
-
       setError(
         getApiErrorMessage(
           err,
-          'Failed to submit transaction.',
+          "Unable to submit your transaction.",
         ),
       );
     } finally {
+      submitLock.current = false;
       setSubmitting(false);
     }
   };
 
-  // ===========================================================================
-  // VERIFY DEPOSIT
-  // ===========================================================================
-
   const verifyDeposit = async () => {
-    if (!deposit?.id) {
+    if (verifyLock.current) return;
+
+    if (!deposit?.id || !deposit.txHash) {
       setError(
-        'This account deposit could not be found.',
+        "Submit your transaction hash before verification.",
       );
       return;
     }
 
-    if (!deposit.txHash) {
-      setError(
-        'Please submit the transaction hash before verification.',
-      );
-      return;
-    }
-
+    verifyLock.current = true;
     setVerifying(true);
-    setError('');
+    setError("");
 
     try {
       const result =
@@ -545,351 +430,232 @@ export default function AccountDepositPage() {
         );
 
       setDeposit(result);
-
       await loadHistory();
     } catch (err) {
-      console.error(
-        'Failed to verify account deposit:',
-        err,
-      );
-
       setError(
         getApiErrorMessage(
           err,
-          'Failed to verify the deposit.',
+          "Unable to check deposit status.",
         ),
       );
     } finally {
+      verifyLock.current = false;
       setVerifying(false);
     }
   };
 
-  // ===========================================================================
-  // REFRESH
-  // ===========================================================================
-
   const refresh = async () => {
+    if (refreshLock.current) return;
+
+    refreshLock.current = true;
     setRefreshing(true);
-    setError('');
+    setError("");
 
     try {
-      const requests: Promise<void>[] = [
+      const requests: Promise<unknown>[] = [
         loadHistory(),
       ];
 
-      if (
-        selectedAsset &&
-        selectedNetwork
-      ) {
+      if (selectedAsset && selectedNetwork) {
         requests.push(loadAddress());
       }
 
       if (deposit?.id) {
         requests.push(
           investmentApi
-            .getAccountDeposit(
-              deposit.id,
-            )
-            .then((latest) => {
-              setDeposit(latest);
-            }),
+            .getAccountDeposit(deposit.id)
+            .then(setDeposit),
         );
       }
 
       await Promise.all(requests);
     } catch (err) {
-      console.error(
-        'Failed to refresh account deposit:',
-        err,
-      );
-
       setError(
         getApiErrorMessage(
           err,
-          'Failed to refresh deposit information.',
+          "Unable to refresh deposit information.",
         ),
       );
     } finally {
+      refreshLock.current = false;
       setRefreshing(false);
     }
   };
 
-  // ===========================================================================
-  // LOADING
-  // ===========================================================================
-
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#050B18] px-6">
-        <div className="flex flex-col items-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-emerald-400/20 bg-emerald-400/10">
-            <Wallet
-              size={22}
-              className="text-emerald-400"
-            />
-          </div>
-
-          <div className="mt-4 flex items-center gap-2 text-xs font-medium text-slate-400">
-            <RefreshCw
-              size={14}
-              className="animate-spin"
-            />
-            Loading deposit...
-          </div>
+      <main className="min-h-screen bg-[#050B18] px-4 py-7 text-white">
+        <div className="mx-auto max-w-2xl animate-pulse space-y-4">
+          <div className="h-12 w-44 rounded-xl bg-white/10" />
+          <div className="h-36 rounded-[22px] bg-[#0B1426]" />
+          <div className="h-64 rounded-[22px] bg-[#0B1426]" />
+          <div className="h-72 rounded-[22px] bg-[#0B1426]" />
         </div>
-      </div>
+      </main>
     );
   }
 
-  // ===========================================================================
-  // UI
-  // ===========================================================================
-
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#050B18] text-white">
-      {/* Ambient background */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -right-32 -top-32 h-80 w-80 rounded-full bg-purple-600/10 blur-3xl" />
-        <div className="absolute -left-40 top-[35%] h-80 w-80 rounded-full bg-emerald-500/5 blur-3xl" />
-        <div className="absolute bottom-0 right-0 h-72 w-72 rounded-full bg-blue-600/5 blur-3xl" />
-      </div>
-
-      <main className="relative mx-auto w-full max-w-2xl px-4 pb-32 pt-5 sm:px-6 lg:max-w-5xl lg:px-8">
-        {/* ================================================================= */}
+    <main className="relative mx-auto w-full max-w-2xl px-4 pb-32 pt-5 sm:px-6 lg:max-w-5xl lg:px-8">
+      <div className="mx-auto w-full max-w-2xl space-y-4">
         {/* HEADER */}
-        {/* ================================================================= */}
+        <header className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() =>
+              router.push("/investment/profile/wallet")
+            }
+            aria-label="Back to wallet"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-[#0B1426] text-slate-300"
+          >
+            <ArrowLeft size={17} />
+          </button>
 
-        <header className="flex items-center justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-3">
-            <button
-              type="button"
-              onClick={() =>
-                router.push(
-                  '/investment/profile/wallet',
-                )
-              }
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-slate-300 shadow-lg shadow-black/10 transition hover:bg-white/8 hover:text-white active:scale-95"
-              aria-label="Back to wallet"
-            >
-              <ArrowLeft size={18} />
-            </button>
+          <div className="min-w-0 flex-1">
+            <p className="text-[9px] font-extrabold uppercase tracking-[0.16em] text-[#FF476B]">
+              REDIQ Wallet
+            </p>
 
-            <div className="min-w-0">
-              <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-emerald-400">
-                Account Wallet
-              </p>
-
-              <h1 className="mt-0.5 truncate text-[20px] font-extrabold tracking-tight text-white">
-                Deposit
-              </h1>
-
-              <p className="text-[10px] text-slate-500">
-                Fund your available balance
-              </p>
-            </div>
+            <h1 className="mt-0.5 text-lg font-black tracking-tight sm:text-xl">
+              Deposit funds
+            </h1>
           </div>
 
           <button
             type="button"
             onClick={() => void refresh()}
             disabled={refreshing}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-slate-300 transition hover:bg-white/8 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-            aria-label="Refresh deposit"
+            aria-label="Refresh deposit information"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-[#0B1426] text-slate-300 disabled:opacity-50"
           >
             <RefreshCw
               size={16}
-              className={
-                refreshing
-                  ? 'animate-spin'
-                  : ''
-              }
+              className={refreshing ? "animate-spin" : ""}
             />
           </button>
         </header>
 
-        {/* ================================================================= */}
-        {/* HERO */}
-        {/* ================================================================= */}
+        {/* INTRO */}
+        <section className="relative overflow-hidden rounded-[22px] border border-[#E60033]/15 bg-linear-to-br from-[#142039] via-[#0B1426] to-[#10101F] p-4 sm:p-5">
+          <div className="pointer-events-none absolute -right-12 -top-12 h-36 w-36 rounded-full bg-[#E60033]/15 blur-3xl" />
 
-        <section className="relative mt-5 overflow-hidden rounded-[28px] border border-white/8 bg-linear-to-br from-[#101D33] via-[#0B1426] to-[#11102B] p-5 shadow-2xl shadow-black/20">
-          <div className="absolute -right-10 -top-16 h-40 w-40 rounded-full bg-emerald-400/10 blur-3xl" />
-
-          <div className="relative">
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-emerald-400/20 bg-emerald-400/10">
-                <ArrowDownToLine
-                  size={19}
-                  className="text-emerald-400"
-                />
-              </div>
-
-              <div>
-                <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-emerald-400">
-                  Secure Funding
-                </p>
-
-                <h2 className="mt-1 text-base font-extrabold text-white">
-                  Add USDT to your account
-                </h2>
-              </div>
+          <div className="relative flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#E60033]/12 text-[#FF476B]">
+              <ArrowDownToLine size={19} />
             </div>
 
-            <p className="mt-4 max-w-lg text-xs leading-5 text-slate-400">
-              Send USDT through the supported TRON/TRC20
-              network and submit the blockchain transaction
-              hash for verification.
-            </p>
+            <div>
+              <h2 className="text-sm font-extrabold">
+                Add USDT to your balance
+              </h2>
 
-            <div className="mt-5 grid grid-cols-2 gap-3">
-              <div className="rounded-2xl border border-white/[0.07] bg-white/4 p-3.5">
-                <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-                  Asset
-                </p>
-
-                <p className="mt-1.5 text-sm font-extrabold text-white">
-                  {selectedAsset?.symbol ?? 'USDT'}
-                </p>
-
-                <p className="mt-0.5 text-[10px] text-slate-500">
-                  {selectedAsset?.name ?? 'Tether USD'}
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-purple-400/10 bg-purple-400/5 p-3.5">
-                <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-                  Network
-                </p>
-
-                <p className="mt-1.5 text-sm font-extrabold text-white">
-                  TRON
-                </p>
-
-                <p className="mt-0.5 text-[10px] text-purple-300">
-                  TRC20
-                </p>
-              </div>
+              <p className="mt-1 text-[11px] leading-5 text-slate-400">
+                Send USDT through TRON/TRC20, then submit
+                your transaction hash for verification.
+              </p>
             </div>
+          </div>
+
+          <div className="relative mt-4 grid grid-cols-2 gap-2.5">
+            <InfoBox
+              label="Asset"
+              value={selectedAsset?.symbol ?? "USDT"}
+            />
+            <InfoBox
+              label="Network"
+              value="TRON / TRC20"
+            />
           </div>
         </section>
 
-        {/* ================================================================= */}
-        {/* DEPOSIT ADDRESS */}
-        {/* ================================================================= */}
+        {/* ADDRESS */}
+        <section className="rounded-[22px] border border-white/10 bg-[#0B1426] p-4 sm:p-5">
+          <div className="flex items-center gap-2.5">
+            <ShieldCheck
+              size={18}
+              className="text-[#FF476B]"
+            />
 
-        <section className="mt-4 overflow-hidden rounded-[26px] border border-white/8 bg-[#0B1426] shadow-xl shadow-black/10">
-          <div className="p-5">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-400/10">
-                  <ShieldCheck
-                    size={18}
-                    className="text-blue-400"
-                  />
-                </div>
+            <div className="flex-1">
+              <h2 className="text-sm font-extrabold">
+                Deposit address
+              </h2>
+              <p className="mt-0.5 text-[10px] text-slate-500">
+                Your assigned TRON wallet
+              </p>
+            </div>
 
-                <div>
-                  <h2 className="text-[15px] font-extrabold text-white">
-                    Your deposit address
-                  </h2>
-
-                  <p className="mt-1 text-[10px] leading-4 text-slate-500">
-                    Send USDT only through TRON/TRC20.
-                  </p>
-                </div>
-              </div>
-
-              <span className="shrink-0 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2.5 py-1 text-[8px] font-bold uppercase tracking-wider text-emerald-300">
+            {address?.isActive && (
+              <span className="rounded-full border border-white/10 bg-white/5 px-2 py-1 text-[9px] font-bold text-slate-300">
                 Active
               </span>
-            </div>
-
-            {loadingAddress ? (
-              <div className="mt-5 flex items-center gap-2 rounded-2xl border border-white/6 bg-white/[0.035] p-4 text-xs text-slate-400">
-                <RefreshCw
-                  size={14}
-                  className="animate-spin"
-                />
-
-                Loading address...
-              </div>
-            ) : address ? (
-              <>
-                <div className="mt-5 rounded-2xl border border-emerald-400/10 bg-[#07101F] p-4">
-                  <p className="mb-2 text-[8px] font-bold uppercase tracking-[0.16em] text-slate-600">
-                    TRON wallet address
-                  </p>
-
-                  <p className="break-all font-mono text-[11px] font-bold leading-5 text-slate-200">
-                    {address.depositAddress}
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => void copyAddress()}
-                  className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3.5 text-xs font-extrabold text-[#04100B] shadow-lg shadow-emerald-500/10 transition hover:bg-emerald-400 active:scale-[0.99]"
-                >
-                  {copied ? (
-                    <>
-                      <CheckCircle2 size={15} />
-                      Address copied
-                    </>
-                  ) : (
-                    <>
-                      <Copy size={15} />
-                      Copy deposit address
-                    </>
-                  )}
-                </button>
-
-                <div className="mt-3 flex items-start gap-2.5 rounded-2xl border border-amber-400/10 bg-amber-400/6 p-3.5">
-                  <ShieldCheck
-                    size={15}
-                    className="mt-0.5 shrink-0 text-amber-400"
-                  />
-
-                  <p className="text-[10px] leading-4 text-amber-200/80">
-                    Only send USDT over the TRON/TRC20
-                    network to this address. Sending another
-                    asset or using another network may result
-                    in permanent loss of funds.
-                  </p>
-                </div>
-              </>
-            ) : (
-              <div className="mt-5 rounded-2xl border border-white/6 bg-white/[0.035] p-4 text-xs text-slate-500">
-                Deposit address is currently unavailable.
-              </div>
             )}
           </div>
-        </section>
 
-        {/* ================================================================= */}
-        {/* PREPARE NEW DEPOSIT */}
-        {/* ================================================================= */}
-
-        {!preparedDeposit && !deposit && (
-          <section className="mt-4 rounded-[26px] border border-white/8 bg-[#0B1426] p-5 shadow-xl shadow-black/10">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-400/10">
-                <Wallet
-                  size={18}
-                  className="text-purple-300"
-                />
+          {loadingAddress ? (
+            <p className="mt-4 text-xs text-slate-400">
+              Loading address...
+            </p>
+          ) : address ? (
+            <>
+              <div className="mt-4 rounded-xl border border-white/[0.07] bg-[#07101F] p-3.5">
+                <p className="break-all font-mono text-[11px] leading-5 text-slate-200">
+                  {address.depositAddress}
+                </p>
               </div>
 
+              <button
+                type="button"
+                onClick={() => void copyAddress()}
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#E60033] px-4 py-3 text-xs font-extrabold text-white transition hover:bg-[#FF174D]"
+              >
+                {copied ? (
+                  <>
+                    <CheckCircle2 size={15} />
+                    Address copied
+                  </>
+                ) : (
+                  <>
+                    <Copy size={15} />
+                    Copy deposit address
+                  </>
+                )}
+              </button>
+
+              <p className="mt-3 text-[10px] leading-4 text-amber-200/75">
+                Send only USDT through TRON/TRC20 to this
+                address. Other assets or networks may
+                result in permanent loss of funds.
+              </p>
+            </>
+          ) : (
+            <p className="mt-4 text-xs text-slate-500">
+              Deposit address is currently unavailable.
+            </p>
+          )}
+        </section>
+
+        {/* PREPARE */}
+        {!preparedDeposit && !deposit && (
+          <section className="rounded-[22px] border border-white/10 bg-[#0B1426] p-4 sm:p-5">
+            <div className="flex items-center gap-2.5">
+              <Wallet
+                size={18}
+                className="text-[#FF476B]"
+              />
+
               <div>
-                <h2 className="text-[15px] font-extrabold text-white">
+                <h2 className="text-sm font-extrabold">
                   Deposit amount
                 </h2>
 
                 <p className="mt-0.5 text-[10px] text-slate-500">
-                  Enter the amount you intend to send
+                  How much USDT will you send?
                 </p>
               </div>
             </div>
 
-            <div className="relative mt-5">
+            <div className="relative mt-4">
               <input
                 type="number"
                 min="0"
@@ -897,93 +663,54 @@ export default function AccountDepositPage() {
                 inputMode="decimal"
                 value={amount}
                 onChange={(event) =>
-                  setAmount(
-                    event.target.value,
-                  )
+                  setAmount(event.target.value)
                 }
                 placeholder="0.00"
-                className="h-16 w-full rounded-2xl border border-white/8 bg-[#07101F] px-4 pr-20 text-xl font-extrabold text-white outline-none transition placeholder:text-slate-700 focus:border-emerald-400/40 focus:bg-[#091525]"
+                className="h-14 w-full rounded-xl border border-white/10 bg-[#07101F] px-4 pr-20 text-xl font-black outline-none placeholder:text-slate-700 focus:border-[#FF476B]/50"
               />
 
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 rounded-lg border border-white/[0.07] bg-white/4 px-2.5 py-1.5 text-[9px] font-extrabold tracking-wider text-emerald-300">
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-extrabold text-[#FF476B]">
                 USDT
               </span>
             </div>
 
             <button
               type="button"
-              onClick={() =>
-                void prepareDeposit()
-              }
-              disabled={
-                preparing ||
-                numericAmount <= 0
-              }
-              className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3.5 text-xs font-extrabold text-[#04100B] shadow-lg shadow-emerald-500/10 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-40"
+              onClick={() => void prepareDeposit()}
+              disabled={preparing || numericAmount <= 0}
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#E60033] px-4 py-3.5 text-xs font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-40"
             >
-              {preparing ? (
-                <>
-                  <RefreshCw
-                    size={15}
-                    className="animate-spin"
-                  />
-
-                  Preparing deposit...
-                </>
-              ) : (
-                <>
-                  <Wallet size={15} />
-
-                  Prepare deposit
-                </>
+              {preparing && (
+                <RefreshCw
+                  size={15}
+                  className="animate-spin"
+                />
               )}
+              {preparing
+                ? "Preparing deposit..."
+                : "Prepare deposit"}
             </button>
-
-            <p className="mt-3 text-center text-[9px] leading-4 text-slate-600">
-              You will receive a deposit instruction before
-              submitting your transaction hash.
-            </p>
           </section>
         )}
 
-        {/* ================================================================= */}
-        {/* PREPARED DEPOSIT */}
-        {/* ================================================================= */}
-
+        {/* PREPARED */}
         {preparedDeposit && !deposit && (
-          <section className="mt-4 rounded-[26px] border border-purple-400/10 bg-[#0B1426] p-5 shadow-xl shadow-black/10">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-purple-400/10">
-                    <CheckCircle2
-                      size={15}
-                      className="text-purple-300"
-                    />
-                  </div>
-
-                  <h2 className="text-[15px] font-extrabold text-white">
-                    Deposit prepared
-                  </h2>
-                </div>
-
-                <p className="mt-2 break-all font-mono text-[9px] text-slate-600">
-                  ID: {preparedDeposit.id}
-                </p>
-              </div>
+          <section className="rounded-[22px] border border-white/10 bg-[#0B1426] p-4 sm:p-5">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-sm font-extrabold">
+                Deposit prepared
+              </h2>
 
               <span
-                className={`shrink-0 rounded-full border px-2.5 py-1 text-[8px] font-bold ${getStatusClasses(
-                  preparedDeposit.status,
-                )}`}
+                className={`rounded-full border px-2.5 py-1 text-[9px] font-bold ${getStatusClasses(preparedDeposit.status)}`}
               >
                 {preparedDeposit.status}
               </span>
             </div>
 
-            <div className="mt-5 grid grid-cols-2 gap-3">
+            <div className="mt-4 grid grid-cols-2 gap-2.5">
               <InfoBox
-                label="Expected"
+                label="Expected amount"
                 value={formatUSDT(
                   preparedDeposit.expectedAmount,
                   currency,
@@ -996,145 +723,91 @@ export default function AccountDepositPage() {
               />
             </div>
 
-            <div className="mt-4 rounded-2xl border border-blue-400/10 bg-blue-400/6 p-4">
-              <div className="flex items-start gap-3">
-                <ArrowDownToLine
-                  size={18}
-                  className="mt-0.5 shrink-0 text-blue-400"
-                />
-
-                <div>
-                  <p className="text-xs font-extrabold text-blue-200">
-                    Send your USDT
-                  </p>
-
-                  <p className="mt-1 text-[10px] leading-4 text-blue-200/70">
-                    Send exactly{' '}
-                    <strong className="text-blue-100">
-                      {formatUSDT(
-                        preparedDeposit.expectedAmount,
-                        currency,
-                      )}
-                    </strong>{' '}
-                    to your TRON deposit address above.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-5">
-              <label
-                htmlFor="transaction-hash"
-                className="text-xs font-bold text-white"
-              >
-                Transaction hash
-              </label>
-
-              <p className="mt-1 text-[10px] leading-4 text-slate-500">
-                After sending USDT from Binance or another
-                wallet, paste the TRON transaction hash here.
-              </p>
-
-              <input
-                id="transaction-hash"
-                type="text"
-                value={txHash}
-                onChange={(event) =>
-                  setTxHash(
-                    event.target.value,
-                  )
-                }
-                placeholder="Paste your TRON transaction hash"
-                className="mt-3 h-13 w-full rounded-2xl border border-white/8 bg-[#07101F] px-4 font-mono text-xs text-white outline-none transition placeholder:text-slate-700 focus:border-emerald-400/40"
-              />
-
-              <button
-                type="button"
-                onClick={() =>
-                  void submitTransaction()
-                }
-                disabled={
-                  submitting ||
-                  !txHash.trim()
-                }
-                className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3.5 text-xs font-extrabold text-[#04100B] shadow-lg shadow-emerald-500/10 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                {submitting ? (
-                  <>
-                    <RefreshCw
-                      size={15}
-                      className="animate-spin"
-                    />
-
-                    Submitting transaction...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle2 size={15} />
-
-                    Submit transaction
-                  </>
+            <p className="mt-4 text-[11px] leading-5 text-slate-400">
+              Send{" "}
+              <strong className="text-white">
+                {formatUSDT(
+                  preparedDeposit.expectedAmount,
+                  currency,
                 )}
-              </button>
-            </div>
+              </strong>{" "}
+              to the deposit address above. After sending,
+              paste your transaction hash below.
+            </p>
+
+            <label
+              htmlFor="deposit-tx-hash"
+              className="mt-4 block text-xs font-bold"
+            >
+              Transaction hash
+            </label>
+
+            <input
+              id="deposit-tx-hash"
+              type="text"
+              value={txHash}
+              onChange={(event) =>
+                setTxHash(event.target.value)
+              }
+              placeholder="Paste your TRON transaction hash"
+              autoComplete="off"
+              spellCheck={false}
+              className="mt-2 h-12 w-full rounded-xl border border-white/10 bg-[#07101F] px-3 font-mono text-[11px] outline-none placeholder:text-slate-600 focus:border-[#FF476B]/50"
+            />
+
+            <button
+              type="button"
+              onClick={() => void submitTransaction()}
+              disabled={submitting || !txHash.trim()}
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#E60033] px-4 py-3.5 text-xs font-extrabold disabled:opacity-40"
+            >
+              {submitting && (
+                <RefreshCw
+                  size={15}
+                  className="animate-spin"
+                />
+              )}
+
+              {submitting
+                ? "Submitting transaction..."
+                : "Submit transaction"}
+            </button>
           </section>
         )}
 
-        {/* ================================================================= */}
         {/* ERROR */}
-        {/* ================================================================= */}
-
         {error && (
-          <section
+          <div
             role="alert"
-            className="mt-4 rounded-2xl border border-red-400/20 bg-red-400/[0.07] p-4"
+            className="flex items-start gap-2.5 rounded-xl border border-red-400/20 bg-red-400/[0.07] p-3.5 text-xs leading-5 text-red-300"
           >
-            <div className="flex items-start gap-3">
-              <XCircle
-                size={17}
-                className="mt-0.5 shrink-0 text-red-400"
-              />
-
-              <div>
-                <p className="text-xs font-bold text-red-300">
-                  Deposit request needs attention
-                </p>
-
-                <p className="mt-1 text-[10px] leading-4 text-red-300/80">
-                  {error}
-                </p>
-              </div>
-            </div>
-          </section>
+            <XCircle size={16} className="mt-0.5 shrink-0" />
+            {error}
+          </div>
         )}
 
-        {/* ================================================================= */}
-        {/* FULL ACCOUNT DEPOSIT */}
-        {/* ================================================================= */}
-
+        {/* CURRENT DEPOSIT */}
         {deposit && (
-          <section className="mt-4 rounded-[26px] border border-white/8 bg-[#0B1426] p-5 shadow-xl shadow-black/10">
+          <section className="rounded-[22px] border border-white/10 bg-[#0B1426] p-4 sm:p-5">
             <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <h2 className="text-[15px] font-extrabold text-white">
+              <div>
+                <h2 className="text-sm font-extrabold">
                   Deposit details
                 </h2>
 
-                <p className="mt-1 break-all font-mono text-[9px] text-slate-600">
-                  ID: {deposit.id}
+                <p className="mt-1 break-all font-mono text-[9px] text-slate-500">
+                  {deposit.id}
                 </p>
               </div>
 
               <span
-                className={`shrink-0 rounded-full border px-2.5 py-1 text-[8px] font-bold ${getStatusClasses(
-                  deposit.status,
-                )}`}
+                className={`shrink-0 rounded-full border px-2.5 py-1 text-[9px] font-bold ${getStatusClasses(deposit.status)}`}
               >
                 {deposit.status}
               </span>
             </div>
 
-            <div className="mt-5 grid grid-cols-2 gap-3">
+            <div className="mt-4 grid grid-cols-2 gap-2.5">
               <InfoBox
                 label="Expected"
                 value={formatUSDT(
@@ -1163,279 +836,190 @@ export default function AccountDepositPage() {
             </div>
 
             {deposit.txHash && (
-              <div className="mt-4 rounded-2xl border border-white/6 bg-[#07101F] p-4">
-                <p className="text-[8px] font-bold uppercase tracking-[0.15em] text-slate-600">
+              <div className="mt-3 rounded-xl border border-white/[0.07] bg-[#07101F] p-3">
+                <p className="text-[9px] uppercase tracking-wider text-slate-500">
                   Transaction hash
                 </p>
 
-                <p className="mt-2 break-all font-mono text-[10px] font-bold leading-5 text-slate-300">
+                <p className="mt-2 break-all font-mono text-[10px] leading-5 text-slate-300">
                   {deposit.txHash}
                 </p>
               </div>
             )}
 
-            {deposit.senderAddress && (
-              <div className="mt-3 rounded-2xl border border-white/6 bg-[#07101F] p-4">
-                <p className="text-[8px] font-bold uppercase tracking-[0.15em] text-slate-600">
-                  Sender address
-                </p>
-
-                <p className="mt-2 break-all font-mono text-[10px] font-bold leading-5 text-slate-300">
-                  {deposit.senderAddress}
-                </p>
+            {deposit.status === "CONFIRMED" && (
+              <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-emerald-400/15 bg-emerald-400/[0.07] p-3.5 text-xs leading-5 text-emerald-200">
+                <CheckCircle2
+                  size={17}
+                  className="mt-0.5 shrink-0"
+                />
+                Deposit confirmed and credited to your
+                available balance.
               </div>
             )}
 
-            {/* VERIFYING */}
-
-            {deposit.status === 'VERIFYING' && (
-              <>
-                <div className="mt-4 rounded-2xl border border-amber-400/10 bg-amber-400/6 p-4">
-                  <div className="flex items-start gap-3">
-                    <RefreshCw
-                      size={19}
-                      className="mt-0.5 shrink-0 text-amber-400"
-                    />
-
-                    <div>
-                      <p className="text-xs font-extrabold text-amber-200">
-                        Transaction is being verified
-                      </p>
-
-                      <p className="mt-1 text-[10px] leading-4 text-amber-200/70">
-                        We are checking the TRON blockchain
-                        for your transaction and waiting for
-                        the required confirmations.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    void verifyDeposit()
-                  }
-                  disabled={verifying}
-                  className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-amber-500 px-4 py-3.5 text-xs font-extrabold text-[#160E00] transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  {verifying ? (
-                    <>
-                      <RefreshCw
-                        size={15}
-                        className="animate-spin"
-                      />
-
-                      Checking...
-                    </>
-                  ) : (
-                    <>
-                      <RefreshCw size={15} />
-
-                      Check deposit status
-                    </>
-                  )}
-                </button>
-              </>
-            )}
-
-            {/* PENDING */}
-
-            {deposit.status === 'PENDING' && (
-              <>
-                <div className="mt-4 rounded-2xl border border-white/[0.07] bg-white/[0.035] p-4">
-                  <div className="flex items-start gap-3">
-                    <RefreshCw
-                      size={19}
-                      className="mt-0.5 shrink-0 text-slate-400"
-                    />
-
-                    <div>
-                      <p className="text-xs font-extrabold text-white">
-                        Waiting for transaction
-                      </p>
-
-                      <p className="mt-1 text-[10px] leading-4 text-slate-500">
-                        The transaction has not yet been
-                        confirmed by the verification service.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    void verifyDeposit()
-                  }
-                  disabled={verifying}
-                  className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-white/8 px-4 py-3.5 text-xs font-extrabold text-white transition hover:bg-white/12 disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  {verifying ? (
-                    <>
-                      <RefreshCw
-                        size={15}
-                        className="animate-spin"
-                      />
-
-                      Checking...
-                    </>
-                  ) : (
-                    <>
-                      <RefreshCw size={15} />
-
-                      Check deposit status
-                    </>
-                  )}
-                </button>
-              </>
-            )}
-
-            {/* CONFIRMED */}
-
-            {deposit.status === 'CONFIRMED' && (
-              <div className="mt-5 rounded-2xl border border-emerald-400/15 bg-emerald-400/[0.07] p-4">
-                <div className="flex items-start gap-3">
-                  <CheckCircle2
-                    size={20}
-                    className="mt-0.5 shrink-0 text-emerald-400"
-                  />
-
-                  <div>
-                    <p className="text-xs font-extrabold text-emerald-200">
-                      Deposit confirmed
-                    </p>
-
-                    <p className="mt-1 text-[10px] leading-4 text-emerald-200/70">
-                      {formatUSDT(
-                        deposit.receivedAmount,
-                        currency,
-                      )}{' '}
-                      has been credited to your available
-                      account balance.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* FAILED / EXPIRED / UNMATCHED */}
-
-            {(deposit.status === 'FAILED' ||
-              deposit.status === 'EXPIRED' ||
-              deposit.status === 'UNMATCHED') && (
-              <div className="mt-4 flex items-start gap-3 rounded-2xl border border-red-400/15 bg-red-400/6 p-4">
-                <XCircle
-                  size={19}
-                  className="mt-0.5 shrink-0 text-red-400"
+            {(deposit.status === "PENDING" ||
+              deposit.status === "VERIFYING") && (
+              <button
+                type="button"
+                onClick={() => void verifyDeposit()}
+                disabled={verifying}
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-[#E60033]/30 bg-[#E60033]/10 px-4 py-3 text-xs font-extrabold text-[#FF8199] disabled:opacity-40"
+              >
+                <RefreshCw
+                  size={15}
+                  className={verifying ? "animate-spin" : ""}
                 />
 
-                <div>
-                  <p className="text-xs font-extrabold text-red-200">
-                    Deposit{' '}
-                    {deposit.status.toLowerCase()}
-                  </p>
+                {verifying
+                  ? "Checking..."
+                  : "Check deposit status"}
+              </button>
+            )}
 
-                  {deposit.failureReason && (
-                    <p className="mt-1 text-[10px] leading-4 text-red-200/70">
-                      {deposit.failureReason}
-                    </p>
-                  )}
-                </div>
+            {["FAILED", "EXPIRED", "UNMATCHED"].includes(
+              deposit.status,
+            ) && (
+              <div className="mt-4 rounded-xl border border-red-400/15 bg-red-400/5 p-3.5 text-xs text-red-300">
+                Deposit {deposit.status.toLowerCase()}.
+                {deposit.failureReason && (
+                  <p className="mt-1 text-[11px]">
+                    {deposit.failureReason}
+                  </p>
+                )}
               </div>
             )}
+
+            <button
+              type="button"
+              onClick={() =>
+                router.push(
+                  `/investment/profile/account-deposit/${deposit.id}`,
+                )
+              }
+              className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-xs font-bold text-slate-200"
+            >
+              View full details
+              <ChevronRight size={15} />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setDeposit(null);
+                setPreparedDeposit(null);
+                setAmount("");
+                setTxHash("");
+                setError("");
+              }}
+              className="mt-2 w-full py-2 text-xs font-bold text-[#FF476B]"
+            >
+              Prepare another deposit
+            </button>
           </section>
         )}
 
-        {/* ================================================================= */}
-        {/* HISTORY */}
-        {/* ================================================================= */}
+        {/* SCROLLABLE HISTORY */}
+        <section className="overflow-hidden rounded-[22px] border border-white/10 bg-[#0B1426]">
+          <div className="flex items-center justify-between gap-3 p-4 sm:p-5">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#E60033]/10 text-[#FF476B]">
+                <History size={17} />
+              </div>
 
-        <section className="mt-4 overflow-hidden rounded-[26px] border border-white/8 bg-[#0B1426] shadow-xl shadow-black/10">
-          <div className="px-5 pb-4 pt-5">
-            <div className="flex items-center justify-between gap-3">
               <div>
-                <h2 className="text-[15px] font-extrabold text-white">
+                <h2 className="text-sm font-extrabold">
                   Deposit history
                 </h2>
 
-                <p className="mt-1 text-[10px] text-slate-500">
-                  Your account balance deposits
+                <p className="mt-0.5 text-[10px] text-slate-500">
+                  {history.length} recent transaction
+                  {history.length === 1 ? "" : "s"}
                 </p>
               </div>
-
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-400/10">
-                <ArrowDownToLine
-                  size={16}
-                  className="text-blue-400"
-                />
-              </div>
             </div>
+
+            {history.length > 10 && (
+              <button
+                type="button"
+                onClick={() =>
+                  setHistoryExpanded((previous) => !previous)
+                }
+                className="shrink-0 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-[10px] font-bold text-[#FF8199]"
+              >
+                {historyExpanded ? "Show 10" : "Show all"}
+              </button>
+            )}
           </div>
 
-          {history.length === 0 ? (
-            <div className="border-t border-white/6 px-5 pb-7 pt-6 text-center">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-white/6 bg-white/[0.035] text-slate-600">
-                <ArrowDownToLine size={18} />
-              </div>
+          {historyError && (
+            <p
+              role="alert"
+              className="border-t border-white/5.5 px-4 py-3 text-[11px] text-red-300"
+            >
+              {historyError}
+            </p>
+          )}
 
-              <p className="mt-3 text-xs font-semibold text-slate-300">
+          {history.length === 0 ? (
+            <div className="border-t border-white/5.5 px-4 py-9 text-center">
+              <ArrowDownToLine
+                size={22}
+                className="mx-auto text-slate-600"
+              />
+
+              <p className="mt-3 text-xs font-bold text-slate-300">
                 No deposits yet
               </p>
 
-              <p className="mx-auto mt-1 max-w-xs text-[10px] leading-4 text-slate-600">
-                Your completed and pending deposits will
-                appear here.
+              <p className="mt-1 text-[10px] text-slate-500">
+                Your deposit transactions will appear here.
               </p>
             </div>
           ) : (
-            <div className="border-t border-white/6">
-              {history.map((item, index) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() =>
-                    router.push(
-                      `/investment/profile/account-deposit/${item.id}`,
-                    )
-                  }
-                  className={`block w-full px-5 py-4 text-left transition hover:bg-white/2.5 active:bg-white/5 ${
-                    index !== history.length - 1
-                      ? 'border-b border-white/6'
-                      : ''
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex min-w-0 items-start gap-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-blue-400/10 bg-blue-400/[0.07] text-blue-400">
-                        <ArrowDownToLine size={16} />
-                      </div>
+            <>
+              <div
+                tabIndex={0}
+                aria-label="Scrollable deposit history"
+                className={`overscroll-contain overflow-y-auto border-t border-white/5.5 [scrollbar-color:#374151_transparent] scrollbar-thin ${
+                  historyExpanded
+                    ? "max-h-180"
+                    : "max-h-170"
+                }`}
+              >
+                {history.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() =>
+                      router.push(
+                        `/investment/profile/account-deposit/${item.id}`,
+                      )
+                    }
+                    className="flex w-full items-center gap-3 border-b border-white/5.5 px-4 py-3.5 text-left transition last:border-b-0 hover:bg-white/[0.035] sm:px-5"
+                  >
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#E60033]/10 text-[#FF476B]">
+                      <ArrowDownToLine size={16} />
+                    </div>
 
-                      <div className="min-w-0">
-                        <p className="text-xs font-bold text-white">
-                          USDT Deposit
-                        </p>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[11px] font-extrabold text-white">
+                        USDT Deposit
+                      </p>
 
-                        <p className="mt-1 text-[9px] text-slate-600">
-                          {new Date(
-                            item.createdAt,
-                          ).toLocaleString()}
-                        </p>
+                      <p className="mt-1 text-[9px] text-slate-500">
+                        {new Date(
+                          item.createdAt,
+                        ).toLocaleString()}
+                      </p>
 
-                        {item.txHash && (
-                          <p className="mt-1.5 truncate font-mono text-[9px] text-slate-600">
-                            {item.txHash}
-                          </p>
-                        )}
-
-                        <p className="mt-1.5 text-[8px] font-semibold uppercase tracking-wider text-slate-700">
-                          Tap to view deposit
-                        </p>
-                      </div>
+                      <p className="mt-1 truncate font-mono text-[9px] text-slate-600">
+                        {item.txHash || item.id}
+                      </p>
                     </div>
 
                     <div className="shrink-0 text-right">
-                      <p className="text-xs font-extrabold text-white">
+                      <p className="text-[11px] font-extrabold text-white">
                         {formatUSDT(
                           item.receivedAmount ||
                             item.expectedAmount,
@@ -1444,45 +1028,36 @@ export default function AccountDepositPage() {
                       </p>
 
                       <span
-                        className={`mt-1.5 inline-flex rounded-full border px-2 py-0.5 text-[8px] font-bold ${getStatusClasses(
-                          item.status,
-                        )}`}
+                        className={`mt-1.5 inline-flex rounded-full border px-2 py-0.5 text-[8px] font-bold ${getStatusClasses(item.status)}`}
                       >
                         {item.status}
                       </span>
                     </div>
-                  </div>
-                </button>
-              ))}
-            </div>
+
+                    <ChevronRight
+                      size={13}
+                      className="shrink-0 text-slate-600"
+                    />
+                  </button>
+                ))}
+              </div>
+
+              {history.length > 10 && (
+                <div className="border-t border-white/6 px-4 py-2.5 text-center text-[10px] text-slate-500">
+                  Scroll inside this section to see more
+                  transactions
+                </div>
+              )}
+            </>
           )}
         </section>
 
-        {/* ================================================================= */}
-        {/* INFORMATION */}
-        {/* ================================================================= */}
-
-        <section className="mt-4 rounded-2xl border border-white/[0.07] bg-white/2.5 p-4">
-          <div className="flex items-start gap-3">
-            <ShieldCheck
-              size={18}
-              className="mt-0.5 shrink-0 text-emerald-400"
-            />
-
-            <div>
-              <p className="text-xs font-bold text-slate-200">
-                Account balance deposit
-              </p>
-
-              <p className="mt-1 text-[10px] leading-4 text-slate-600">
-                Confirmed deposits are credited directly to
-                your available ledger balance. They do not
-                create an investment automatically.
-              </p>
-            </div>
-          </div>
-        </section>
-      </main>
-</div>
+        <p className="px-1 text-center text-[10px] leading-4 text-slate-500">
+          Confirmed deposits are credited to your available
+          account balance. Depositing does not automatically
+          create an investment.
+        </p>
+      </div>
+    </main>
   );
 }

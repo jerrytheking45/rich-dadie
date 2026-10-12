@@ -1,132 +1,162 @@
 
 /* src/app/investment/profile/wallet/bind/page.tsx */
 
-/* src/app/investment/profile/wallet/bind/page.tsx */
 
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+
+import axios from "axios";
+
 import {
+  AlertCircle,
   ArrowLeft,
   CheckCircle2,
+  ChevronRight,
+  Eye,
+  EyeOff,
   Loader2,
+  LockKeyhole,
   Plus,
+  RefreshCw,
   ShieldCheck,
   Wallet,
-} from 'lucide-react';
-import axios from 'axios';
+} from "lucide-react";
 
-import { withdrawalApi } from '@/src/lib/api/withdrawal';
+import { withdrawalApi } from "@/src/lib/api/withdrawal";
+
 import type {
   WithdrawalWalletResponse,
-} from '@/src/lib/api/withdrawal';
+} from "@/src/lib/api/withdrawal";
 
 const PIN_LENGTH = 6;
 
-const ProfileWalletBindPage = () => {
+const PAYMENTS_PATH = "/investment/profile/payments";
+
+/*
+ * A standard TRON address:
+ * - starts with T
+ * - contains 34 Base58 characters
+ *
+ * The backend remains responsible for final address
+ * validation, including any additional network checks.
+ */
+const TRON_ADDRESS_REGEX =
+  /^T[1-9A-HJ-NP-Za-km-z]{33}$/;
+
+function getApiError(
+  err: unknown,
+  fallback: string
+): string {
+  if (axios.isAxiosError(err)) {
+    const responseError = err.response?.data?.error;
+
+    if (
+      typeof responseError === "string" &&
+      responseError.trim()
+    ) {
+      return responseError;
+    }
+
+    const responseMessage =
+      err.response?.data?.message;
+
+    if (
+      typeof responseMessage === "string" &&
+      responseMessage.trim()
+    ) {
+      return responseMessage;
+    }
+
+    switch (err.response?.status) {
+      case 401:
+        return "Your session has expired. Please sign in again.";
+
+      case 400:
+        return "The wallet address or wallet PIN is invalid.";
+
+      case 404:
+        return "Your withdrawal wallet could not be found.";
+
+      case 409:
+        return "You already have an active withdrawal wallet.";
+
+      default:
+        break;
+    }
+  }
+
+  return fallback;
+}
+
+export default function ProfileWalletBindPage() {
   const router = useRouter();
 
   const [wallet, setWallet] =
     useState<WithdrawalWalletResponse | null>(null);
 
-  const [address, setAddress] = useState('');
-  const [pin, setPin] = useState('');
+  const [address, setAddress] = useState("");
+  const [pin, setPin] = useState("");
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
+  const [loadError, setLoadError] = useState("");
+
   const [success, setSuccess] = useState(false);
+  const [showPin, setShowPin] = useState(false);
 
-  const getApiError = (
-    err: unknown,
-    fallback: string,
-  ): string => {
-    if (axios.isAxiosError(err)) {
-      const responseError = err.response?.data?.error;
+  const [reloadKey, setReloadKey] = useState(0);
 
-      if (
-        typeof responseError === 'string' &&
-        responseError.trim()
-      ) {
-        return responseError;
-      }
-
-      const responseMessage =
-        err.response?.data?.message;
-
-      if (
-        typeof responseMessage === 'string' &&
-        responseMessage.trim()
-      ) {
-        return responseMessage;
-      }
-
-      switch (err.response?.status) {
-        case 401:
-          return 'Your session has expired. Please sign in again.';
-
-        case 400:
-          return 'The wallet address or wallet PIN is invalid.';
-
-        case 404:
-          return 'Your withdrawal wallet could not be found.';
-
-        case 409:
-          return 'You already have an active withdrawal wallet. You cannot bind another wallet.';
-
-        default:
-          break;
-      }
-    }
-
-    return fallback;
-  };
-
-  const isValidPin = (value: string): boolean => {
-    return /^\d{6}$/.test(value);
-  };
+  /* ==========================================
+     CHECK EXISTING WALLET
+  ========================================== */
 
   useEffect(() => {
     let cancelled = false;
 
     const loadWallet = async () => {
+      setLoading(true);
+      setLoadError("");
+
       try {
         const currentWallet =
           await withdrawalApi.getWithdrawalWallet();
 
-        if (cancelled) {
-          return;
-        }
+        if (cancelled) return;
 
         setWallet(currentWallet);
-        setError('');
       } catch (err) {
-        if (cancelled) {
-          return;
-        }
+        if (cancelled) return;
 
+        /*
+         * A 404 indicates that the user does not
+         * currently have a withdrawal wallet.
+         */
         if (
           axios.isAxiosError(err) &&
           err.response?.status === 404
         ) {
           setWallet(null);
-          setError('');
           return;
         }
 
         console.error(
-          'Failed to load withdrawal wallet:',
-          err,
+          "Failed to load withdrawal wallet:",
+          err
         );
 
-        setWallet(null);
-        setError(
+        /*
+         * Do not allow a new wallet to be bound when
+         * the existing-wallet check could not complete.
+         */
+        setLoadError(
           getApiError(
             err,
-            'Failed to load your withdrawal wallet.',
-          ),
+            "Unable to check your withdrawal wallet. Please try again."
+          )
         );
       } finally {
         if (!cancelled) {
@@ -140,42 +170,61 @@ const ProfileWalletBindPage = () => {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [reloadKey]);
 
-  const handleBind = async () => {
-    const trimmedAddress = address.trim();
-    const trimmedPin = pin.trim();
+  /* ==========================================
+     FORM VALIDATION
+  ========================================== */
 
-    setError('');
+  const trimmedAddress = address.trim();
+
+  const isAddressValid =
+    TRON_ADDRESS_REGEX.test(trimmedAddress);
+
+  const isPinValid =
+    /^\d{6}$/.test(pin);
+
+  const canSubmit =
+    !loading &&
+    !loadError &&
+    !wallet &&
+    !submitting &&
+    isAddressValid &&
+    isPinValid;
+
+  /* ==========================================
+     BIND WALLET
+  ========================================== */
+
+  const handleBind = useCallback(async () => {
+    if (submitting || loading || loadError) return;
+
+    setError("");
     setSuccess(false);
 
     if (wallet) {
       setError(
-        'You already have a withdrawal wallet. Unbind your current wallet before binding another one.',
+        "You already have a withdrawal wallet. Manage your current wallet before binding another."
       );
       return;
     }
 
     if (!trimmedAddress) {
-      setError('Wallet address is required.');
+      setError("Please enter your withdrawal wallet address.");
       return;
     }
 
-    if (!trimmedAddress.startsWith('T')) {
+    if (!isAddressValid) {
       setError(
-        'Enter a valid TRON wallet address beginning with T.',
+        "Enter a valid 34-character TRON wallet address beginning with T."
       );
       return;
     }
 
-    if (!isValidPin(trimmedPin)) {
+    if (!isPinValid) {
       setError(
-        'Your wallet PIN must contain exactly 6 digits.',
+        "Your wallet PIN must contain exactly 6 digits."
       );
-      return;
-    }
-
-    if (submitting) {
       return;
     }
 
@@ -185,511 +234,484 @@ const ProfileWalletBindPage = () => {
       const boundWallet =
         await withdrawalApi.bindWithdrawalWallet(
           trimmedAddress,
-          trimmedPin,
+          pin
         );
 
       setWallet(boundWallet);
-      setAddress('');
-      setPin('');
+
+      setAddress("");
+      setPin("");
+
       setSuccess(true);
     } catch (err) {
       console.error(
-        'Failed to bind withdrawal wallet:',
-        err,
+        "Failed to bind withdrawal wallet:",
+        err
       );
 
       setError(
         getApiError(
           err,
-          'Failed to bind withdrawal wallet. Please try again.',
-        ),
+          "Failed to bind your withdrawal wallet. Please try again."
+        )
       );
     } finally {
       setSubmitting(false);
     }
-  };
+  }, [
+    submitting,
+    loading,
+    loadError,
+    wallet,
+    trimmedAddress,
+    pin,
+    isAddressValid,
+    isPinValid,
+  ]);
 
-  /* ---------------------------------------------------------------------------
-   * Existing wallet
-   * ------------------------------------------------------------------------- */
+  /* ==========================================
+     SHARED HEADER
+  ========================================== */
 
-  if (!loading && wallet) {
-    return (
-      <div className="min-h-screen bg-[#050B18] text-white">
-        <main className="relative mx-auto w-full max-w-2xl overflow-hidden px-4 pb-32 pt-5 sm:px-6 lg:max-w-5xl lg:px-8">
-          <div className="pointer-events-none absolute -right-32 top-20 h-72 w-72 rounded-full bg-emerald-500/8 blur-3xl" />
-          <div className="pointer-events-none absolute -left-32 top-80 h-72 w-72 rounded-full bg-violet-500/8 blur-3xl" />
-
-          <header className="relative flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() =>
-                router.push(
-                  '/investment/profile/payments',
-                )
-              }
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/8 bg-[#0B1426] text-white/65 shadow-lg transition hover:border-white/15 hover:bg-[#101D33] hover:text-white"
-              aria-label="Back to payment wallets"
-            >
-              <ArrowLeft
-                size={18}
-                aria-hidden="true"
-              />
-            </button>
-
-            <div className="min-w-0">
-              <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-emerald-300/65">
-                Withdrawal Security
-              </p>
-
-              <h1 className="truncate text-xl font-extrabold tracking-tight text-white">
-                Wallet Already Bound
-              </h1>
-
-              <p className="text-[10px] text-white/35">
-                Only one withdrawal wallet is allowed
-              </p>
-            </div>
-          </header>
-
-          <section className="relative mt-6 overflow-hidden rounded-[28px] border border-emerald-400/12 bg-linear-to-br from-emerald-500/10 via-[#0B1426] to-[#11102B] p-5 shadow-2xl shadow-black/20 sm:p-6">
-            <div className="pointer-events-none absolute -right-20 -top-20 h-48 w-48 rounded-full bg-emerald-400/10 blur-3xl" />
-
-            <div className="relative">
-              <div className="flex items-start gap-3">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-emerald-400/15 bg-emerald-400/10 text-emerald-300">
-                  <CheckCircle2
-                    size={20}
-                    aria-hidden="true"
-                  />
-                </div>
-
-                <div className="min-w-0">
-                  <h2 className="text-sm font-bold text-white">
-                    You already have a withdrawal wallet
-                  </h2>
-
-                  <p className="mt-1 text-xs leading-5 text-white/45">
-                    Only one active withdrawal wallet can be
-                    bound to your account at a time.
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-5 rounded-2xl border border-white/8 bg-[#07101F] p-4">
-                <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/30">
-                  Current withdrawal address
-                </p>
-
-                <p className="mt-2 break-all font-mono text-xs text-white/80">
-                  {wallet.address}
-                </p>
-
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <span className="rounded-full border border-emerald-400/10 bg-emerald-400/8 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-emerald-300">
-                    USDT
-                  </span>
-
-                  <span className="rounded-full border border-sky-400/10 bg-sky-400/8 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-sky-300">
-                    TRON
-                  </span>
-
-                  <span className="rounded-full border border-white/8 bg-white/5 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-white/55">
-                    {wallet.status}
-                  </span>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() =>
-                  router.push(
-                    '/investment/profile/payments',
-                  )
-                }
-                className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3 text-xs font-extrabold text-[#03100B] shadow-lg shadow-emerald-500/10 transition hover:bg-emerald-400 active:scale-[0.99]"
-              >
-                Manage Withdrawal Wallet
-              </button>
-            </div>
-          </section>
-
-          <section className="relative mt-4 rounded-2xl border border-white/8 bg-[#0B1426] p-4">
-            <div className="flex items-start gap-3">
-              <ShieldCheck
-                size={18}
-                className="mt-0.5 shrink-0 text-emerald-300/70"
-                aria-hidden="true"
-              />
-
-              <div>
-                <p className="text-xs font-bold text-white/80">
-                  Wallet security
-                </p>
-
-                <p className="mt-1 text-[11px] leading-5 text-white/35">
-                  You cannot bind a second withdrawal wallet.
-                  Changing or removing this wallet requires
-                  your 6-digit wallet PIN.
-                </p>
-              </div>
-            </div>
-          </section>
-        </main>
-      </div>
-    );
-  }
-
-  /* ---------------------------------------------------------------------------
-   * Loading
-   * ------------------------------------------------------------------------- */
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#050B18] text-white">
-        <main className="mx-auto w-full max-w-xl px-4 pb-28 pt-5 sm:px-6">
-          <header className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() =>
-                router.push(
-                  '/investment/profile/payments',
-                )
-              }
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/8 bg-[#0B1426] text-white/65"
-              aria-label="Back to payment wallets"
-            >
-              <ArrowLeft
-                size={18}
-                aria-hidden="true"
-              />
-            </button>
-
-            <div className="min-w-0">
-              <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-emerald-300/65">
-                Withdrawal Security
-              </p>
-
-              <h1 className="truncate text-xl font-extrabold text-white">
-                Bind Withdrawal Wallet
-              </h1>
-            </div>
-          </header>
-
-          <section className="mt-6 rounded-[26px] border border-white/8 bg-[#0B1426] p-10 shadow-2xl shadow-black/15">
-            <div className="flex flex-col items-center justify-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-emerald-400/10 bg-emerald-400/8">
-                <Loader2
-                  size={19}
-                  className="animate-spin text-emerald-300"
-                  aria-hidden="true"
-                />
-              </div>
-
-              <p className="mt-4 text-sm font-semibold text-white/70">
-                Checking withdrawal wallet...
-              </p>
-
-              <p className="mt-1 text-[10px] text-white/30">
-                Securing your wallet settings
-              </p>
-            </div>
-          </section>
-        </main>
-      </div>
-    );
-  }
-
-  /* ---------------------------------------------------------------------------
-   * Render bind form
-   * ------------------------------------------------------------------------- */
+  const pageTitle = success
+    ? "Wallet Connected"
+    : wallet
+      ? "Withdrawal Wallet"
+      : "Bind Withdrawal Wallet";
 
   return (
-    <div className="min-h-screen bg-[#050B18] text-white">
-      <main className="relative mx-auto w-full max-w-xl overflow-hidden px-4 pb-28 pt-5 sm:px-6">
-        <div className="pointer-events-none absolute -right-32 top-24 h-64 w-64 rounded-full bg-violet-500/8 blur-3xl" />
-        <div className="pointer-events-none absolute -left-32 top-96 h-64 w-64 rounded-full bg-emerald-500/7 blur-3xl" />
+    <div className="relative min-h-screen overflow-x-hidden bg-[#050B18] text-white">
 
-        <header className="relative flex items-center gap-3">
+      {/* BACKGROUND */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 overflow-hidden"
+      >
+        <div className="absolute -right-24 top-20 h-64 w-64 rounded-full bg-[#E60033]/7 blur-[85px]" />
+
+        <div className="absolute -left-24 top-[60%] h-64 w-64 rounded-full bg-[#E60033]/5 blur-[85px]" />
+      </div>
+
+      <main className="relative mx-auto w-full min-w-0 max-w-xl px-3 pb-32 pt-4 min-[375px]:px-4 sm:px-6 sm:pt-6">
+
+        {/* =====================================
+            HEADER
+        ====================================== */}
+
+        <header className="flex min-w-0 items-center gap-3">
+
           <button
             type="button"
-            onClick={() =>
-              router.push(
-                '/investment/profile/payments',
-              )
-            }
+            onClick={() => router.push(PAYMENTS_PATH)}
             disabled={submitting}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/8 bg-[#0B1426] text-white/65 shadow-lg transition hover:border-white/15 hover:bg-[#101D33] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
             aria-label="Back to payment wallets"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-[#0B1426] text-white/65 transition hover:border-[#E60033]/30 hover:text-white disabled:opacity-40 sm:h-10 sm:w-10"
           >
-            <ArrowLeft
-              size={18}
-              aria-hidden="true"
-            />
+            <ArrowLeft size={17} aria-hidden="true" />
           </button>
 
           <div className="min-w-0">
-            <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-emerald-300/65">
+
+            <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-[#FF476B]">
               Withdrawal Security
             </p>
 
-            <h1 className="truncate text-xl font-extrabold text-white">
-              Bind Withdrawal Wallet
+            <h1 className="truncate text-[18px] font-black tracking-tight text-white sm:text-[22px]">
+              {pageTitle}
             </h1>
 
-            <p className="text-[10px] text-white/35">
-              USDT on TRON only
+            <p className="text-[10px] text-white/45">
+              USDT on TRON (TRC20)
             </p>
           </div>
         </header>
 
-        {/* Security explanation */}
-        <section className="relative mt-6 overflow-hidden rounded-[26px] border border-emerald-400/10 bg-linear-to-br from-emerald-400/8 via-[#0B1426] to-[#11102B] p-5">
-          <div className="pointer-events-none absolute -right-16 -top-16 h-36 w-36 rounded-full bg-emerald-400/8 blur-3xl" />
+        {/* =====================================
+            LOADING STATE
+        ====================================== */}
 
-          <div className="relative flex items-start gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-emerald-400/12 bg-emerald-400/8 text-emerald-300">
-              <ShieldCheck
+        {loading && (
+          <section
+            role="status"
+            className="mt-6 flex min-h-48 flex-col items-center justify-center rounded-2xl border border-white/10 bg-[#0B1426] px-4 py-10 text-center"
+          >
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-[#E60033]/20 bg-[#E60033]/10 text-[#FF476B]">
+              <Loader2
                 size={20}
+                className="animate-spin"
                 aria-hidden="true"
               />
             </div>
 
-            <div>
-              <h2 className="text-sm font-bold text-white">
-                Withdrawal wallet security
-              </h2>
+            <p className="mt-4 text-sm font-bold text-white/80">
+              Checking withdrawal wallet...
+            </p>
 
-              <p className="mt-1 text-xs leading-5 text-white/40">
-                Your withdrawal wallet is protected by your
-                6-digit wallet PIN. The PIN is required
-                whenever you bind, change, or unbind your
-                withdrawal wallet.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Error */}
-        {error && (
-          <div
-            role="alert"
-            className="mt-4 rounded-2xl border border-red-400/15 bg-red-500/8 p-4"
-          >
-            <div className="flex items-start gap-3">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-red-500/10 text-red-300">
-                <span className="text-xs font-black">!</span>
-              </div>
-
-              <p className="pt-1 text-xs font-semibold leading-5 text-red-200">
-                {error}
-              </p>
-            </div>
-          </div>
+            <p className="mt-1 text-[11px] text-white/40">
+              Retrieving your current wallet settings
+            </p>
+          </section>
         )}
 
-        {/* Success */}
-        {success && wallet && (
+        {/* =====================================
+            INITIAL LOAD ERROR
+        ====================================== */}
+
+        {!loading && loadError && (
           <section
-            role="status"
-            className="mt-4 overflow-hidden rounded-[26px] border border-emerald-400/12 bg-linear-to-br from-emerald-500/10 via-[#0B1426] to-[#11102B] p-5"
+            role="alert"
+            className="mt-6 rounded-2xl border border-[#E60033]/25 bg-[#0B1426] p-5 text-center"
           >
-            <div className="flex items-start gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-emerald-400/15 bg-emerald-400/10">
-                <CheckCircle2
-                  size={20}
-                  className="text-emerald-300"
-                  aria-hidden="true"
-                />
-              </div>
-
-              <div className="min-w-0">
-                <p className="text-sm font-bold text-white">
-                  Withdrawal wallet bound successfully
-                </p>
-
-                <p className="mt-1 text-xs leading-5 text-white/40">
-                  This is now your only active withdrawal
-                  destination.
-                </p>
-
-                <div className="mt-4 rounded-2xl border border-white/8 bg-[#07101F] p-3">
-                  <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-emerald-300/65">
-                    Withdrawal Address
-                  </p>
-
-                  <p className="mt-2 break-all font-mono text-xs text-white/80">
-                    {wallet.address}
-                  </p>
-                </div>
-              </div>
+            <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-[#E60033]/10 text-[#FF476B]">
+              <AlertCircle size={20} aria-hidden="true" />
             </div>
+
+            <h2 className="mt-3 text-sm font-black text-white">
+              Unable to check your wallet
+            </h2>
+
+            <p className="mx-auto mt-2 max-w-sm text-[11px] leading-5 text-white/50">
+              {loadError}
+            </p>
 
             <button
               type="button"
               onClick={() =>
-                router.push(
-                  '/investment/profile/payments',
-                )
+                setReloadKey((current) => current + 1)
               }
-              className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3 text-xs font-extrabold text-[#03100B] shadow-lg shadow-emerald-500/10 transition hover:bg-emerald-400"
+              className="mt-4 inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-[#E60033] px-5 text-[11px] font-bold text-white transition hover:bg-[#FF174B]"
             >
-              Manage Withdrawal Wallet
+              <RefreshCw size={14} aria-hidden="true" />
+              Try again
             </button>
           </section>
         )}
 
-        {/* Form */}
-        {!success && (
-          <section className="relative mt-5 rounded-[28px] border border-white/8 bg-[#0B1426] p-5 shadow-2xl shadow-black/15 sm:p-6">
-            <div className="mb-5">
-              <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-emerald-300/60">
-                Wallet Setup
-              </p>
+        {/* =====================================
+            SUCCESS CONFIRMATION
+        ====================================== */}
 
-              <h2 className="mt-1 text-base font-extrabold text-white">
-                Connect withdrawal wallet
-              </h2>
+        {!loading && !loadError && success && wallet && (
+          <section
+            role="status"
+            className="relative mt-6 overflow-hidden rounded-[22px] border border-[#E60033]/20 bg-linear-to-br from-[#29101D] via-[#0B1426] to-[#07101F] p-4 sm:p-6"
+          >
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-[#E60033]/10 blur-[55px]"
+            />
 
-              <p className="mt-1 text-[10px] leading-4 text-white/30">
-                Make sure the address belongs to a wallet you control.
-              </p>
+            <div className="relative">
+
+              <div className="flex items-start gap-3">
+
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-emerald-400/20 bg-emerald-400/10 text-emerald-300">
+                  <CheckCircle2 size={21} aria-hidden="true" />
+                </div>
+
+                <div className="min-w-0">
+
+                  <h2 className="text-sm font-black text-white">
+                    Wallet bound successfully
+                  </h2>
+
+                  <p className="mt-1 text-[11px] leading-5 text-white/55">
+                    Your withdrawal wallet has been connected
+                    to your REDIQ account.
+                  </p>
+                </div>
+              </div>
+
+              <AddressCard wallet={wallet} />
+
+              <button
+                type="button"
+                onClick={() => router.push(PAYMENTS_PATH)}
+                className="mt-5 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#E60033] px-4 text-xs font-bold text-white transition hover:bg-[#FF174B]"
+              >
+                Manage Withdrawal Wallet
+                <ChevronRight size={16} aria-hidden="true" />
+              </button>
             </div>
+          </section>
+        )}
 
-            <div className="space-y-5">
-              {/* Asset */}
-              <div>
-                <p className="text-xs font-bold text-white/75">
-                  Asset
+        {/* =====================================
+            EXISTING WALLET
+        ====================================== */}
+
+        {!loading && !loadError && !success && wallet && (
+          <>
+            <section className="relative mt-6 overflow-hidden rounded-[22px] border border-[#E60033]/20 bg-linear-to-br from-[#29101D] via-[#0B1426] to-[#07101F] p-4 sm:p-6">
+
+              <div className="flex items-start gap-3">
+
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#E60033]/20 bg-[#E60033]/10 text-[#FF476B]">
+                  <Wallet size={19} aria-hidden="true" />
+                </div>
+
+                <div className="min-w-0">
+
+                  <h2 className="text-[13px] font-black text-white">
+                    You already have a withdrawal wallet
+                  </h2>
+
+                  <p className="mt-1 text-[11px] leading-5 text-white/50">
+                    Only one withdrawal wallet can be bound
+                    to your account at a time.
+                  </p>
+                </div>
+              </div>
+
+              <AddressCard wallet={wallet} />
+
+              <button
+                type="button"
+                onClick={() => router.push(PAYMENTS_PATH)}
+                className="mt-5 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#E60033] px-4 text-xs font-bold text-white transition hover:bg-[#FF174B]"
+              >
+                Manage Withdrawal Wallet
+                <ChevronRight size={16} aria-hidden="true" />
+              </button>
+            </section>
+
+            <SecurityNotice
+              title="Wallet security"
+              description="To change or remove your existing withdrawal wallet, use the wallet management section. Your 6-digit wallet PIN is required."
+            />
+          </>
+        )}
+
+        {/* =====================================
+            NEW WALLET FORM
+        ====================================== */}
+
+        {!loading && !loadError && !wallet && !success && (
+          <>
+
+            {/* SECURITY INTRO */}
+            <section className="relative mt-6 overflow-hidden rounded-[22px] border border-[#E60033]/20 bg-linear-to-br from-[#29101D] via-[#0B1426] to-[#07101F] p-4 sm:p-5">
+
+              <div className="flex items-start gap-3">
+
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#E60033]/20 bg-[#E60033]/10 text-[#FF476B]">
+                  <ShieldCheck size={19} aria-hidden="true" />
+                </div>
+
+                <div className="min-w-0">
+
+                  <h2 className="text-[13px] font-black text-white">
+                    Connect your withdrawal wallet
+                  </h2>
+
+                  <p className="mt-1 text-[11px] leading-5 text-white/55">
+                    Add a USDT-TRC20 wallet address and confirm
+                    the setup with your 6-digit wallet PIN.
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            {/* FORM ERROR */}
+            {error && (
+              <div
+                role="alert"
+                className="mt-4 flex items-start gap-2.5 rounded-xl border border-[#E60033]/25 bg-[#E60033]/8 p-3.5"
+              >
+                <AlertCircle
+                  size={17}
+                  className="mt-0.5 shrink-0 text-[#FF476B]"
+                  aria-hidden="true"
+                />
+
+                <p className="text-[11px] font-semibold leading-5 text-white/85">
+                  {error}
+                </p>
+              </div>
+            )}
+
+            {/* MAIN FORM */}
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                void handleBind();
+              }}
+              className="mt-5 min-w-0 rounded-[22px] border border-white/10 bg-[#0B1426] p-4 sm:p-6"
+            >
+
+              <div className="mb-5">
+
+                <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-[#FF476B]">
+                  Wallet Setup
                 </p>
 
-                <div className="mt-2 flex items-center justify-between rounded-2xl border border-white/7 bg-[#07101F] p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-400/10 bg-emerald-400/8">
-                      <Wallet
-                        size={17}
-                        className="text-emerald-300"
-                      />
+                <h2 className="mt-1 text-base font-black text-white">
+                  Withdrawal Details
+                </h2>
+
+                <p className="mt-1 text-[10px] leading-5 text-white/45">
+                  Verify the network and address before
+                  connecting your wallet.
+                </p>
+              </div>
+
+              {/* ASSET + NETWORK */}
+              <div className="grid grid-cols-2 gap-2 sm:gap-3">
+
+                <div className="min-w-0 rounded-xl border border-white/10 bg-[#07101F] p-3">
+
+                  <p className="text-[9px] font-bold uppercase tracking-wide text-white/40">
+                    Asset
+                  </p>
+
+                  <div className="mt-2 flex items-center gap-2">
+
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#E60033]/10 text-[#FF476B]">
+                      <Wallet size={16} aria-hidden="true" />
                     </div>
 
-                    <div>
-                      <p className="text-sm font-extrabold text-white">
+                    <div className="min-w-0">
+
+                      <p className="text-xs font-black text-white">
                         USDT
                       </p>
 
-                      <p className="mt-0.5 text-[11px] text-white/30">
+                      <p className="text-[9px] text-white/40">
                         Tether USD
                       </p>
                     </div>
                   </div>
+                </div>
 
-                  <span className="rounded-full border border-emerald-400/10 bg-emerald-400/8 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-emerald-300">
-                    Supported
-                  </span>
+                <div className="min-w-0 rounded-xl border border-white/10 bg-[#07101F] p-3">
+
+                  <p className="text-[9px] font-bold uppercase tracking-wide text-white/40">
+                    Network
+                  </p>
+
+                  <p className="mt-2 text-xs font-black text-white">
+                    TRON
+                  </p>
+
+                  <p className="mt-1 text-[10px] font-semibold text-[#FF476B]">
+                    TRC20
+                  </p>
                 </div>
               </div>
 
-              {/* Network */}
-              <div>
-                <p className="text-xs font-bold text-white/75">
-                  Network
-                </p>
+              {/* WALLET ADDRESS */}
+              <div className="mt-5">
 
-                <div className="mt-2 flex items-center justify-between rounded-2xl border border-white/7 bg-[#07101F] p-4">
-                  <div>
-                    <p className="text-sm font-extrabold text-white">
-                      TRON
-                    </p>
-
-                    <p className="mt-0.5 text-[11px] text-white/30">
-                      USDT-TRC20
-                    </p>
-                  </div>
-
-                  <span className="rounded-full border border-sky-400/10 bg-sky-400/8 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-sky-300">
-                    Supported
-                  </span>
-                </div>
-              </div>
-
-              {/* Address */}
-              <div>
                 <label
                   htmlFor="withdrawal-address"
-                  className="text-xs font-bold text-white/75"
+                  className="text-[11px] font-bold text-white/85"
                 >
-                  USDT TRON Wallet Address
+                  Withdrawal Wallet Address
                 </label>
 
                 <input
                   id="withdrawal-address"
+                  name="withdrawal-address"
                   type="text"
                   value={address}
                   onChange={(event) => {
                     setAddress(event.target.value);
-                    setError('');
+                    setError("");
                   }}
                   placeholder="Enter your TRON wallet address"
                   autoComplete="off"
+                  autoCapitalize="off"
                   spellCheck={false}
                   disabled={submitting}
-                  className="mt-2 w-full rounded-2xl border border-white/8 bg-[#07101F] p-3.5 text-sm text-white outline-none transition placeholder:text-white/20 focus:border-emerald-400/40 focus:bg-[#091423] focus:ring-4 focus:ring-emerald-400/5 disabled:cursor-not-allowed disabled:opacity-50"
+                  required
+                  aria-invalid={
+                    trimmedAddress.length > 0 &&
+                    !isAddressValid
+                  }
+                  className="mt-2 h-12 w-full min-w-0 rounded-xl border border-white/10 bg-[#07101F] px-3.5 text-[12px] text-white outline-none transition placeholder:text-white/30 focus:border-[#E60033]/50 focus:ring-2 focus:ring-[#E60033]/10 disabled:opacity-50 sm:text-[13px]"
                 />
 
-                <p className="mt-2 text-[10px] leading-4 text-white/25">
-                  Only USDT-TRC20 addresses are supported.
-                  TRON addresses begin with T.
+                <p className="mt-2 text-[10px] leading-5 text-white/45">
+                  Enter a TRON address beginning with T.
+                  Only use a wallet that you control and
+                  that supports USDT on TRC20.
                 </p>
               </div>
 
-              {/* PIN */}
-              <div>
+              {/* WALLET PIN */}
+              <div className="mt-5">
+
                 <label
                   htmlFor="withdrawal-pin"
-                  className="text-xs font-bold text-white/75"
+                  className="flex items-center gap-2 text-[11px] font-bold text-white/85"
                 >
+                  <LockKeyhole
+                    size={14}
+                    className="text-[#FF476B]"
+                    aria-hidden="true"
+                  />
                   6-Digit Wallet PIN
                 </label>
 
-                <input
-                  id="withdrawal-pin"
-                  type="password"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  maxLength={PIN_LENGTH}
-                  value={pin}
-                  onChange={(event) => {
-                    const value =
-                      event.target.value.replace(
-                        /\D/g,
-                        '',
-                      );
+                <div className="relative mt-2">
 
-                    setPin(value);
-                    setError('');
-                  }}
-                  placeholder="••••••"
-                  autoComplete="off"
-                  disabled={submitting}
-                  className="mt-2 w-full rounded-2xl border border-white/8 bg-[#07101F] p-3.5 text-center text-lg font-bold tracking-[0.5em] text-white outline-none transition placeholder:text-white/15 focus:border-emerald-400/40 focus:bg-[#091423] focus:ring-4 focus:ring-emerald-400/5 disabled:cursor-not-allowed disabled:opacity-50"
-                />
+                  <input
+                    id="withdrawal-pin"
+                    name="withdrawal-pin"
+                    type={showPin ? "text" : "password"}
+                    inputMode="numeric"
+                    pattern="[0-9]{6}"
+                    maxLength={PIN_LENGTH}
+                    value={pin}
+                    onChange={(event) => {
+                      const digits =
+                        event.target.value
+                          .replace(/\D/g, "")
+                          .slice(0, PIN_LENGTH);
 
-                <p className="mt-2 text-[10px] leading-4 text-white/25">
-                  Your 6-digit wallet PIN protects your
-                  assets and wallet.
+                      setPin(digits);
+                      setError("");
+                    }}
+                    placeholder="Enter 6-digit PIN"
+                    autoComplete="off"
+                    disabled={submitting}
+                    required
+                    aria-invalid={
+                      pin.length > 0 && !isPinValid
+                    }
+                    className="h-12 w-full min-w-0 rounded-xl border border-white/10 bg-[#07101F] pl-3.5 pr-12 text-[16px] font-bold tracking-[0.2em] text-white outline-none transition placeholder:text-[12px] placeholder:font-normal placeholder:tracking-normal placeholder:text-white/30 focus:border-[#E60033]/50 focus:ring-2 focus:ring-[#E60033]/10 disabled:opacity-50"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setShowPin((current) => !current)
+                    }
+                    disabled={submitting}
+                    aria-label={
+                      showPin ? "Hide wallet PIN" : "Show wallet PIN"
+                    }
+                    className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-white/45 transition hover:bg-white/5 hover:text-white"
+                  >
+                    {showPin ? (
+                      <EyeOff size={16} aria-hidden="true" />
+                    ) : (
+                      <Eye size={16} aria-hidden="true" />
+                    )}
+                  </button>
+                </div>
+
+                <p className="mt-2 text-[10px] leading-5 text-white/45">
+                  Enter your wallet PIN. Never share it
+                  with another person.
                 </p>
               </div>
 
-              {/* Submit */}
+              {/* SUBMIT */}
               <button
-                type="button"
-                onClick={handleBind}
-                disabled={
-                  submitting ||
-                  !address.trim() ||
-                  pin.length !== PIN_LENGTH
-                }
-                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-500 py-3.5 text-sm font-extrabold text-[#03100B] shadow-lg shadow-emerald-500/10 transition hover:bg-emerald-400 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-35"
+                type="submit"
+                disabled={!canSubmit}
+                className="mt-6 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#E60033] px-4 text-xs font-black text-white shadow-lg shadow-[#E60033]/10 transition hover:bg-[#FF174B] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-35"
               >
                 {submitting ? (
                   <>
@@ -702,44 +724,95 @@ const ProfileWalletBindPage = () => {
                   </>
                 ) : (
                   <>
-                    <Plus
-                      size={17}
-                      aria-hidden="true"
-                    />
+                    <Plus size={17} aria-hidden="true" />
                     Bind Withdrawal Wallet
                   </>
                 )}
               </button>
-            </div>
-          </section>
-        )}
+            </form>
 
-        {/* Safety notice */}
-        <section className="relative mt-4 rounded-2xl border border-white/8 bg-[#0B1426] p-4">
-          <div className="flex items-start gap-3">
-            <Wallet
-              size={18}
-              className="mt-0.5 shrink-0 text-white/40"
-              aria-hidden="true"
+            <SecurityNotice
+              title="Before you continue"
+              description="Confirm that your address supports USDT-TRC20. Sending assets through an incorrect network or to an incorrect address can result in permanent loss of funds."
             />
-
-            <div>
-              <p className="text-xs font-bold text-white/75">
-                Important
-              </p>
-
-              <p className="mt-1 text-[10px] leading-5 text-white/30">
-                Only bind a TRON wallet that you control.
-                Your withdrawal wallet is the authoritative
-                destination for withdrawals. You cannot bind
-                a second wallet while one is active.
-              </p>
-            </div>
-          </div>
-        </section>
+          </>
+        )}
       </main>
     </div>
   );
-};
+}
 
-export default ProfileWalletBindPage;
+/* ==========================================
+   CURRENT WALLET ADDRESS CARD
+========================================== */
+
+function AddressCard({
+  wallet,
+}: {
+  wallet: WithdrawalWalletResponse;
+}) {
+  return (
+    <div className="mt-5 min-w-0 rounded-xl border border-white/10 bg-[#07101F] p-3.5 sm:p-4">
+
+      <p className="text-[9px] font-bold uppercase tracking-[0.13em] text-white/45">
+        Current Withdrawal Address
+      </p>
+
+      <p className="mt-2 wrap-break-word font-mono text-[11px] leading-5 text-white/85 sm:text-xs">
+        {wallet.address}
+      </p>
+
+      <div className="mt-4 flex flex-wrap gap-2">
+
+        <span className="rounded-full border border-[#E60033]/20 bg-[#E60033]/10 px-2.5 py-1 text-[9px] font-bold text-[#FF7895]">
+          USDT
+        </span>
+
+        <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[9px] font-bold text-white/65">
+          TRON · TRC20
+        </span>
+
+        <span className="max-w-full truncate rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[9px] font-bold uppercase text-white/65">
+          {wallet.status}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/* ==========================================
+   SECURITY NOTICE
+========================================== */
+
+function SecurityNotice({
+  title,
+  description,
+}: {
+  title: string;
+  description: string;
+}) {
+  return (
+    <section className="mt-4 rounded-xl border border-white/10 bg-[#0B1426] p-4">
+
+      <div className="flex items-start gap-3">
+
+        <ShieldCheck
+          size={18}
+          className="mt-0.5 shrink-0 text-[#FF476B]"
+          aria-hidden="true"
+        />
+
+        <div className="min-w-0">
+
+          <h3 className="text-[11px] font-bold text-white/85">
+            {title}
+          </h3>
+
+          <p className="mt-1 text-[10px] leading-5 text-white/50">
+            {description}
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
