@@ -205,7 +205,7 @@ export default function InvestmentDetailsPage() {
 
   const isPendingDeposit = investment.status === "PENDING";
 
-  
+
 /*
  * Display the latest investment status returned by the backend.
  * This is an investment activity summary, not a payment ledger.

@@ -100,7 +100,7 @@ export default function WalletPage() {
   const [error, setError] = useState("");
   const requestIdRef = useRef(0);
 
-  
+
 /*
  * The backend balance-summary endpoint remains
  * the authoritative source for wallet balances.
