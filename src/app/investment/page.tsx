@@ -45,11 +45,19 @@ import type {
    HELPERS
 ========================================== */
 
-function shufflePlans(items: InvestmentPlan[]): InvestmentPlan[] {
+function shufflePlans(
+  items: InvestmentPlan[],
+): InvestmentPlan[] {
   const shuffled = [...items];
 
-  for (let i = shuffled.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
+  for (
+    let i = shuffled.length - 1;
+    i > 0;
+    i -= 1
+  ) {
+    const j = Math.floor(
+      Math.random() * (i + 1),
+    );
 
     [shuffled[i], shuffled[j]] = [
       shuffled[j],
@@ -62,7 +70,7 @@ function shufflePlans(items: InvestmentPlan[]): InvestmentPlan[] {
 
 function getUniqueKey(
   id: string,
-  index: number
+  index: number,
 ): string {
   return id && !isZeroUUID(id)
     ? id
@@ -76,16 +84,32 @@ function getUniqueKey(
 export default function Home() {
   const router = useRouter();
 
-  const [balanceSummary, setBalanceSummary] =
-    useState<BalanceSummary | null>(null);
+  const [
+    balanceSummary,
+    setBalanceSummary,
+  ] = useState<BalanceSummary | null>(
+    null,
+  );
 
-  const [searchOpen, setSearchOpen] = useState(false);
+  const [
+    searchOpen,
+    setSearchOpen,
+  ] = useState(false);
 
-  const [plans, setPlans] = useState<InvestmentPlan[]>([]);
-  const [investments, setInvestments] = useState<Investment[]>([]);
-  const [user, setUser] = useState<UserProfile | null>(null);
+  const [plans, setPlans] = useState<
+    InvestmentPlan[]
+  >([]);
 
-  const [loading, setLoading] = useState(true);
+  const [
+    investments,
+    setInvestments,
+  ] = useState<Investment[]>([]);
+
+  const [user, setUser] =
+    useState<UserProfile | null>(null);
+
+  const [loading, setLoading] =
+    useState(true);
 
   /* ==========================================
      LOAD DASHBOARD INFORMATION
@@ -102,57 +126,86 @@ export default function Home() {
         balanceResult,
       ] = await Promise.allSettled([
         investmentApi.getPlans(),
-        investmentApi.getInvestments(1, 50),
+        investmentApi.getInvestments(
+          1,
+          50,
+        ),
         investmentApi.getProfile(),
         investmentApi.getBalanceSummary(),
       ]);
 
-      if (cancelled) return;
+      if (cancelled) {
+        return;
+      }
 
-      if (plansResult.status === "fulfilled") {
-        setPlans(shufflePlans(plansResult.value));
+      if (
+        plansResult.status === "fulfilled"
+      ) {
+        const publishedPlans =
+          plansResult.value.filter(
+            (plan) =>
+              plan.status === "PUBLISHED",
+          );
+
+        setPlans(
+          shufflePlans(publishedPlans),
+        );
       } else {
         console.error(
           "Failed to load investment plans:",
-          plansResult.reason
+          plansResult.reason,
         );
 
         setPlans([]);
       }
 
-      if (investmentsResult.status === "fulfilled") {
+      if (
+        investmentsResult.status ===
+        "fulfilled"
+      ) {
         const validInvestments =
           investmentsResult.value.investments.filter(
-            (investment) => !isZeroUUID(investment.id)
+            (investment) =>
+              !isZeroUUID(investment.id),
           );
 
-        setInvestments(validInvestments);
+        setInvestments(
+          validInvestments,
+        );
       } else {
         console.error(
           "Failed to load user investments:",
-          investmentsResult.reason
+          investmentsResult.reason,
         );
 
         setInvestments([]);
       }
 
-      if (profileResult.status === "fulfilled") {
+      if (
+        profileResult.status ===
+        "fulfilled"
+      ) {
         setUser(profileResult.value);
       } else {
         console.error(
           "Failed to load user profile:",
-          profileResult.reason
+          profileResult.reason,
         );
 
         setUser(null);
       }
 
-      if (balanceResult.status === "fulfilled") {
-        setBalanceSummary(balanceResult.value);
+      if (
+        balanceResult.status ===
+        "fulfilled"
+      ) {
+        setBalanceSummary(
+          balanceResult.value,
+        );
       } else {
         console.error(
           "Failed to load balance summary:",
-          balanceResult.reason
+          balanceResult.reason,
         );
 
         setBalanceSummary(null);
@@ -172,18 +225,40 @@ export default function Home() {
      DASHBOARD DATA
   ========================================== */
 
-  const displayedPlans = plans.slice(0, 4);
+  const displayedPlans =
+    plans.slice(0, 4);
 
-  const recentInvestments = investments.slice(0, 2);
+  const recentInvestments =
+    investments.slice(0, 2);
 
   const summary: InvestmentSummary = {
-    totalInvested: balanceSummary?.totalInvested ?? 0,
-    totalExpectedProfit: balanceSummary?.totalExpectedProfit ?? 0,
-    totalLockedBalance: balanceSummary?.totalLockedBalance ?? 0,
-    activeBalance: balanceSummary?.activeBalance ?? 0,
-    activeInvestments: balanceSummary?.activeInvestments ?? 0,
-    maturedInvestments: balanceSummary?.maturedInvestments ?? 0,
-    assetSymbol: balanceSummary?.assetSymbol ?? "USDT",
+    totalInvested:
+      balanceSummary?.totalInvested ??
+      0,
+
+    totalExpectedProfit:
+      balanceSummary?.totalExpectedProfit ??
+      0,
+
+    totalLockedBalance:
+      balanceSummary?.totalLockedBalance ??
+      0,
+
+    activeBalance:
+      balanceSummary?.activeBalance ??
+      0,
+
+    activeInvestments:
+      balanceSummary?.activeInvestments ??
+      0,
+
+    maturedInvestments:
+      balanceSummary?.maturedInvestments ??
+      0,
+
+    assetSymbol:
+      balanceSummary?.assetSymbol ??
+      "USDT",
   };
 
   /* ==========================================
@@ -192,9 +267,19 @@ export default function Home() {
 
   return (
     <>
-      <main className="relative mx-auto w-full max-w-2xl px-4 pb-32 pt-4 text-white sm:px-6 sm:pt-6 lg:max-w-5xl lg:px-8">
-
+      <main
+        className="
+          relative mx-auto w-full
+          max-w-2xl
+          px-3 pb-32 pt-4
+          text-white
+          min-[375px]:px-4
+          sm:px-6 sm:pt-6
+          lg:max-w-7xl lg:px-8
+        "
+      >
         {/* BACKGROUND */}
+
         <div
           aria-hidden="true"
           className="pointer-events-none fixed inset-0 -z-10 overflow-hidden"
@@ -210,7 +295,9 @@ export default function Home() {
 
         <InvestmentHeader
           name={user?.name || ""}
-          onSearch={() => setSearchOpen(true)}
+          onSearch={() =>
+            setSearchOpen(true)
+          }
         />
 
         {/* =====================================
@@ -218,20 +305,27 @@ export default function Home() {
         ====================================== */}
 
         <section className="mt-6 sm:mt-7">
-
           <div className="inline-flex items-center gap-1.5 rounded-full border border-[#E60033]/20 bg-[#E60033]/10 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.13em] text-[#FF476B]">
-            <Sparkles size={12} aria-hidden="true" />
+            <Sparkles
+              size={12}
+              aria-hidden="true"
+            />
+
             Investment dashboard
           </div>
 
           <h1 className="mt-3 text-[25px] font-black leading-tight tracking-tight text-white sm:text-[30px]">
             Grow your future
-            <span className="text-[#FF476B]">.</span>
+            <span className="text-[#FF476B]">
+              .
+            </span>
           </h1>
 
           <p className="mt-1.5 max-w-xl text-[11px] leading-5 text-white/45 sm:text-xs">
-            Monitor your portfolio, explore available plans
-            and follow your investment activity in one place.
+            Monitor your portfolio,
+            explore available plans and
+            follow your investment activity
+            in one place.
           </p>
         </section>
 
@@ -240,11 +334,13 @@ export default function Home() {
         ====================================== */}
 
         <section className="mt-5">
-          <BalanceCard summary={summary} />
+          <BalanceCard
+            summary={summary}
+          />
         </section>
 
         {/* =====================================
-            NEW REDIQ ADVERTISEMENT BANNER
+            REDIQ ADVERTISEMENT BANNER
         ====================================== */}
 
         <section
@@ -252,19 +348,16 @@ export default function Home() {
           className="mt-4 min-w-0"
         >
           <div className="group relative overflow-hidden rounded-2xl border border-[#E60033]/20 bg-[#050B18] shadow-lg shadow-black/20">
-
-            {/* Original artwork - no cropping */}
             <Image
               src="/images/futuristic.png"
               alt="REDIQ promotional artwork featuring the investment platform, portfolio dashboard and digital asset market."
               width={1200}
               height={630}
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 960px"
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 1200px"
               className="block h-auto w-full object-contain"
               priority
             />
 
-            {/* Bottom brand accent */}
             <div
               aria-hidden="true"
               className="absolute inset-x-0 bottom-0 h-0.5 bg-linear-to-r from-[#E60033] via-[#FF476B]/70 to-transparent"
@@ -272,11 +365,17 @@ export default function Home() {
           </div>
 
           <p className="mt-1.5 px-1 text-[9px] leading-4 text-white/35">
-            Your future begins with the decisions you make today.
-            Discover new possibilities with REDIQ. Explore digital investment
-            opportunities, stay connected to global markets, and build your financial
-            journey with confidence. Every great ambition starts with a single step.
-
+            Your future begins with the
+            decisions you make today.
+            Discover new possibilities
+            with REDIQ. Explore digital
+            investment opportunities,
+            stay connected to global
+            markets, and build your
+            financial journey with
+            confidence. Every great
+            ambition starts with a
+            single step.
           </p>
         </section>
 
@@ -289,11 +388,15 @@ export default function Home() {
           className="mt-4 grid grid-cols-2 gap-2.5 sm:gap-3"
         >
           <QuickAction
-            icon={ChartNoAxesCombined}
+            icon={
+              ChartNoAxesCombined
+            }
             label="My investments"
             description="Track portfolio"
             onClick={() =>
-              router.push("/investment/investments")
+              router.push(
+                "/investment/investments",
+              )
             }
           />
 
@@ -302,7 +405,9 @@ export default function Home() {
             label="Explore plans"
             description="View opportunities"
             onClick={() =>
-              router.push("/investment/plans")
+              router.push(
+                "/investment/plans",
+              )
             }
           />
         </section>
@@ -312,38 +417,54 @@ export default function Home() {
         ====================================== */}
 
         <section className="mt-7">
-
           <SectionHeader
             eyebrow="Portfolio"
             title="My investments"
             action="View all"
             onClick={() =>
-              router.push("/investment/investments")
+              router.push(
+                "/investment/investments",
+              )
             }
           />
 
           <div className="mt-3 space-y-2.5">
             {loading ? (
               <InvestmentSkeleton />
-            ) : recentInvestments.length > 0 ? (
-              recentInvestments.map((investment, index) => (
-                <InvestmentCard
-                  key={getUniqueKey(investment.id, index)}
-                  investment={investment}
-                  onClick={() =>
-                    router.push(
-                      `/investment/investments/${investment.id}`
-                    )
-                  }
-                />
-              ))
+            ) : recentInvestments.length >
+              0 ? (
+              recentInvestments.map(
+                (
+                  investment,
+                  index,
+                ) => (
+                  <InvestmentCard
+                    key={getUniqueKey(
+                      investment.id,
+                      index,
+                    )}
+                    investment={
+                      investment
+                    }
+                    onClick={() =>
+                      router.push(
+                        `/investment/investments/${encodeURIComponent(
+                          investment.id,
+                        )}`,
+                      )
+                    }
+                  />
+                ),
+              )
             ) : (
               <EmptySection
                 title="No investments yet"
                 description="Explore available investment plans to begin building your portfolio."
                 action="Explore plans"
                 onClick={() =>
-                  router.push("/investment/plans")
+                  router.push(
+                    "/investment/plans",
+                  )
                 }
               />
             )}
@@ -355,29 +476,54 @@ export default function Home() {
         ====================================== */}
 
         <section className="mt-8">
-
           <SectionHeader
             eyebrow="Opportunities"
             title="Explore investment plans"
             action="See all"
             onClick={() =>
-              router.push("/investment/plans")
+              router.push(
+                "/investment/plans",
+              )
             }
           />
 
           {loading ? (
             <PlansSkeleton />
-          ) : displayedPlans.length > 0 ? (
-            <div className="mt-3 grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
-              {displayedPlans.map((plan, index) => (
-                <InvestmentPlanCard
-                  key={getUniqueKey(plan.id, index)}
-                  plan={plan}
-                  onClick={() =>
-                    router.push(`/investment/plans/${plan.id}`)
-                  }
-                />
-              ))}
+          ) : displayedPlans.length >
+            0 ? (
+            <div
+              className="
+                mt-3 grid
+                grid-cols-1
+                items-stretch
+                gap-3
+                sm:gap-4
+                md:grid-cols-2
+                lg:grid-cols-4
+              "
+            >
+              {displayedPlans.map(
+                (plan, index) => (
+                  <div
+                    key={getUniqueKey(
+                      plan.id,
+                      index,
+                    )}
+                    className="min-w-0"
+                  >
+                    <InvestmentPlanCard
+                      plan={plan}
+                      onClick={() =>
+                        router.push(
+                          `/investment/plans/${encodeURIComponent(
+                            plan.id,
+                          )}`,
+                        )
+                      }
+                    />
+                  </div>
+                ),
+              )}
             </div>
           ) : (
             <div className="mt-3">
@@ -416,16 +562,19 @@ export default function Home() {
         <section className="mt-7">
           <LiveCryptoMarket />
         </section>
-
       </main>
 
       {/* SEARCH MODAL */}
+
       <SearchModal
         open={searchOpen}
-        onClose={() => setSearchOpen(false)}
+        onClose={() =>
+          setSearchOpen(false)
+        }
       />
 
       {/* SUPPORT BUTTON */}
+
       <SupportFloatingButton />
     </>
   );
@@ -450,7 +599,6 @@ function SectionHeader({
 }: SectionHeaderProps) {
   return (
     <div className="flex items-end justify-between gap-3">
-
       <div className="min-w-0">
         <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[#FF476B]">
           {eyebrow}
@@ -507,11 +655,13 @@ function QuickAction({
       className="group flex min-w-0 items-center gap-2.5 rounded-xl border border-white/8 bg-[#0B1426] p-3 text-left transition duration-200 hover:-translate-y-0.5 hover:border-[#E60033]/25 hover:bg-[#101D30] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E60033]/50 sm:p-3.5"
     >
       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[#E60033]/20 bg-[#E60033]/10 text-[#FF476B]">
-        <Icon size={17} aria-hidden={true} />
+        <Icon
+          size={17}
+          aria-hidden={true}
+        />
       </div>
 
       <div className="min-w-0 flex-1">
-
         <p className="truncate text-[11px] font-bold text-white sm:text-xs">
           {label}
         </p>
@@ -560,14 +710,23 @@ function PlansSkeleton() {
     <div
       role="status"
       aria-label="Loading investment plans"
-      className="mt-3 grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4"
+      className="
+        mt-3 grid
+        grid-cols-1
+        gap-3
+        sm:gap-4
+        md:grid-cols-2
+        lg:grid-cols-4
+      "
     >
-      {[1, 2, 3, 4].map((item) => (
-        <div
-          key={item}
-          className="h-71.25 animate-pulse rounded-2xl border border-white/8 bg-[#0B1426]"
-        />
-      ))}
+      {[1, 2, 3, 4].map(
+        (item) => (
+          <div
+            key={item}
+            className="h-64 animate-pulse rounded-2xl border border-white/8 bg-[#0B1426] sm:h-72"
+          />
+        ),
+      )}
     </div>
   );
 }
@@ -591,9 +750,11 @@ function EmptySection({
 }: EmptySectionProps) {
   return (
     <div className="rounded-2xl border border-dashed border-white/10 bg-[#0B1426]/80 px-4 py-7 text-center">
-
       <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-[#E60033]/10 text-[#FF476B]">
-        <Sparkles size={18} aria-hidden="true" />
+        <Sparkles
+          size={18}
+          aria-hidden="true"
+        />
       </div>
 
       <h3 className="mt-3 text-xs font-bold text-white">
@@ -611,7 +772,11 @@ function EmptySection({
           className="mt-4 inline-flex min-h-9 items-center gap-2 rounded-lg bg-[#E60033] px-4 text-[11px] font-black text-white transition hover:bg-[#FF174B]"
         >
           {action}
-          <ArrowRight size={13} aria-hidden="true" />
+
+          <ArrowRight
+            size={13}
+            aria-hidden="true"
+          />
         </button>
       )}
     </div>
