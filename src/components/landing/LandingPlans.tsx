@@ -272,8 +272,7 @@ export default function LandingPlans({
             />
 
             <p className="text-[10px] leading-[1.65] text-white/45">
-              Investments involve financial risk. Expected returns
-              are not guaranteed. Review each plan&apos;s minimum amount,
+              Review each plan&apos;s minimum amount,
               duration, fees and withdrawal conditions before investing.
             </p>
           </div>
