@@ -1,7 +1,6 @@
 
 // src/app/investment/plans/page.tsx
 
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -9,8 +8,10 @@ import { useRouter } from "next/navigation";
 
 import {
   ArrowLeft,
-  ArrowRight,
+  ArrowUpRight,
   ChevronRight,
+  Layers3,
+  Loader2,
   RefreshCw,
   Sparkles,
   TrendingUp,
@@ -19,429 +20,489 @@ import {
 import InvestmentPlanCard from "@/src/components/InvestmentPlanCard";
 import { investmentApi } from "@/src/lib/api/investmentApi";
 
-import type { InvestmentPlan } from "@/src/lib/types/investment";
+import type {
+  InvestmentPlan,
+} from "@/src/lib/types/investment";
 
-/* ==========================================
-   PLANS PAGE
-========================================== */
+/* -------------------------------------------------------------------------- */
+/* Page                                                                       */
+/* -------------------------------------------------------------------------- */
 
 export default function PlansPage() {
   const router = useRouter();
 
-  const [plans, setPlans] = useState<InvestmentPlan[]>([]);
+  const [plans, setPlans] = useState<
+    InvestmentPlan[]
+  >([]);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const [reloadKey, setReloadKey] = useState(0);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  /* ==========================================
-     LOAD PUBLISHED PLANS
-  ========================================== */
+  /* ------------------------------------------------------------------------ */
+  /* Load published investment plans                                          */
+  /* ------------------------------------------------------------------------ */
 
   useEffect(() => {
     let cancelled = false;
 
-    const loadPlans = async () => {
+    async function loadPlans() {
       try {
         setLoading(true);
         setError("");
 
-        const data = await investmentApi.getPlans();
+        const data =
+          await investmentApi.getPlans();
 
-        if (cancelled) return;
+        if (cancelled) {
+          return;
+        }
 
-        const publishedPlans = data.filter(
-          (plan) => plan.status === "PUBLISHED"
+        setPlans(
+          data.filter(
+            (plan) =>
+              plan.status === "PUBLISHED",
+          ),
         );
-
-        setPlans(publishedPlans);
       } catch (err) {
-        if (cancelled) return;
+        if (cancelled) {
+          return;
+        }
 
         console.error(
-          "Failed to load investment plans:",
-          err
+          "Unable to load investment plans:",
+          err,
         );
 
-        setPlans([]);
-
         setError(
-          "Unable to load investment plans. Please try again."
+          "Unable to load investment plans. Please try again.",
         );
       } finally {
         if (!cancelled) {
           setLoading(false);
         }
       }
-    };
+    }
 
     void loadPlans();
 
     return () => {
       cancelled = true;
     };
-  }, [reloadKey]);
+  }, [refreshKey]);
 
-  /* ==========================================
-     NAVIGATION
-  ========================================== */
+  /* ------------------------------------------------------------------------ */
+  /* Navigation                                                               */
+  /* ------------------------------------------------------------------------ */
 
   const handlePlanClick = (planId: string) => {
-    router.push(`/investment/plans/${planId}`);
+    router.push(
+      `/investment/plans/${encodeURIComponent(planId)}`,
+    );
   };
 
-  const handleRetry = () => {
-    setReloadKey((current) => current + 1);
+  const handleRefresh = () => {
+    if (loading) {
+      return;
+    }
+
+    setRefreshKey((current) => current + 1);
   };
 
-  /* ==========================================
-     PAGE
-  ========================================== */
+  /* ------------------------------------------------------------------------ */
+  /* Page                                                                     */
+  /* ------------------------------------------------------------------------ */
 
   return (
-    <main className="relative mx-auto w-full min-w-0 max-w-2xl overflow-x-clip px-3 pb-32 pt-4 text-white min-[375px]:px-4 sm:px-6 sm:pt-6 lg:max-w-5xl lg:px-8">
+    <main className="relative min-h-screen overflow-x-hidden bg-[#050B18] px-3 pb-32 pt-5 text-white min-[375px]:px-4 sm:px-6 sm:pt-7 lg:px-8">
 
-      {/* =====================================
-          BACKGROUND ACCENTS
-      ====================================== */}
+      {/* Ambient background */}
 
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
-      >
-        <div className="absolute -right-20 top-24 h-64 w-64 rounded-full bg-[#E60033]/5 blur-[90px]" />
+        className="pointer-events-none absolute -right-16 -top-20 h-64 w-64 rounded-full bg-[#E60033]/8 blur-3xl"
+      />
 
-        <div className="absolute -left-20 top-[55%] h-64 w-64 rounded-full bg-[#E60033]/5 blur-[90px]" />
-      </div>
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute left-0 top-80 h-48 w-48 rounded-full bg-[#FF476B]/5 blur-3xl"
+      />
 
-      {/* =====================================
-          HEADER
-      ====================================== */}
+      <div className="relative mx-auto w-full max-w-7xl">
 
-      <header className="flex min-w-0 items-center justify-between gap-3">
+        {/* ================================================================ */}
+        {/* PAGE HEADER                                                      */}
+        {/* ================================================================ */}
 
-        <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
+        <header className="flex items-center justify-between gap-3">
 
-          <button
-            type="button"
-            onClick={() => router.back()}
-            aria-label="Go back"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/10 bg-[#0B1426] text-white/65 transition hover:border-[#E60033]/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E60033]/60 sm:h-10 sm:w-10"
-          >
-            <ArrowLeft size={17} aria-hidden="true" />
-          </button>
+          <div className="flex min-w-0 items-center gap-3">
 
-          <div className="min-w-0">
-            <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-[#FF476B]">
-              Explore
-            </p>
+            <button
+              type="button"
+              onClick={() => router.back()}
+              aria-label="Go back"
+              className="
+                flex h-10 w-10 shrink-0 items-center
+                justify-center rounded-xl
+                border border-white/10
+                bg-[#0B1426]
+                text-white/65
+                transition
+                hover:border-[#E60033]/30
+                hover:text-white
+                active:scale-95
+              "
+            >
+              <ArrowLeft size={17} />
+            </button>
 
-            <h1 className="truncate text-[17px] font-black tracking-tight text-white min-[375px]:text-[19px] sm:text-[23px]">
-              Investment Plans
-            </h1>
-          </div>
-        </div>
+            <div className="min-w-0">
 
-        {/* Published plan count */}
-        <div
-          aria-label={`${plans.length} published investment plans`}
-          className="flex h-9 min-w-9 shrink-0 items-center justify-center rounded-full border border-[#E60033]/20 bg-[#E60033]/10 px-2.5 text-[11px] font-black tabular-nums text-[#FF476B] sm:h-10 sm:min-w-10"
-        >
-          {loading ? "…" : plans.length}
-        </div>
-      </header>
+              <p className="text-[9px] font-extrabold uppercase tracking-[0.17em] text-[#FF476B]">
+                REDIQ Investments
+              </p>
 
-      {/* =====================================
-          INTRODUCTION
-      ====================================== */}
+              <h1 className="mt-0.5 truncate text-lg font-black tracking-tight text-white sm:text-xl">
+                Investment Plans
+              </h1>
 
-      <section className="mt-6">
-        <div className="flex items-center gap-3">
-
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#E60033]/20 bg-[#E60033]/10 text-[#FF476B]">
-            <Sparkles size={16} aria-hidden="true" />
-          </div>
-
-          <div className="min-w-0">
-            <p className="text-[12px] font-bold text-white/85 sm:text-[13px]">
-              Discover your next opportunity
-            </p>
-
-            <p className="mt-0.5 text-[10px] leading-5 text-white/45 sm:text-[11px]">
-              Explore investment plans that align with your goals.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* =====================================
-          FEATURED BANNER
-      ====================================== */}
-
-      <section className="mt-5">
-
-        <div className="relative isolate min-w-0 overflow-hidden rounded-[22px] border border-[#E60033]/20 bg-linear-to-br from-[#29101D] via-[#111525] to-[#07101F] p-4 shadow-xl shadow-black/20 min-[375px]:p-5 sm:rounded-[26px] sm:p-6">
-
-          {/* Background effects */}
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute -right-12 -top-20 -z-10 h-52 w-52 rounded-full bg-[#E60033]/15 blur-[55px]"
-          />
-
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute bottom-0 right-0 -z-10 h-28 w-44 rounded-full bg-[#FF476B]/5 blur-[45px]"
-          />
-
-          {/* Badge */}
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-[#FF476B]/25 bg-[#E60033]/15 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.11em] text-[#FF7895]">
-            <TrendingUp size={12} aria-hidden="true" />
-            REDIQ Investments
-          </span>
-
-          {/* Heading */}
-          <h2 className="mt-4 max-w-md text-[21px] font-black leading-tight tracking-tight text-white sm:text-[27px]">
-            Your future starts with
-            <span className="text-[#FF476B]"> a smart decision.</span>
-          </h2>
-
-          {/* Description */}
-          <p className="mt-2 max-w-md text-[11px] leading-5 text-white/60 sm:text-xs sm:leading-6">
-            Discover available investment opportunities,
-            compare plan details, and take meaningful steps
-            toward your financial goals with REDIQ.
-          </p>
-
-          {/* Available plans */}
-          <div className="mt-5 inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2">
-
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#E60033]/15 text-[#FF476B]">
-              <Sparkles size={13} aria-hidden="true" />
             </div>
-
-            <span className="text-[10px] font-semibold text-white/75">
-              {loading
-                ? "Checking available plans..."
-                : `${plans.length} published ${
-                    plans.length === 1 ? "plan" : "plans"
-                  } available`}
-            </span>
           </div>
 
-          {/* Bottom accent */}
-          <div
-            aria-hidden="true"
-            className="absolute inset-x-0 bottom-0 h-0.5 bg-linear-to-r from-[#E60033] via-[#FF476B]/50 to-transparent"
-          />
-        </div>
-      </section>
+          {/* Published plan count */}
 
-      {/* =====================================
-          PLANS SECTION HEADING
-      ====================================== */}
+          <div className="flex shrink-0 items-center gap-2 rounded-xl border border-[#E60033]/20 bg-[#E60033]/10 px-3 py-2">
 
-      <section className="mt-7">
+            <Layers3
+              size={15}
+              className="text-[#FF476B]"
+            />
 
-        <div className="flex min-w-0 items-end justify-between gap-3">
-
-          <div className="min-w-0">
-
-            <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-[#FF476B]">
-              Opportunities
-            </p>
-
-            <h2 className="mt-1 text-[16px] font-black tracking-tight text-white sm:text-lg">
-              Available Plans
-            </h2>
-
-            <p className="mt-1 text-[10px] text-white/45 sm:text-[11px]">
-              Select a plan to view its full details.
-            </p>
-          </div>
-
-          {!loading && !error && plans.length > 0 && (
-            <span className="shrink-0 rounded-full border border-[#E60033]/20 bg-[#E60033]/10 px-2.5 py-1 text-[9px] font-bold text-[#FF476B]">
-              {plans.length}{" "}
-              {plans.length === 1 ? "option" : "options"}
+            <span className="text-xs font-black tabular-nums text-white">
+              {loading ? "—" : plans.length}
             </span>
-          )}
-        </div>
-      </section>
 
-      {/* =====================================
-          LOADING STATE
-          TWO CARDS ON MOBILE
-      ====================================== */}
+            <span className="hidden text-[10px] font-semibold text-white/45 min-[400px]:inline">
+              Plans
+            </span>
 
-      {loading && (
-        <section
-          role="status"
-          aria-label="Loading investment plans"
-          className="mt-4 grid min-w-0 grid-cols-2 gap-2 min-[375px]:gap-2.5 sm:gap-3 md:grid-cols-3 lg:grid-cols-4"
-        >
-          {[1, 2, 3, 4].map((item) => (
+          </div>
+        </header>
+
+        {/* ================================================================ */}
+        {/* FEATURED INTRODUCTION                                            */}
+        {/* ================================================================ */}
+
+        <section className="mt-5 sm:mt-6">
+
+          <div className="relative overflow-hidden rounded-[22px] border border-[#E60033]/20 bg-linear-to-br from-[#241225] via-[#141426] to-[#0B1426] p-4 shadow-xl shadow-black/15 min-[375px]:p-5 sm:rounded-[26px] sm:p-6 lg:p-7">
+
+            {/* Decorative glow */}
+
             <div
-              key={item}
-              className="min-w-0 animate-pulse overflow-hidden rounded-2xl border border-white/8 bg-[#0B1426] p-3 sm:p-4"
+              aria-hidden="true"
+              className="pointer-events-none absolute -right-10 -top-20 h-52 w-52 rounded-full bg-[#E60033]/15 blur-3xl"
+            />
+
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute bottom-0 right-0 h-36 w-36 rounded-full bg-[#FF476B]/8 blur-2xl"
+            />
+
+            {/* Decorative icon */}
+
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute -right-4 top-5 hidden rotate-12 text-[#FF476B]/10 sm:block"
             >
-              <div className="h-8 w-8 rounded-lg bg-white/10" />
-
-              <div className="mt-5 h-3 w-3/4 rounded bg-white/10" />
-
-              <div className="mt-2 h-2.5 w-1/2 rounded bg-white/5" />
-
-              <div className="mt-6 h-7 w-2/3 rounded bg-white/10" />
-
-              <div className="mt-5 space-y-2">
-                <div className="h-2.5 rounded bg-white/5" />
-                <div className="h-2.5 rounded bg-white/5" />
-                <div className="h-2.5 w-3/4 rounded bg-white/5" />
-              </div>
-
-              <div className="mt-6 h-9 rounded-lg bg-white/10" />
+              <TrendingUp size={150} strokeWidth={1} />
             </div>
-          ))}
-        </section>
-      )}
 
-      {/* =====================================
-          ERROR STATE
-      ====================================== */}
+            <div className="relative z-10">
 
-      {!loading && error && (
-        <section className="mt-4 rounded-2xl border border-[#E60033]/25 bg-[#E60033]/8 p-5 text-center">
+              {/* Eyebrow */}
 
-          <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-[#E60033]/15 text-[#FF476B]">
-            <RefreshCw size={18} aria-hidden="true" />
-          </div>
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-[#FF476B]/20 bg-[#E60033]/10 px-2.5 py-1">
 
-          <h3 className="mt-3 text-sm font-bold text-white">
-            Something went wrong
-          </h3>
+                <Sparkles
+                  size={11}
+                  className="text-[#FF476B]"
+                />
 
-          <p
-            role="alert"
-            className="mx-auto mt-1.5 max-w-xs text-[11px] leading-5 text-white/55"
-          >
-            {error}
-          </p>
-
-          <button
-            type="button"
-            onClick={handleRetry}
-            className="mt-4 inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-[#E60033] px-5 text-[11px] font-bold text-white transition hover:bg-[#FF174B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF476B]"
-          >
-            <RefreshCw size={14} aria-hidden="true" />
-            Try again
-          </button>
-        </section>
-      )}
-
-      {/* =====================================
-          INVESTMENT PLAN CARDS
-      ====================================== */}
-
-      {!loading && !error && (
-        <>
-          {plans.length > 0 ? (
-
-            <section
-              aria-label="Published investment plans"
-              className="mt-4 min-w-0"
-            >
-
-              {/*
-                RESPONSIVE GRID:
-
-                Mobile:  2 cards
-                Tablet:  3 cards
-                Desktop: 4 cards
-
-                min-w-0 prevents flex/grid content
-                from forcing horizontal overflow.
-              */}
-
-              <div className="grid min-w-0 grid-cols-2 items-stretch gap-2 min-[375px]:gap-2.5 sm:gap-3 md:grid-cols-3 lg:grid-cols-4">
-
-                {plans.map((plan, index) => (
-                  <div
-                    key={`${plan.id}-${index}`}
-                    className="min-w-0 *:h-full *:min-w-0 *:w-full"
-                  >
-                    <InvestmentPlanCard
-                      plan={plan}
-                      onClick={() =>
-                        handlePlanClick(plan.id)
-                      }
-                    />
-                  </div>
-                ))}
+                <span className="text-[9px] font-extrabold uppercase tracking-[0.1em] text-[#FF9AAD]">
+                  Employee investment
+                </span>
 
               </div>
-            </section>
 
-          ) : (
+              {/* Title */}
 
-            /* =====================================
-                EMPTY STATE
-            ====================================== */
+              <h2 className="mt-3 max-w-lg text-[22px] font-black leading-tight tracking-tight text-white sm:text-[26px] lg:text-[30px]">
+                Build your financial future.
+              </h2>
 
-            <section className="mt-4">
+              {/* Description */}
 
-              <div className="rounded-2xl border border-dashed border-white/10 bg-[#0B1426] px-4 py-10 text-center sm:px-6 sm:py-12">
+              <p className="mt-2 max-w-lg text-[11px] leading-[19px] text-white/55 sm:text-xs sm:leading-5">
+                Explore investment opportunities created
+                for company team members. Choose a plan
+                that aligns with your goals.
+              </p>
 
-                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl border border-[#E60033]/20 bg-[#E60033]/10 text-[#FF476B]">
-                  <Sparkles size={21} aria-hidden="true" />
+              {/* Availability */}
+
+              <div className="mt-5 flex flex-wrap items-center gap-2">
+
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-[#FF476B]">
+                  <Layers3 size={15} />
                 </div>
 
-                <h3 className="mt-4 text-[13px] font-black text-white sm:text-sm">
-                  No investment plans available
-                </h3>
+                <span className="text-[11px] font-semibold text-white/65">
 
-                <p className="mx-auto mt-2 max-w-xs text-[11px] leading-5 text-white/50">
-                  There are currently no published
-                  investment plans. Check back later
-                  for new opportunities.
-                </p>
+                  {loading
+                    ? "Checking available plans..."
+                    : error
+                      ? "Plans temporarily unavailable"
+                      : `${plans.length} published ${
+                          plans.length === 1
+                            ? "plan"
+                            : "plans"
+                        } available`}
 
-                <button
-                  type="button"
-                  onClick={() =>
-                    router.push("/investment")
-                  }
-                  className="mt-5 inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-[#E60033] px-4 text-[11px] font-bold text-white transition hover:bg-[#FF174B] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF476B]"
-                >
-                  Back to dashboard
+                </span>
 
-                  <ChevronRight
-                    size={14}
-                    aria-hidden="true"
-                  />
-                </button>
               </div>
-            </section>
-          )}
-        </>
-      )}
 
-      {/* =====================================
-          PAGE FOOTER MESSAGE
-      ====================================== */}
+            </div>
+          </div>
+        </section>
 
-      {!loading && !error && plans.length > 0 && (
-        <div className="mt-6 flex items-start gap-2 rounded-xl border border-white/8 bg-[#0B1426]/70 px-3.5 py-3">
+        {/* ================================================================ */}
+        {/* PLANS SECTION HEADER                                             */}
+        {/* ================================================================ */}
 
-          <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-[#E60033]/10 text-[#FF476B]">
-            <ArrowRight size={12} aria-hidden="true" />
+        <section className="mt-7 sm:mt-8">
+
+          <div className="flex items-end justify-between gap-3">
+
+            <div className="min-w-0">
+
+              <div className="flex items-center gap-2">
+
+                <span className="h-4 w-1 rounded-full bg-[#E60033]" />
+
+                <h2 className="text-[15px] font-black tracking-tight text-white sm:text-[17px]">
+                  Available Plans
+                </h2>
+
+              </div>
+
+              <p className="mt-1 pl-3 text-[10px] leading-4 text-white/40 sm:text-[11px]">
+                Select a plan to explore its details.
+              </p>
+
+            </div>
+
+            <button
+              type="button"
+              onClick={handleRefresh}
+              disabled={loading}
+              aria-label="Refresh investment plans"
+              title="Refresh investment plans"
+              className="
+                flex h-9 w-9 shrink-0 items-center
+                justify-center rounded-xl
+                border border-white/10
+                bg-[#0B1426]
+                text-white/55
+                transition
+                hover:border-[#E60033]/30
+                hover:text-[#FF476B]
+                disabled:cursor-not-allowed
+                disabled:opacity-40
+              "
+            >
+              {loading ? (
+                <Loader2
+                  size={15}
+                  className="animate-spin"
+                />
+              ) : (
+                <RefreshCw size={15} />
+              )}
+            </button>
+
           </div>
 
-          <p className="text-[10px] leading-5 text-white/45">
-            Review each plan&apos;s investment amount,
-            duration, projected returns and applicable
-            conditions before proceeding.
-          </p>
-        </div>
-      )}
+          {/* ============================================================ */}
+          {/* LOADING                                                      */}
+          {/* ============================================================ */}
+
+          {loading && (
+            <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
+
+              {Array.from({ length: 4 }).map(
+                (_, index) => (
+                  <div
+                    key={index}
+                    className="animate-pulse rounded-[22px] border border-white/8 bg-[#0B1426] p-4"
+                  >
+
+                    <div className="flex items-center justify-between">
+
+                      <div className="h-10 w-10 rounded-xl bg-white/8" />
+
+                      <div className="h-5 w-16 rounded-full bg-white/8" />
+
+                    </div>
+
+                    <div className="mt-5 h-4 w-3/4 rounded bg-white/10" />
+
+                    <div className="mt-3 h-3 w-full rounded bg-white/5" />
+
+                    <div className="mt-2 h-3 w-2/3 rounded bg-white/5" />
+
+                    <div className="mt-6 h-10 rounded-xl bg-white/8" />
+
+                  </div>
+                ),
+              )}
+
+            </div>
+          )}
+
+          {/* ============================================================ */}
+          {/* ERROR                                                        */}
+          {/* ============================================================ */}
+
+          {!loading && error && (
+            <div
+              role="alert"
+              className="mt-4 rounded-[22px] border border-[#E60033]/20 bg-[#E60033]/8 p-5"
+            >
+
+              <p className="text-xs font-semibold text-[#FF9AAD]">
+                {error}
+              </p>
+
+              <button
+                type="button"
+                onClick={handleRefresh}
+                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#E60033] px-4 py-2.5 text-[11px] font-extrabold text-white transition hover:bg-[#FF174B] active:scale-95"
+              >
+                <RefreshCw size={13} />
+
+                Try again
+              </button>
+
+            </div>
+          )}
+
+          {/* ============================================================ */}
+          {/* PUBLISHED INVESTMENT PLANS                                   */}
+          {/* ============================================================ */}
+
+          {!loading && !error && plans.length > 0 && (
+
+            <div
+              className="
+                mt-4 grid grid-cols-1
+                items-stretch
+                gap-3
+                sm:gap-4
+                md:grid-cols-2
+                lg:grid-cols-4
+              "
+            >
+
+              {plans.map((plan) => (
+
+                <div
+                  key={plan.id}
+                  className="group min-w-0"
+                >
+
+                  <InvestmentPlanCard
+                    plan={plan}
+                    onClick={() =>
+                      handlePlanClick(plan.id)
+                    }
+                  />
+
+                </div>
+
+              ))}
+
+            </div>
+
+          )}
+
+          {/* ============================================================ */}
+          {/* EMPTY STATE                                                  */}
+          {/* ============================================================ */}
+
+          {!loading && !error && plans.length === 0 && (
+
+            <div className="mt-4 rounded-[22px] border border-dashed border-white/10 bg-[#0B1426] px-5 py-10 text-center sm:px-6 sm:py-12">
+
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-[#E60033]/20 bg-[#E60033]/10 text-[#FF476B]">
+                <Sparkles size={24} />
+              </div>
+
+              <h3 className="mt-4 text-sm font-black text-white">
+                No investment plans available
+              </h3>
+
+              <p className="mx-auto mt-2 max-w-xs text-[11px] leading-5 text-white/45">
+                There are currently no published
+                investment plans available for team
+                members. Please check again later.
+              </p>
+
+              <button
+                type="button"
+                onClick={() =>
+                  router.push("/investment")
+                }
+                className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#E60033] px-4 py-3 text-[11px] font-extrabold text-white transition hover:bg-[#FF174B] active:scale-95"
+              >
+                Back to investments
+
+                <ChevronRight size={15} />
+              </button>
+
+            </div>
+
+          )}
+
+        </section>
+
+        {/* ================================================================ */}
+        {/* BOTTOM INFORMATION                                               */}
+        {/* ================================================================ */}
+
+        {!loading && !error && plans.length > 0 && (
+
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-white/6 bg-[#0B1426]/60 px-3 py-3 sm:px-4">
+
+            <p className="text-[10px] text-white/40">
+              Showing all {plans.length} published{" "}
+              {plans.length === 1 ? "plan" : "plans"}
+            </p>
+
+            <div className="flex items-center gap-1 text-[10px] font-bold text-[#FF476B]">
+              Explore your options
+
+              <ArrowUpRight size={13} />
+            </div>
+
+          </div>
+
+        )}
+
+      </div>
     </main>
   );
 }
