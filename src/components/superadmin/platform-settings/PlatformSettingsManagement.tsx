@@ -254,19 +254,7 @@ export default function PlatformSettingsManagement() {
 
         setSettings(result);
 
-        setOpenCategories((current) => {
-          const next = { ...current };
 
-          for (const category of categories) {
-            if (
-              !(category.value in next)
-            ) {
-              next[category.value] = true;
-            }
-          }
-
-          return next;
-        });
       } catch (loadError: unknown) {
         console.error(
           "Failed to load platform settings:",
@@ -805,7 +793,7 @@ export default function PlatformSettingsManagement() {
                 const open =
                   openCategories[
                     category.value
-                  ] ?? true;
+                  ] ?? false;
 
                 return (
                   <section
@@ -819,7 +807,9 @@ export default function PlatformSettingsManagement() {
                           category.value,
                         )
                       }
-                      className="flex w-full items-center justify-between border-b border-white/5 px-3.5 py-3 text-left transition sm:px-5 sm:py-4 hover:bg-white/2.5"
+                      aria-expanded={open}
+                      aria-controls={`platform-settings-${category.value.toLowerCase()}`}
+                      className={`flex w-full items-center justify-between px-3.5 py-3 text-left transition sm:px-5 sm:py-4 hover:bg-white/2.5 ${open ? "border-b border-white/5" : ""}`}
                     >
                       <div className="flex items-center gap-3">
                         <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-purple-400/10 bg-purple-400/10">
@@ -851,7 +841,10 @@ export default function PlatformSettingsManagement() {
                     </button>
 
                     {open && (
-                      <div className="divide-y divide-white/5">
+                      <div
+                        id={`platform-settings-${category.value.toLowerCase()}`}
+                        className="divide-y divide-white/5"
+                      >
                         {categorySettings.map(
                           (setting) => (
                             <div
