@@ -1,8 +1,9 @@
-﻿
+
 // src/app/layout.tsx
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
+import { Analytics } from '@vercel/analytics/next';
 import { Providers } from '@/src/components/Providers';
 import TransactionActivityToast from '@/src/components/TransactionActivityToast';
 
@@ -48,6 +49,9 @@ export default function RootLayout({
           {children}
           <TransactionActivityToast />
         </Providers>
+
+        {/* Vercel Web Analytics */}
+        <Analytics />
       </body>
     </html>
   );
